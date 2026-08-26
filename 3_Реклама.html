@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ozon — Реклама</title>
+<style>
+:root{
+  --bg:#f7f7f5; --card:#ffffff; --ink:#0b0b0b; --ink2:#52514e; --muted:#898781;
+  --line:#e4e3dd; --pos:#0a7d34; --neg:#c0392b; --accent:#1c5cab; --warnbg:#fff8e6; --warnln:#e8c56a;
+}
+@media (prefers-color-scheme: dark){
+  :root{--bg:#0e0e0d;--card:#1a1a19;--ink:#fff;--ink2:#c3c2b7;--muted:#8a8880;--line:#2c2c2a;
+        --pos:#4ec46e;--neg:#e87b6f;--accent:#7fb0f0;--warnbg:#2a2415;--warnln:#5c4d20;}
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1400px;margin:0 auto;padding:26px 18px 70px}
+h1{font-size:23px;margin:0 0 3px;letter-spacing:-.01em}
+.sub{color:var(--ink2);font-size:13.5px;margin:0 0 26px}
+h2{font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);
+   margin:34px 0 12px;font-weight:700}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media(max-width:860px){.tiles{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:480px){.tiles{grid-template-columns:1fr}}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 17px}
+.tile .cap{font-size:12px;color:var(--muted);margin-bottom:9px;line-height:1.35}
+.tile .big{font-size:27px;font-weight:700;letter-spacing:-.02em;line-height:1.1}
+.tile .big.small{font-size:20px}
+.tile .sup{font-size:12.5px;color:var(--ink2);margin-top:7px;line-height:1.45}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+table{width:100%;border-collapse:collapse;font-size:12.2px}
+th,td{padding:7px 5px;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+th{font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);
+   font-weight:700;border-bottom:1px solid var(--line);background:var(--card);position:sticky;top:0}
+td{border-bottom:1px solid var(--line)}
+tr:last-child td{border-bottom:none}
+th:first-child,td:first-child{text-align:left}
+tr.tot td{font-weight:700;background:color-mix(in srgb,var(--accent) 7%,transparent)}
+.pos{color:var(--pos);font-weight:600}
+.neg{color:var(--neg);font-weight:600}
+.dim{color:var(--muted)}
+.scroll{overflow-x:auto}
+.cmtcol{white-space:normal!important;text-align:left!important;font-size:11.8px;
+  line-height:1.5;color:var(--ink2);min-width:170px;max-width:185px;padding-left:9px}
+th.cmtcol{color:var(--muted)}
+.adsc{color:#b06a1f;font-weight:600}
+@media(prefers-color-scheme:dark){.adsc{color:#e0a253}}
+.promoc{color:#8a5cc4;font-weight:600}
+@media(prefers-color-scheme:dark){.promoc{color:#b79ae0}}
+.note{font-size:12.5px;color:var(--ink2);line-height:1.65;margin:11px 2px 0}
+.note b{color:var(--ink)}
+.flag{background:var(--warnbg);border:1px solid var(--warnln);border-radius:10px;
+      padding:13px 15px;font-size:13px;line-height:1.6;color:var(--ink2);margin-top:13px}
+.flag b{color:var(--ink)}
+.flag.good{background:color-mix(in srgb,var(--pos) 10%,var(--card));border-color:var(--pos)}
+.flag.bad{background:color-mix(in srgb,var(--neg) 9%,var(--card));border-color:var(--neg)}
+.tabs{display:flex;gap:6px;margin-bottom:11px;flex-wrap:wrap}
+.tabs button{border:1px solid var(--line);background:var(--card);color:var(--ink2);
+  padding:7px 14px;border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit}
+.tabs button.on{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600}
+.hide{display:none}
+.foot{font-size:11.5px;color:var(--muted);line-height:1.7;border-top:1px solid var(--line);
+      margin-top:34px;padding-top:14px}
+.anom td{background:color-mix(in srgb,var(--neg) 8%,transparent)}
+
+.pagenav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.pagenav a{border:1px solid var(--line);background:var(--card);color:var(--ink2);
+  padding:7px 13px;border-radius:8px;font-size:12.5px;text-decoration:none;white-space:nowrap}
+.pagenav a:hover{border-color:var(--accent);color:var(--accent)}
+.pagenav a.on{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="pagenav"><a href="index.html">Обзор</a><a href="1_Общие_показатели.html">1. API</a><a href="2_Партнёрская.html">2. Прибыль</a><a href="3_Реклама.html" class="on">3. Реклама</a><a href="4_Топ_локомотивов_прибыли.html">4. Топ прибыли</a><a href="5_Слабая_маржа.html">5. Слабая маржа</a></div>
+
+<h1>Ozon — Реклама: переброска бюджета на «Оплату за заказ»</h1>
+<p class="sub">Данные на 20 августа 2026 · период 22.06–20.08.2026 (60 дней), сравнение окон 09–14.08 и 15–20.08</p>
+
+<div class="flag good" style="margin-top:0">
+  <b>Главное для решения.</b> 15.08 запущена кампания «Оплата за заказ — все товары» (ALL_SKU_PROMO).
+  За 6 дней на неё потрачено <b>63 014,05 ₽</b> — 36,6% всего рекламного бюджета окна 15–20.08.
+  Одновременно клики (обычная реклама по товарам) обрезаны почти вдвое: с 27 573 до 15 175 (−45,0%),
+  расход на клики упал с 201 932 ₽ до 109 188 ₽ (−45,9%). Показатель ДРР по кликовой части улучшился
+  с 7,07% до 4,54% — но <b>у «Оплаты за заказ» Ozon не отдаёт по API ни одного заказа</b>
+  (0 заказов, 0 ₽ выручки в кампанейской статистике за все 6 дней, при 6 542 кликах и 200 127 показах) —
+  это подтверждённый тупик API (см. «Ограничения» ниже), а не обязательно означает, что заказов
+  реально не было. Итог: 63 014 ₽ потрачены «вслепую» для аналитики — оценить их отдачу отдельно
+  от общей выручки магазина сейчас нельзя.
+</div>
+
+<h2>Окна ДО / ПОСЛЕ — сравнение</h2>
+<div class="card scroll">
+<table><thead><tr>
+ <th>Окно</th><th>Дней</th><th>Расход<br>всего</th><th>из них<br>клики</th><th>из них<br>оплата за заказ</th>
+ <th>Клики,<br>шт</th><th>Ø цена<br>клика</th><th>Товаров<br>с расходом</th><th>Товаров<br>без заказов</th>
+ <th>Бюджет<br>на них</th><th>Заказы,<br>шт</th><th>Заказано<br>на сумму</th><th>ДРР</th>
+</tr></thead><tbody id="tbWin"></tbody></table>
+</div>
+<p class="note">
+  <b>Как считаю.</b> «Заказы» и «ДРР» посчитаны только по кликовой части — это единственное, что
+  Ozon показывает по товарам. «ДРР» = расход / «Заказано на сумму» (это официальная метрика
+  Ozon «ДРР (общий)», не узкая «ДРР в продвижении»). «Оплата за заказ» дана отдельной колонкой
+  и не входит в расчёт заказов и ДРР — по ней заказов через API нет.
+</p>
+
+<h2>Как менялся бюджет по дням, 09–20.08</h2>
+<div class="card scroll">
+<table><thead><tr>
+ <th>Дата</th><th>Расход всего</th><th>Клики</th><th>Оплата за заказ</th><th>% на оплату за заказ</th>
+ <th>Кликов (обычная реклама)</th><th>Кликов (оплата за заказ)</th><th>Показов (оплата за заказ)</th>
+</tr></thead><tbody id="tbDaily"></tbody></table>
+</div>
+<p class="note">
+  <b>Что видно.</b> 14→15.08 расход на клики обрушился с 29 463 ₽ до 18 494 ₽ за одну ночь (−37,2%) —
+  это и есть переброска. Общий бюджет в день при этом просел до 24 193 ₽ в день запуска, а к 20.08
+  восстановился до 30 454 ₽ — почти вровень с последним днём «до» (29 463 ₽, +3,4%). Доля «оплаты
+  за заказ» в бюджете растёт каждый день и на 20.08 ещё не вышла на плато: 23,6% → 30,2% → 35,3% →
+  42,9% → 39,9% → 43,8%.
+</p>
+
+<h2>За 60 дней (22.06–20.08)</h2>
+<div class="tabs">
+  <button class="on" onclick="show('wk',this)">По неделям</button>
+  <button onclick="show('sp',this)">Топ-20 по расходу</button>
+  <button onclick="show('dr',this)">Топ-20 по ДРР</button>
+  <button onclick="show('zo',this)">Расход без заказов</button>
+</div>
+
+<div id="tab-wk" class="card scroll">
+  <table><thead><tr><th>Неделя</th><th>Расход</th><th>Заказано на сумму</th><th>ДРР</th><th>Заказы, шт</th><th>Клики, шт</th><th class="cmtcol">Комментарий</th></tr></thead>
+  <tbody id="tbWeekly"></tbody></table>
+</div>
+
+<div id="tab-sp" class="card scroll hide">
+  <table><thead><tr><th>Товар</th><th>SKU</th><th>Расход, 60 дн</th><th>Заказы, шт</th><th>Заказано на сумму</th><th>ДРР</th><th>Клики</th></tr></thead>
+  <tbody id="tbTopSpend"></tbody></table>
+</div>
+
+<div id="tab-dr" class="card scroll hide">
+  <table><thead><tr><th>Товар</th><th>SKU</th><th>Расход, 60 дн</th><th>Заказано на сумму</th><th>Заказы, шт</th><th>ДРР</th></tr></thead>
+  <tbody id="tbTopDrr"></tbody></table>
+  <p class="note" style="padding:0 14px 12px">
+    Порог включения — расход от 1 000 ₽ за 60 дней (иначе в топ попадают товары с 1–2 кликами,
+    это шум, а не сигнал).
+  </p>
+</div>
+
+<div id="tab-zo" class="card scroll hide">
+  <table><thead><tr><th>Товар</th><th>SKU</th><th>Расход, 60 дн</th><th>Клики</th><th>Показы</th></tr></thead>
+  <tbody id="tbZero"></tbody></table>
+  <p class="note" style="padding:0 14px 12px" id="zeroNote"></p>
+</div>
+
+<div class="flag bad">
+  <b>Аномалия, требует немедленного решения.</b> SKU <b>1548325869</b> «Саморезы по дереву,
+  жёлтые 6×70 мм» — за 60 дней расход на рекламу <b>11 772,95 ₽</b>, а «заказано на сумму» —
+  всего <b>459 ₽</b>. ДРР <b>2 565%</b>: на каждый заказанный рубль потрачено 25,6 ₽ рекламы.
+  Это не опечатка — я пересчитал по сырым данным дважды. Либо цена клика по этому товару
+  абсурдно высока для его стоимости (дешёвые саморезы, крупная упаковка конкурентов забирает клик),
+  либо ставка стоит по ошибке. Рекомендация — снять с продвижения сегодня, разбираться не срочно.
+</div>
+
+<h2>Выводы и рекомендации</h2>
+
+<div class="flag good">
+  <b>Сильные стороны.</b><br>
+  1. Расход на клики за 6 дней после переброски снизился на <b>92 745 ₽</b> (201 932 → 109 188 ₽,
+  −45,9%), при этом заказы (шт) по кликовой части не упали, а чуть выросли: 1 251 → 1 277 (+2,1%).
+  Заказано на сумму просело меньше, чем расход (2 857 815 → 2 407 272 ₽, −15,8%), поэтому ДРР
+  по кликам улучшился с 7,07% до 4,54%.<br>
+  2. Товаров с расходом и нулевыми заказами (по кликам) стало меньше: 240 → 161 за окно, бюджет
+  на них упал с 27 324 ₽ до 14 319 ₽.
+</div>
+
+<div class="flag bad">
+  <b>Слабые стороны.</b><br>
+  1. <b>63 014 ₽</b> (37% бюджета «после») ушли в кампанию, для которой Ozon не показывает
+  ни заказов, ни выручки ни по одному из проверенных методов API — оценить её ROI отдельно
+  от общего оборота магазина нельзя.<br>
+  2. За 60 дней 207 товаров с расходом так и не дали ни одного заказа — суммарно
+  <b>48 484,63 ₽</b> (1,96% всего рекламного бюджета периода) потрачены без отдачи.<br>
+  3. Один товар (саморезы 6×70, SKU 1548325869) — явная аномалия на 11 773 ₽, см. выше.<br>
+  4. Улучшение ДРР по кликам частично может объясняться не ростом эффективности, а тем, что
+  «заказано на сумму» держится на базовом уровне органических продаж — рост заказов при падении
+  кликов на 45% сам по себе не типичен и требует времени, чтобы понять причину, а не сразу
+  засчитывать как эффект оптимизации.
+</div>
+
+<div class="flag">
+  <b>Рекомендации.</b><br>
+  <b>Мои рычаги:</b> снять с продвижения SKU 1548325869 (саморезы) — освобождает часть от
+  11 773 ₽/60 дней сразу. Пересмотреть 10 товаров из списка «Топ-20 по ДРР» с ДРР выше 40%
+  (это дешёвые товары с мелким чеком, где реклама объективно невыгодна) — под пересмотром
+  расход <b>53 990 ₽</b> за 60 дней, из них 21 344 ₽ — один товар («Изолента», ДРР 49,0%).
+  По 207 товарам с нулевыми заказами — не снимать разом
+  (48 484 ₽ за 60 дней это всего 1,96% бюджета, среди них могут быть новинки), а выгрузить
+  список и сверить с датой старта продаж по каждому SKU.<br>
+  <b>Механики Ozon:</b> держать кампанию «Оплата за заказ» под наблюдением ещё минимум 2 недели
+  (см. «Ограничения») и параллельно сверять общую выручку магазина (не только рекламную) за
+  сопоставимые периоды — это единственный способ оценить её реальный эффект, раз Ozon не отдаёт
+  атрибуцию по API. Если через 2–3 недели доля бюджета на неё продолжит расти без видимого
+  роста общих продаж — сокращать её вручную.
+</div>
+
+<div class="flag" style="border-color:#c98a2a">
+  <b>Ограничения — прочитать перед тем, как принимать решения по этим цифрам.</b><br>
+  1. <b>6 дней — короткое окно.</b> Часть разницы между «до» и «после» может быть сезонной
+  (день недели, случайные колебания спроса), а не эффектом переброски бюджета. Полноценный вывод
+  можно будет сделать, когда после запуска пройдёт минимум ещё одно 6-дневное окно (то есть после
+  26.08.2026) — тогда сравнивать станет проще, а ещё надёжнее — после 2–3 полных недель (к началу
+  сентября), когда сгладятся дневные колебания.<br>
+  2. <b>«Оплата за заказ» не разложена по товарам и не даёт заказов через API.</b> Проверено:
+  GET .../statistics/all_sku_promo/{products,orders}/generate — все 9 комбинаций параметров вернули
+  400 без тела. Это тупик, а не то, что я не попробовал. Как обходной путь для страницы 2 использую
+  начисления Seller API (MarketplaceServicePromotionWithCostPerOrder по отправлениям) — там есть
+  привязка к SKU, но это уже другой источник, не рекламный API.<br>
+  3. Реклама глубже 22.06.2026 по товарам недоступна — Ozon отдаёт историю асинхронного отчёта
+  максимум на этот срок назад. Раскладка за май и 1–21 июня возможна только пропорционально
+  (оценка), это сделано на странице 2, не здесь.
+</div>
+
+<div class="foot">
+  Источники: Ozon Performance API — <code>/api/client/statistics/daily/json</code> (кампании по дням,
+  эталон), <code>POST /api/client/statistics</code> (асинхронные отчёты по SKU, пачками по 10 кампаний).
+  Файлы: <code>daily_campaign_stats.json</code> (112 кампаний, 60 дней, 2 538 903,14 ₽),
+  <code>ads_sku_day.json</code> (754 товара, 34 637 пар «день+товар», 2 476 476,69 ₽ — без кампании
+  «Оплата за заказ», её нельзя разложить по SKU). Разница между двумя файлами — 62 426,45 ₽
+  за 60 дней; из них 63 014,05 ₽ — расход кампании «Оплата за заказ» за 15–20.08; остаток
+  (−587,60 ₽) — прочие мелкие расхождения округления/сборки, не разбирался отдельно, это 0,02%
+  от эталона. Сверка недели 10–16.08 по данному файлу: 200 273,26 ₽ — сходится с контрольной
+  точкой бухгалтера (200 273,63 ₽, расхождение 0,37 ₽), см. Протокол проверки страницы 1.
+</div>
+
+</div>
+
+<script>
+const D = {"windows":{"before":{"days":6,"date_from":"2026-08-09","date_to":"2026-08-14","sku_expense":201931.77,"sku_orders":1251,"sku_orderedSum":2857815,"sku_salesPromo":1371952,"n_sku_with_spend":487,"n_sku_zero_orders":240,"zero_orders_spend":27324.11,"drr":7.07,"total_spend":201932.18,"clicks_spend":201932.18,"promo_spend":0,"clicks_n":27573.0,"clicks_views":1044910.0,"promo_clicks":0,"promo_views":0,"n_active_camp":84,"avg_cpc":7.32},"after":{"days":6,"date_from":"2026-08-15","date_to":"2026-08-20","sku_expense":109187.58,"sku_orders":1277,"sku_orderedSum":2407272,"sku_salesPromo":1384032,"n_sku_with_spend":355,"n_sku_zero_orders":161,"zero_orders_spend":14319.46,"drr":4.54,"total_spend":172201.69,"clicks_spend":109187.64,"promo_spend":63014.05,"clicks_n":15175.0,"clicks_views":571679.0,"promo_clicks":6542.0,"promo_views":200127.0,"n_active_camp":75,"avg_cpc":7.2}},"daily_trend":[{"date":"2026-08-09","total":38429.41,"clicks_spend":38429.41,"promo_spend":0,"clicks_n":5199,"promo_clicks":0,"promo_views":0},{"date":"2026-08-10","total":37951.85,"clicks_spend":37951.85,"promo_spend":0,"clicks_n":5156,"promo_clicks":0,"promo_views":0},{"date":"2026-08-11","total":32649.24,"clicks_spend":32649.24,"promo_spend":0,"clicks_n":4519,"promo_clicks":0,"promo_views":0},{"date":"2026-08-12","total":32125.77,"clicks_spend":32125.77,"promo_spend":0,"clicks_n":4425,"promo_clicks":0,"promo_views":0},{"date":"2026-08-13","total":31313.13,"clicks_spend":31313.13,"promo_spend":0,"clicks_n":4335,"promo_clicks":0,"promo_views":0},{"date":"2026-08-14","total":29462.78,"clicks_spend":29462.78,"promo_spend":0,"clicks_n":3939,"promo_clicks":0,"promo_views":0},{"date":"2026-08-15","total":24193.06,"clicks_spend":18493.86,"promo_spend":5699.2,"clicks_n":2567,"promo_clicks":662,"promo_views":19811},{"date":"2026-08-16","total":26170.25,"clicks_spend":18277.0,"promo_spend":7893.25,"clicks_n":2565,"promo_clicks":1039,"promo_views":31569},{"date":"2026-08-17","total":28567.36,"clicks_spend":18476.81,"promo_spend":10090.55,"clicks_n":2545,"promo_clicks":1057,"promo_views":35606},{"date":"2026-08-18","total":31920.27,"clicks_spend":18240.67,"promo_spend":13679.6,"clicks_n":2568,"promo_clicks":1280,"promo_views":37515},{"date":"2026-08-19","total":30896.32,"clicks_spend":18570.37,"promo_spend":12325.95,"clicks_n":2575,"promo_clicks":1285,"promo_views":38500},{"date":"2026-08-20","total":30454.43,"clicks_spend":17128.93,"promo_spend":13325.5,"clicks_n":2355,"promo_clicks":1219,"promo_views":37126}],"weekly":[{"beg":"2026-06-22","end":"2026-06-28","days":7,"expense":289306.31,"orderedSum":4016302.02,"orders":2031,"clicks":33395,"drr":7.2},{"beg":"2026-06-29","end":"2026-07-05","days":7,"expense":332139.72,"orderedSum":4329108.0,"orders":2116,"clicks":39082,"drr":7.67},{"beg":"2026-07-06","end":"2026-07-12","days":7,"expense":358557.16,"orderedSum":6412639.01,"orders":2450,"clicks":45254,"drr":5.59},{"beg":"2026-07-13","end":"2026-07-19","days":7,"expense":323938.53,"orderedSum":4586858.0,"orders":2034,"clicks":40423,"drr":7.06},{"beg":"2026-07-20","end":"2026-07-26","days":7,"expense":317812.36,"orderedSum":4669905,"orders":1816,"clicks":38515,"drr":6.81},{"beg":"2026-07-27","end":"2026-08-02","days":7,"expense":322657.06,"orderedSum":4462290.0,"orders":1942,"clicks":38982,"drr":7.23},{"beg":"2026-08-03","end":"2026-08-09","days":7,"expense":259375.58,"orderedSum":4016547,"orders":1718,"clicks":34087,"drr":6.46},{"beg":"2026-08-10","end":"2026-08-16","days":7,"expense":200273.26,"orderedSum":3213735,"orders":1534,"clicks":27506,"drr":6.23},{"beg":"2026-08-17","end":"2026-08-23","days":7,"expense":72416.71,"orderedSum":1590344,"orders":807,"clicks":10043,"drr":4.55,"days_real":4}],"top_spend":[{"sku":"744311013","name":"Розетка встраиваемая двойная, для столешницы стены офисного стола, Atlas Design с раздвижными крышками","expense":90086.68,"orders":168,"orderedSum":629483,"drr":14.31,"clicks":23508},{"sku":"929195190","name":"Розетка двойная влагозащищенная Systeme (Schneider) Electric Glossa антрацит с заземлением IP44 SE GSL000747","expense":64078.83,"orders":241,"orderedSum":889186,"drr":7.21,"clicks":7630},{"sku":"1454501897","name":"Пакеты фасовочные 600 шт., 24х37","expense":57570.73,"orders":174,"orderedSum":511047.42,"drr":11.27,"clicks":5583},{"sku":"694627828","name":"Розетка двойная влагозащищенная IP44 с крышкой с заземлением и защитными шторками BLANCA Systeme Electric Белый BLNRS441121","expense":42754.32,"orders":318,"orderedSum":769905,"drr":5.55,"clicks":6308},{"sku":"1738119865","name":"Розетка двойная внутренняя с заземлением Systeme Schneider Electric ATLASDESIGN, 16А, цвет белый 2 шт","expense":36186.17,"orders":79,"orderedSum":260827.08,"drr":13.87,"clicks":4485},{"sku":"821456425","name":"Розетка накладная Systeme Electric BLANCA четверная без заземления, без штор, цвет ясень BLNRA000415","expense":34762.11,"orders":144,"orderedSum":500372,"drr":6.95,"clicks":4447},{"sku":"929177473","name":"Розетка двойная влагозащищенная IP44 с крышкой с заземлением и защитными шторками Glossa Systeme(Schneider) Electric Белая GSL000147","expense":31445.71,"orders":97,"orderedSum":294841,"drr":10.67,"clicks":3957},{"sku":"488988346","name":"Выключатель двухклавишный встраиваемый с рамкой Systeme Schneider Electric AtlasDesign, цвет белый","expense":30759.81,"orders":215,"orderedSum":245235.86,"drr":12.54,"clicks":2973},{"sku":"821453130","name":"Розетка двухместная без заземления Systeme Electric(Schneider Electric) BLANCA 16А 250В ясень BLNRA000215","expense":29091.87,"orders":327,"orderedSum":612158,"drr":4.75,"clicks":3603},{"sku":"928526391","name":"Розетка влагозащищенная IP44 с крышкой, заземлением и защитными шторками Glossa Systeme Schneider Electric цвет черный антрацит GSL000748","expense":28675.16,"orders":155,"orderedSum":510974,"drr":5.61,"clicks":2910},{"sku":"743518124","name":"Розетка одинарная без заземления Systeme (Schneider) Electric AtlasDesign 16А белая ATN000140 с рамкой","expense":28481.71,"orders":484,"orderedSum":466488,"drr":6.11,"clicks":3006},{"sku":"3996657589","name":"Выключатель света Шнайдер (Systeme Electric) Art Gallery одноклавишный внутренний","expense":27616.44,"orders":75,"orderedSum":152566,"drr":18.1,"clicks":3062},{"sku":"821453239","name":"Розетка двухместная накладная с заземлением со шторками Systeme Electric(Schneider Electric) BLANCA 16А 250В ясень BLNRA011215","expense":26512.86,"orders":313,"orderedSum":943063,"drr":2.81,"clicks":2603},{"sku":"2898878611","name":"Розетка двойная встраиваемая с заземлением и рамкой Systeme Schneider Electric Atlas Design цвет черный карбон","expense":24182.08,"orders":33,"orderedSum":225639,"drr":10.72,"clicks":2318},{"sku":"489593528","name":"Розетка двойная без заземления с рамкой Systeme Schneider Electric AtlasDesign 16А цвет белый","expense":23291.91,"orders":134,"orderedSum":203676,"drr":11.44,"clicks":3129},{"sku":"4008018838","name":"Розетка двойная внутренняя с заземлением Шнайдер (Systeme Electric) Art Gallery, цвет песочный","expense":23194.98,"orders":31,"orderedSum":179360,"drr":12.93,"clicks":2197},{"sku":"816524172","name":"Розетка двойная с рамкой без заземления Systeme Schneider Electric AtlasDesign 16А цвет серый грифель","expense":22426.79,"orders":117,"orderedSum":280255,"drr":8.0,"clicks":2781},{"sku":"742611433","name":"Выключатель трехклавишный Белый Systeme (Schneider) Electric AtlasDesign ATN000131","expense":22115.96,"orders":148,"orderedSum":238303,"drr":9.28,"clicks":2759},{"sku":"2905344794","name":"Розетка двойная Бежевая глянцевая с заземлением Шнайдер Systeme (Schneider) Electric Atlas Design","expense":21474.48,"orders":65,"orderedSum":221008,"drr":9.72,"clicks":2602},{"sku":"1438922989","name":"Изолента профессиональная ПВХ для проводов и проводки Systeme Schneider Electric цвет синий","expense":21344.16,"orders":166,"orderedSum":43540,"drr":49.02,"clicks":3654}],"top_drr":[{"sku":"1548325869","name":"Саморезы по дереву, желтые 6 х 70 мм (10 шт)","expense":11772.95,"orderedSum":459,"orders":3,"drr":2564.91},{"sku":"4008388679","name":"Выключатели с рамкой Шнайдер (Systeme Electric) Art Gallery внутренние, одноклавишный и двухклавишный, песочный","expense":8049.27,"orderedSum":11864,"orders":2,"drr":67.85},{"sku":"4008388367","name":"Выключатели одноклавишный и двухклавишный с рамкой Шнайдер (Systeme Electric) Art Gallery внутренние, черный матовый карбон","expense":2500.44,"orderedSum":3850,"orders":0,"drr":64.95},{"sku":"875238236","name":"Розетка двойная с заземлением Systeme (Schneider) Electric AtlasDesign 16А изумруд ATN000826","expense":1020.46,"orderedSum":1801,"orders":1,"drr":56.66},{"sku":"2335890150","name":"Автоматический выключатель 25A DEKraft ВА-101 1P 4,5кА тип C, Модульный автомат 11056DEK","expense":2274.78,"orderedSum":4081,"orders":2,"drr":55.74},{"sku":"1677273292","name":"Розетка с заземлением белая, Systeme Electric AtlasDesign ATN000143 5ШТ","expense":1037.72,"orderedSum":2033,"orders":0,"drr":51.04},{"sku":"1438922989","name":"Изолента профессиональная ПВХ для проводов и проводки Systeme Schneider Electric цвет синий","expense":21344.16,"orderedSum":43540,"orders":166,"drr":49.02},{"sku":"4008655520","name":"Розетка с двухклавишным выключателем Шнайдер (Systeme Electric) Art Gallery внутренняя, черная матовая карбон","expense":1877.5,"orderedSum":3850,"orders":1,"drr":48.77},{"sku":"1557385543","name":"Саморезы по дереву, желтые 6 х 60 мм (10 шт)","expense":1143.86,"orderedSum":2430,"orders":12,"drr":47.07},{"sku":"1421589314","name":"Розетка Шнайдер белая с заземлением Systeme Electric AtlasDesign комплект 10 шт 16А механизм ATN000143","expense":2969.23,"orderedSum":7388,"orders":0,"drr":40.19},{"sku":"1421595329","name":"Розетка однопостовая встраиваемая с заземлением Systeme Schneider Electric AtlasDesign цвет белый 20 шт","expense":16556.05,"orderedSum":41880,"orders":2,"drr":39.53},{"sku":"694565430","name":"Двойная розетка открытой установки с заземлением, без шторок Systeme Schneider Electric BLANCA, цвет антрацит","expense":1432.45,"orderedSum":4856,"orders":3,"drr":29.5},{"sku":"3972559205","name":"Розетка одинарная с заземлением Шнайдер (Systeme Electric) ArtGallery внутренняя, белая","expense":5443.32,"orderedSum":19307,"orders":11,"drr":28.19},{"sku":"4008388918","name":"Выключатель одноклавишный и двухклавишный с рамкой Шнайдер (Systeme Electric) Art Gallery внутренний, белый","expense":5700.13,"orderedSum":20546,"orders":5,"drr":27.74},{"sku":"1761742999","name":"Розетка встраиваемая двойная, для столешницы стены офисного стола Systeme Schneider Electric Atlas Design с раздвижными крышками цвет серый базальт","expense":8262.93,"orderedSum":31476,"orders":2,"drr":26.25},{"sku":"4008654728","name":"Розетка с выключателем встраиваемая Шнайдер (Systeme Electric) Art Gallery, цвет белый","expense":8445.25,"orderedSum":32893,"orders":12,"drr":25.67},{"sku":"1032654214","name":"Рамка для выключателя и розетки 1-постовая Systeme Schneider Electric ATLASDESIGN, цвет синий аквамарин","expense":1506.83,"orderedSum":6440,"orders":14,"drr":23.4},{"sku":"1032606973","name":"Розетка синяя с крышкой и заземлением Systeme (Schneider) Electric AtlasDesign ATN001146","expense":1740.93,"orderedSum":7458,"orders":2,"drr":23.34},{"sku":"694644901","name":"Блок: выключатель двухклавишный, выключатель одноклавишный и розетка одинарная с заземлением и шторками Schneider Electric (Systeme Electric) Blanca Белый","expense":5754.23,"orderedSum":24798,"orders":6,"drr":23.2},{"sku":"4008095411","name":"Розетка тройная с заземлением Шнайдер (Systeme Electric) Art Gallery внутренняя, белая","expense":7579.02,"orderedSum":32867,"orders":4,"drr":23.06}],"zero_orders_top":[{"sku":"1421589314","name":"Розетка Шнайдер белая с заземлением Systeme Electric AtlasDesign комплект 10 шт 16А механизм ATN000143","expense":2969.23,"clicks":132,"views":9725},{"sku":"4008388367","name":"Выключатели одноклавишный и двухклавишный с рамкой Шнайдер (Systeme Electric) Art Gallery внутренние, черный матовый карбон","expense":2500.44,"clicks":303,"views":9757},{"sku":"2912411937","name":"Розетка тройная Серо Голубая с заземлением Шнайдер Systeme (Schneider) Electric Atlas Design","expense":2497.65,"clicks":284,"views":10792},{"sku":"3972558525","name":"Розетка одинарная с заземлением Шнайдер (Systeme Electric) ArtGallery внутренняя, белая, 5 шт","expense":1448.96,"clicks":19,"views":2951},{"sku":"1012097413","name":"Интернет розетка перламутровая (жемчуг) компьютерная двойная (RJ45) Systeme (Schneider) Electric AtlasDesign механизм ATN000485","expense":1289.47,"clicks":146,"views":7013},{"sku":"2920378699","name":"Розетка тройная Перламутровая с заземлением Шнайдер Systeme (Schneider) Electric Atlas Design","expense":1275.11,"clicks":223,"views":9272},{"sku":"1569011069","name":"Розетка с выключателем уличная влагозащищенная (IP54), накладная, Systeme (Schneider) Electric AtlasDesign Profi54, Белая ATN540174","expense":1257.38,"clicks":187,"views":12852},{"sku":"827127191","name":"Розетка двойная черная без заземления Systeme (Schneider) Electric AtlasDesign 16А карбон ATN001022 комплект 2шт.","expense":1229.57,"clicks":150,"views":5822},{"sku":"1555460128","name":"Розетка двойная влагозащищенная Systeme (Schneider) Electric Glossa антрацит с заземлением IP44 SE GSL000747 комплект 2шт","expense":1197.66,"clicks":145,"views":6941},{"sku":"1677273292","name":"Розетка с заземлением белая, Systeme Electric AtlasDesign ATN000143 5ШТ","expense":1037.72,"clicks":40,"views":4936},{"sku":"4008019289","name":"Розетка двойная внутренняя с заземлением Шнайдер (Systeme Electric) Art Gallery , цвет черный карбон","expense":994.41,"clicks":69,"views":4792},{"sku":"1764987393","name":"Розетка двойная IP44 Белый с заземлением защитные шторки в сборе Systeme Electric скрытой установки Glossa 16А в сбое GSL000147 комплект 2шт.","expense":987.25,"clicks":113,"views":7019},{"sku":"830474039","name":"Выключатель одноклавишный встраиваемый Systeme Schneider Electric AtlasDesign белый с антибактериальным покрытием 2шт","expense":862.1,"clicks":104,"views":7893},{"sku":"1539972979","name":"Пакеты фасовочные 24*37см., 10 мкм. 3600 шт.","expense":818.87,"clicks":65,"views":5375},{"sku":"3995132752","name":"Выключатель света одноклавишный внутренний Шнайдер (Systeme Electric) Art Gallery , цвет черный 2 шт","expense":812.07,"clicks":47,"views":4492},{"sku":"1447562723","name":"Розетка черная (карбон) с заземлением Systeme (Schneider) Electric AtlasDesign комплект 10шт. 16А механизм ATN001043","expense":765.8,"clicks":35,"views":4120},{"sku":"1540283550","name":"Розетка грифель с заземлением Systeme (Schneider) Electric AtlasDesign 16А механизм ATN000743","expense":688.29,"clicks":102,"views":5911},{"sku":"1244071990","name":"Розетка белая с заземлением и шторками Systeme (Schneider) Electric AtlasDesign 16А комплект 10шт. механизм ATN000145","expense":659.25,"clicks":36,"views":4344},{"sku":"3995122688","name":"Выключатель одноклавишный с подсветкой Шнайдер (Systeme Electric) Art Gallery внутренний, белый","expense":653.97,"clicks":100,"views":3771},{"sku":"827126712","name":"Одноклавишный выключатель с рамкой Systeme Schneider Electric AtlasDesign, цвет черный карбон","expense":583.56,"clicks":58,"views":5389}],"zero_orders_total_n":207,"zero_orders_total_spend":48484.63,"totals_60d":{"sku_total_expense":2476476.69,"camp_total_expense":2538903.14,"promo_total_expense":63014.05,"n_sku":754,"n_days":60,"n_campaigns":112}};
+const f0=n=>Math.round(n).toLocaleString('ru-RU');
+const money=n=>f0(n)+' ₽';
+const mi='−';
+const p1=n=>n==null?'—':n.toFixed(1).replace('.',',')+'%';
+const cls=(n,inv)=>{if(n==null)return'';const p=inv?-n:n;return p>=0?'pos':'neg';};
+const dd=s=>{const p=s.split('-');return +p[2]+'.'+p[1];};
+
+function winRow(key,label){
+ const w=D.windows[key];
+ return `<tr><td>${label}<br><span class="dim" style="font-size:11px">${dd(w.date_from)}–${dd(w.date_to)}.08</span></td>
+ <td>${w.days}</td><td>${money(w.total_spend)}</td>
+ <td class="adsc">${money(w.clicks_spend)}</td>
+ <td class="promoc">${w.promo_spend?money(w.promo_spend):'—'}</td>
+ <td>${f0(w.clicks_n)}</td><td>${w.avg_cpc.toFixed(2).replace('.',',')} ₽</td>
+ <td>${w.n_sku_with_spend}</td><td>${w.n_sku_zero_orders}</td>
+ <td class="dim">${money(w.zero_orders_spend)}</td>
+ <td>${f0(w.sku_orders)}</td><td>${money(w.sku_orderedSum)}</td>
+ <td class="${cls(w.drr,true)}">${p1(w.drr)}</td></tr>`;
+}
+document.getElementById('tbWin').innerHTML = winRow('before','ДО') + winRow('after','ПОСЛЕ')+
+ `<tr class="tot"><td colspan="2">Изменение</td>
+  <td class="${cls(D.windows.after.total_spend-D.windows.before.total_spend,true)}">${mi}${f0(Math.abs(D.windows.after.total_spend-D.windows.before.total_spend))} (${p1((D.windows.after.total_spend/D.windows.before.total_spend-1)*100)})</td>
+  <td class="${cls(D.windows.after.clicks_spend-D.windows.before.clicks_spend,true)}">${mi}${f0(Math.abs(D.windows.after.clicks_spend-D.windows.before.clicks_spend))} (${p1((D.windows.after.clicks_spend/D.windows.before.clicks_spend-1)*100)})</td>
+  <td colspan="2" class="dim">новая статья</td>
+  <td colspan="3" class="dim"></td>
+  <td class="dim">${D.windows.after.sku_orders-D.windows.before.sku_orders>=0?'+':''}${D.windows.after.sku_orders-D.windows.before.sku_orders}</td>
+  <td class="dim">${p1((D.windows.after.sku_orderedSum/D.windows.before.sku_orderedSum-1)*100)}</td>
+  <td class="pos">${p1(D.windows.after.drr-D.windows.before.drr)} пп</td></tr>`;
+
+document.getElementById('tbDaily').innerHTML = D.daily_trend.map(r=>{
+ const pct = r.total? (r.promo_spend/r.total*100):0;
+ return `<tr><td>${dd(r.date)}</td><td>${money(r.total)}</td>
+ <td class="adsc">${money(r.clicks_spend)}</td>
+ <td class="promoc">${r.promo_spend?money(r.promo_spend):'—'}</td>
+ <td>${r.promo_spend?p1(pct):'—'}</td>
+ <td>${f0(r.clicks_n)}</td><td>${r.promo_clicks?f0(r.promo_clicks):'—'}</td>
+ <td>${r.promo_views?f0(r.promo_views):'—'}</td></tr>`;
+}).join('');
+
+document.getElementById('tbWeekly').innerHTML = D.weekly.map((w,i)=>{
+ const partial = w.days_real && w.days_real<w.days;
+ const cmt = partial
+   ? `Неполная неделя — только ${w.days_real} из ${w.days} дней (данные обрываются 20.08). Расход и ДРР за эти дни, не пересчитывать на полную неделю.`
+   : (i===D.weekly.length-2 ? 'Последняя полная неделя перед запуском «оплаты за заказ» (15.08).' : '');
+ return `<tr class="${partial?'est':''}"><td>${dd(w.beg)}–${dd(w.end)}${partial?' <span class="dim">('+w.days_real+' дн)</span>':''}</td>
+ <td>${money(w.expense)}</td><td>${money(w.orderedSum)}</td>
+ <td class="${cls(w.drr,true)}">${p1(w.drr)}</td><td>${f0(w.orders)}</td><td>${f0(w.clicks)}</td>
+ <td class="cmtcol">${cmt}</td></tr>`;
+}).join('');
+
+document.getElementById('tbTopSpend').innerHTML = D.top_spend.map(r=>
+ `<tr class="${r.drr>40?'anom':''}"><td>${r.name}</td><td class="dim">${r.sku}</td>
+ <td class="adsc">${money(r.expense)}</td><td>${f0(r.orders)}</td><td>${money(r.orderedSum)}</td>
+ <td class="${cls(r.drr,true)}">${p1(r.drr)}</td><td class="dim">${f0(r.clicks)}</td></tr>`).join('');
+
+document.getElementById('tbTopDrr').innerHTML = D.top_drr.map(r=>
+ `<tr class="${r.drr>200?'anom':''}"><td>${r.name}</td><td class="dim">${r.sku}</td>
+ <td class="adsc">${money(r.expense)}</td><td>${money(r.orderedSum)}</td><td>${f0(r.orders)}</td>
+ <td class="neg">${p1(r.drr)}</td></tr>`).join('');
+
+document.getElementById('tbZero').innerHTML = D.zero_orders_top.map(r=>
+ `<tr><td>${r.name}</td><td class="dim">${r.sku}</td>
+ <td class="adsc">${money(r.expense)}</td><td>${f0(r.clicks)}</td><td class="dim">${f0(r.views)}</td></tr>`).join('');
+document.getElementById('zeroNote').textContent =
+ `Всего за 60 дней: ${D.zero_orders_total_n} товаров с расходом и нулевыми заказами, суммарно `+
+ money(D.zero_orders_total_spend)+` (`+p1(D.zero_orders_total_spend/D.totals_60d.sku_total_expense*100)+
+ ` от всего рекламного бюджета за период). Показаны первые 20 по расходу.`;
+
+function show(k,btn){
+ ['wk','sp','dr','zo'].forEach(x=>document.getElementById('tab-'+x).classList.toggle('hide',x!==k));
+ document.querySelectorAll('.tabs button').forEach(b=>b.classList.remove('on'));
+ btn.classList.add('on');
+}
+</script>
+</body>
+</html>
