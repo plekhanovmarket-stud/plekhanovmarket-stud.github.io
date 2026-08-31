@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ozon — Июль vs Август 2026</title>
+<style>
+:root{
+  --bg:#f7f7f5; --card:#ffffff; --ink:#0b0b0b; --ink2:#52514e; --muted:#898781;
+  --line:#e4e3dd; --pos:#0a7d34; --neg:#c0392b; --accent:#1c5cab; --warnbg:#fff8e6; --warnln:#e8c56a;
+}
+@media (prefers-color-scheme: dark){
+  :root{--bg:#0e0e0d;--card:#1a1a19;--ink:#fff;--ink2:#c3c2b7;--muted:#8a8880;--line:#2c2c2a;
+        --pos:#4ec46e;--neg:#e87b6f;--accent:#7fb0f0;--warnbg:#2a2415;--warnln:#5c4d20;}
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1400px;margin:0 auto;padding:26px 18px 70px}
+h1{font-size:23px;margin:0 0 3px;letter-spacing:-.01em}
+.sub{color:var(--ink2);font-size:13.5px;margin:0 0 26px}
+h2{font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);
+   margin:34px 0 12px;font-weight:700}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
+@media(max-width:480px){.tiles{grid-template-columns:1fr}}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 17px}
+.tile .cap{font-size:12px;color:var(--muted);margin-bottom:9px;line-height:1.35}
+.tile .big{font-size:27px;font-weight:700;letter-spacing:-.02em;line-height:1.1}
+.tile .big.small{font-size:20px}
+.tile .sup{font-size:12.5px;color:var(--ink2);margin-top:7px;line-height:1.45}
+.tile.wait{background:var(--warnbg);border-color:var(--warnln)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+table{width:100%;border-collapse:collapse;font-size:12.2px}
+th,td{padding:7px 5px;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+th{font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);
+   font-weight:700;border-bottom:1px solid var(--line);background:var(--card);position:sticky;top:0}
+td{border-bottom:1px solid var(--line)}
+tr:last-child td{border-bottom:none}
+th:first-child,td:first-child{text-align:left}
+tr.tot td{font-weight:700;background:color-mix(in srgb,var(--accent) 7%,transparent)}
+tr.dim2 td{color:var(--muted);font-style:italic}
+.pos{color:var(--pos);font-weight:600}
+.neg{color:var(--neg);font-weight:600}
+.dim{color:var(--muted)}
+.scroll{overflow-x:auto}
+.note{font-size:12.5px;color:var(--ink2);line-height:1.65;margin:11px 2px 0}
+.note b{color:var(--ink)}
+.flag{background:var(--warnbg);border:1px solid var(--warnln);border-radius:10px;
+      padding:13px 15px;font-size:13px;line-height:1.6;color:var(--ink2);margin-top:13px}
+.flag b{color:var(--ink)}
+.flag.bad{background:color-mix(in srgb,var(--neg) 9%,var(--card));border-color:var(--neg)}
+.foot{font-size:11.5px;color:var(--muted);line-height:1.7;border-top:1px solid var(--line);
+      margin-top:34px;padding-top:14px}
+.pagenav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.pagenav a{border:1px solid var(--line);background:var(--card);color:var(--ink2);
+  padding:7px 13px;border-radius:8px;font-size:12.5px;text-decoration:none;white-space:nowrap}
+.pagenav a:hover{border-color:var(--accent);color:var(--accent)}
+.pagenav a.on{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="pagenav"><a href="index.html">Обзор</a><a href="1_Общие_показатели.html">1. API</a><a href="2_Партнёрская.html">2. Прибыль</a><a href="3_Реклама.html">3. Реклама</a><a href="4_Топ_локомотивов_прибыли.html">4. Топ прибыли</a><a href="5_Слабая_маржа.html">5. Слабая маржа</a><a href="6_Июль_vs_Август_2026.html" class="on">6. Июль vs Август</a></div>
+
+<h1>Ozon — Июль vs Август 2026</h1>
+<p class="sub">Прогон 31.08.2026, файлы данных сформированы ~11:40–11:45 · коммит ozon-data 07:45:47 UTC
+(«Прогон 2026-08-31: 12/12 ок, 0 упало, 0 пусто, закупка свежая») · источник — репозиторий ozon-data, папка data/</p>
+
+<div class="tiles">
+  <div class="tile">
+    <div class="cap">Продажи, июль<br>(кассовый отчёт Ozon, 31 день)</div>
+    <div class="big">18 147 043 ₽</div>
+  </div>
+  <div class="tile">
+    <div class="cap">Продажи, август<br>1–30 (31-е ещё не закрыт)</div>
+    <div class="big neg">13 980 350 ₽</div>
+    <div class="sup">−23,0% к июлю</div>
+  </div>
+  <div class="tile">
+    <div class="cap">Комиссия Ozon от продаж</div>
+    <div class="big small">41,0% → 41,4%</div>
+    <div class="sup">июль → август, почти без изменений</div>
+  </div>
+  <div class="tile">
+    <div class="cap">Возвраты от продаж</div>
+    <div class="big small">2,75% → 3,15%</div>
+    <div class="sup">июль → август, небольшой рост</div>
+  </div>
+</div>
+
+<div class="flag bad">
+  <b>Важная оговорка про июль.</b> В недельном периоде 27–31 июля кассовый отчёт Ozon показывает
+  разовую корректировку в статье «прочие услуги» на <b>+9 479 830 ₽</b> — сумма нетипичная (обычные
+  недели — от −35 тыс до −430 тыс ₽) и той же природы, что и «разовая техническая корректировка
+  комиссии Ozon» весом ~8,4 млн ₽, которую уже фиксировала страница 2 «Прибыль» для той же недели.
+  Это не наша выручка и не расход — похоже на технический возврат/переброску на стороне Ozon.
+  Мы не убираем её из отчёта Ozon (это реальная запись в API), но <b>исключаем её при расчёте
+  «чистого движения денег»</b>, чтобы не завышать июль искусственно — иначе получилось бы, что
+  июль вырос к августу, хотя по продажам он выше на 23%, а не ниже.
+</div>
+
+<h2>Движение денег по месяцам (кассовый отчёт Ozon, /v1/finance/cash-flow-statement/list)</h2>
+<div class="card scroll">
+<table><thead><tr>
+  <th>Месяц</th><th>Продажи<br>(заказы)</th><th>Возвраты</th><th>Комиссия<br>Ozon</th>
+  <th>Прочие<br>услуги</th><th>Логистика<br>и доставка</th><th>Кредиты</th>
+  <th>Чистое движение<br>денег</th>
+</tr></thead>
+<tbody>
+<tr><td>Июль (1–31, как в отчёте Ozon)</td><td>18 147 043</td><td class="neg">−498 750</td>
+  <td class="neg">−7 440 524</td><td class="pos">+9 586 717 *</td><td class="neg">−1 903 478</td>
+  <td class="dim">—</td><td>17 891 007 *</td></tr>
+<tr class="tot"><td>Июль без разовой коррекции *</td><td>18 147 043</td><td class="neg">−498 750</td>
+  <td class="neg">−7 440 524</td><td class="pos">+106 887</td><td class="neg">−1 903 478</td>
+  <td class="dim">—</td><td>8 411 178</td></tr>
+<tr class="tot"><td>Август (1–30, полные дни)</td><td>13 980 350</td><td class="neg">−440 931</td>
+  <td class="neg">−5 791 391</td><td class="neg">−303 376</td><td class="neg">−1 297 476</td>
+  <td class="dim">—</td><td>6 147 176</td></tr>
+<tr class="dim2"><td>Август, 31-е число (в процессе)</td><td>69 360</td><td class="neg">−1 324</td>
+  <td class="neg">−32 036</td><td class="dim">0</td><td class="dim">0</td>
+  <td class="dim">—</td><td>35 999</td></tr>
+</tbody>
+</table>
+</div>
+<p class="note">
+  <b>Как читать.</b> «Продажи (заказы)», «возвраты», «комиссия», «прочие услуги» (хранение, эквайринг,
+  доставка до потребителя и др.) и «логистика и доставка» — прямые поля кассового отчёта Ozon
+  (<code>orders_amount</code>, <code>returns_amount</code>, <code>commission_amount</code>,
+  <code>services_amount</code>, <code>item_delivery_and_return_amount</code>), просуммированные
+  по неделям, которые целиком укладываются в месяц (недели у Ozon не пересекают границу месяца —
+  разбивка получилась точной, без деления по дням внутри недели). Это движение денег, а не прибыль:
+  здесь нет закупочной себестоимости, НДС и кредитов — методику полной прибыли см. на странице 2.
+  «31-е число» показано отдельно и <b>не входит</b> в итог за август — день ещё шёл на момент прогона.
+  <br><br>
+  <b>Продажи июля сверены независимо:</b> то же число (18 147 043 ₽) уже фигурирует на странице 2
+  «Прибыль» как «Июль» — два независимых прогона совпали до рубля. Комиссия за август (5 791 391 ₽)
+  также совпала до рубля с суммой по SKU из отчёта реализации (<code>sku_realization_32d.json</code>,
+  дни 01–30 августа) — это независимая проверка тем же методом, что уже применялся на странице 2.
+</p>
+
+<h2>Реклама — фактическое окно 02.07–30.08 (60 дней)</h2>
+<div class="tiles">
+  <div class="tile wait">
+    <div class="cap">Дней с данными по кампаниям в окне</div>
+    <div class="big small">7 из 60</div>
+    <div class="sup">все 7 — в августе (20, 24, 25, 26, 27, 29, 30); в июле данных нет вообще</div>
+  </div>
+  <div class="tile">
+    <div class="cap">Расход на клики (CPC)<br>за известные 7 дней</div>
+    <div class="big small">158 579 ₽</div>
+  </div>
+  <div class="tile">
+    <div class="cap">Заказано (атрибуция CPC)<br>за известные 7 дней</div>
+    <div class="big small">1 384 937 ₽</div>
+    <div class="sup">1 201 заказов, 21 310 кликов, 817 029 показов</div>
+  </div>
+  <div class="tile">
+    <div class="cap">ДРР за известные 7 дней</div>
+    <div class="big small">11,45%</div>
+  </div>
+</div>
+<p class="note">
+  <b>Почему не «60 дней».</b> Источник <code>ads_sku_60d.json</code> запрашивает окно 02.07–30.08
+  (60 дней), но папка ежедневных снимков кампаний (<code>_daily/camp_*.json</code>) на момент прогона
+  содержит только 7 файлов — все из конца августа. 53 дня окна, включая <b>весь июль</b>, физически
+  отсутствуют в данных: не подставляем за них 0 и не досчитываем — расход на рекламу за июль
+  и за первые 19 дней августа здесь <b>прочерк</b>, оценить нельзя. Цифры выше — это не «расход
+  за 60 дней», а расход за те 7 дней, что реально есть.
+  Отдельно источник <code>ads_sku_60d.json</code> отмечает: «оплата за заказ» (CPO) по SKU в этом
+  срезе не отражена — только кампании «оплата за клик».
+</p>
+<p class="note">
+  <b>Сверка другим методом (не полная замена, другая методика).</b> В отчёте начислений
+  (<code>accrual_daily_summary.json</code>) есть статьи «PayPerClick» и «Promotion» почти за весь
+  август (30 из 31 дня, нет только 31-го): в сумме −1 069 495 ₽. Это не то же самое, что расход CPC
+  выше (другая методика — списание по факту начисления, а не отчёт кампаний, и включает не только клики),
+  но по порядку величины подтверждает, что реклама в августе — это скорее ~1 млн ₽, чем 159 тыс ₽.
+  За июль этот же источник даёт только 2 дня (30–31 июля) — недостаточно для месячной оценки,
+  тоже прочерк.
+</p>
+
+<h2>Закупка (себестоимость)</h2>
+<p class="note">
+  Точная закупочная себестоимость по SKU (<code>sku_realization_32d.json</code>) есть только за
+  32-дневное окно 30 июля – 30 августа (726 SKU, из них 6 — без известной себестоимости), общей
+  суммой <b>3 822 712 ₽</b> (26,1% от продаж внутри этого же окна). Разбить эту сумму отдельно на
+  июль и на август нельзя — в окне всего один день июля (30.07), остальные 31 — август, а закупка
+  в источнике посчитана суммарно по каждому SKU за всё окно, не по дням. Показывать «июльскую»
+  и «августовскую» части этой цифры отдельно значит выдумывать разбивку — поэтому для обоих
+  месяцев по отдельности здесь <b>прочерк</b>, а есть только общая сумма за окно.
+  Доля 26,1% близка к 26,34%, которую страница 2 использует как оценку закупки для месяцев без точных
+  данных, — совпадение независимо подтверждает эту оценку.
+</p>
+
+<h2>Что осталось прочерком и почему</h2>
+<div class="card scroll">
+<table><thead><tr><th>Показатель</th><th>Июль</th><th>Август</th><th class="cmtcol" style="text-align:left">Почему</th></tr></thead>
+<tbody>
+<tr><td>Кредиты Ozon</td><td class="dim">—</td><td class="dim">—</td>
+  <td style="text-align:left;white-space:normal">В данных ozon-data нет отчёта по кредитам/займам —
+  источника нет, ни на один из месяцев. Не считаем по старой методике «фиксированная сумма в неделю»
+  (страница 2), потому что для неё нужен файл, которого здесь нет.</td></tr>
+<tr><td>Расход на рекламу, полный месяц</td><td class="dim">—</td><td class="dim">частично, 7 из 30–31 дня</td>
+  <td style="text-align:left;white-space:normal">Ежедневные снимки кампаний есть только за 7 дней
+  конца августа — окно 02.07–30.08 покрыто на 7/60 дней.</td></tr>
+<tr><td>Закупка отдельно по месяцу</td><td class="dim">—</td><td class="dim">—</td>
+  <td style="text-align:left;white-space:normal">Источник считает закупку суммарно за 32-дневное окно
+  по каждому SKU, без разбивки по дням — разнести на месяцы нельзя, не выдумывая доли.</td></tr>
+<tr><td>НДС и чистая прибыль</td><td class="dim">—</td><td class="dim">—</td>
+  <td style="text-align:left;white-space:normal">Не пересчитываем — методика (ставка НДС, кредиты)
+  завязана на внешний файл сверки, которого нет в ozon-data. Полную цепочку прибыли для других окон
+  см. на странице 2.</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="foot">
+  <b>Источники (ozon-data/data/).</b> <code>dashboard_update.json → cashflow</code> — Ozon Seller API
+  <code>/v1/finance/cash-flow-statement/list</code>, по неделям, суммировано по месяцам.
+  <code>ads_sku_60d.json</code> и <code>_daily/camp_*.json</code>, <code>_daily/sku_*.json</code> —
+  Performance API, кампании «оплата за клик» по SKU. <code>accrual_daily_summary.json</code> —
+  начисления Ozon по дням. <code>sku_realization_32d.json</code> — <code>/v1/finance/realization/by-day</code>
+  + закупочные цены (файл себестоимости обновлён 2026-08-20, на момент прогона не устарел).
+  <br>
+  <b>Ограничения.</b> Это движение денег и известный расход/закупка, а не полная чистая прибыль —
+  для неё не хватает кредитов, НДС и части рекламы. Все прочерки в этом отчёте — не нули: это
+  «известного значения нет», из значений явно исключены, а не занижены нулём.
+</div>
+
+</div>
+</body>
+</html>
