@@ -37,7 +37,7 @@ h2{font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:var(--mute
 /* ── ТАБЛИЦЫ ───────────────────────────────────── */
 .card{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
 table{width:100%;border-collapse:collapse;font-size:12.2px}
-th,td{padding:7px 5px;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+th,td{padding:6px 4px;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
 th{font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);
    font-weight:700;border-bottom:1px solid var(--line);background:var(--card);
    position:sticky;top:0}
@@ -172,20 +172,20 @@ td.katya{font-weight:600}
 
 <div id="tab-d" class="card scroll">
   <table><thead><tr>
-    <th>Дата</th><th>День</th><th>Продажи</th><th>Реклама</th><th>Прочее Ozon</th><th>Закупка</th>
+    <th>Дата</th><th>Продажи</th><th>Реклама</th><th>Прочее Ozon</th><th>Закупка</th>
     <th>Прибыль<br>до кредитов и НДС</th>
-    <th>Кредиты<br><span style="font-weight:400;text-transform:none;font-size:10px">оценка — недельный кредит ÷ 7</span></th>
-    <th class="katya">как у Кати<br><span style="font-weight:400;text-transform:none;font-size:10px">оценка — с кредитом (÷7), без НДС</span></th>
+    <th>Кредиты*</th>
+    <th class="katya">как у Кати*</th>
     <th>НДС</th><th>Чистая<br>прибыль</th><th>% прод.</th><th>% зак.</th>
   </tr></thead><tbody id="tbD"></tbody></table>
 </div>
 <p class="note" style="margin-top:6px">
-  <b>Кредит в дневной таблице — оценка,</b> не факт по дням: недельная сумма (152 336,33 ₽, факт из файла
-  Кати) распределена равномерно на все 7 дней недели (÷7 = 21 762,33 ₽/день), потому что реальная дата
-  списания внутри недели неизвестна, а показывать её только на одном дне создавало ложное впечатление,
-  что именно этот день катастрофический, а остальные «чистые». Точный факт по кредиту — на вкладках
-  «по неделям» и «по месяцам» (для месяцев — только там, где неделя Кати целиком внутри месяца), их
-  эта оценка не меняет.
+  <b>* Кредит в колонках «Кредиты» и «как у Кати» — оценка,</b> не факт по дням: недельная сумма
+  (152 336,33 ₽, факт из файла Кати) распределена равномерно на все 7 дней недели (÷7 = 21 762,33 ₽/день),
+  потому что реальная дата списания внутри недели неизвестна, а показывать её только на одном дне
+  создавало ложное впечатление, что именно этот день катастрофический, а остальные «чистые». Точный
+  факт по кредиту — на вкладках «по неделям» и «по месяцам» (для месяцев — только там, где неделя Кати
+  целиком внутри месяца), их эта оценка не меняет.
 </p>
 
 <div id="tab-w" class="card scroll hide">
@@ -207,7 +207,7 @@ td.katya{font-weight:600}
 </div>
 
 <div class="flag" id="monthFlag" style="display:none">
-  <b>Важно про месяцы.</b> Продажи и «начислено Ozon» — точные цифры за все месяцы. <b>Кредиты, «как у
+  <b>Важно про месяцы.</b> Продажи и «начислено Ozon» — точные цифры за все месяцы. <b>Кредиты* «как у
   Кати» и чистая прибыль</b> — «—» на всех месяцах: у Кати есть факт по кредиту только по календарным
   неделям (152 336,33 ₽/нед, с 20.07.2026), и НИ ОДИН месяц не покрыт этими неделями целиком (данные
   начинаются 20.07, значит уже июль накрыт лишь частично, а других полных месяцев в её данных пока
@@ -373,24 +373,23 @@ document.getElementById('kpiMargSub').textContent=marg===null?'нет источ
 const eR=document.getElementById('kpiRoi');eR.textContent=roi===null?'—':p1(roi)+'%';eR.className='big '+cls(roi);
 document.getElementById('kpiRoiSub').textContent=roi===null?'нет источника по кредитам':('на каждый ₽ в товаре — '+(roi/100).toFixed(2).replace('.',',')+' ₽');
 
-const estMark='<br><span class="dim" style="font-size:9.5px">оценка, ÷7 на неделю</span>';
 document.getElementById('tbD').innerHTML=D.days.map(r=>{const dd=r.date.split('-');
- return `<tr><td>${+dd[2]}.${dd[1]}</td><td class="dim">${r.wd}</td><td>${f0(r.sales)}</td>
+ return `<tr><td>${+dd[2]}.${dd[1]}</td><td>${f0(r.sales)}</td>
  <td class="adsc">${adsCell(r.ads,r.sales)}</td><td class="dim">${mi}${f0(r.other)}</td>
  <td class="dim">${mi}${f0(r.zakup)}</td><td class="${cls(r.profit_before)}">${f0(r.profit_before)}</td>
- <td class="loanc">${signed(r.loan)}${estMark}</td>
- <td class="katya ${cls(r.after_kred)}">${f0(r.after_kred)}${estMark}</td>
+ <td class="loanc">${signed(r.loan)}*</td>
+ <td class="katya ${cls(r.after_kred)}">${f0(r.after_kred)}*</td>
  <td class="dim">${vatFmt(r.vat)}</td><td>${box(r.net)}</td>
  <td class="${cls(r.net)}">${p1(r.marg)}</td><td class="${cls(r.net)}">${p1(r.roi)}</td></tr>`;
 }).join('')+(()=>{const s=k=>D.days.reduce((a,r)=>a+r[k],0), so=k=>sumOrNull(D.days,k);
- return `<tr class="tot"><td colspan="2">Итого ${dN} дней</td><td>${f0(s('sales'))}</td>
+ return `<tr class="tot"><td>Итого ${dN} дней</td><td>${f0(s('sales'))}</td>
  <td class="adsc">${adsCell(s('ads'),s('sales'))}</td><td>${mi}${f0(s('other'))}</td><td>${mi}${f0(s('zakup'))}</td>
  <td class="${cls(s('profit_before'))}">${f0(s('profit_before'))}</td>
- <td class="loanc">${signed(so('loan'))}${estMark}</td>
- <td class="katya ${cls(so('after_kred'))}">${f0(so('after_kred'))}${estMark}</td>
+ <td class="loanc">${signed(so('loan'))}*</td>
+ <td class="katya ${cls(so('after_kred'))}">${f0(so('after_kred'))}*</td>
  <td>${vatFmt(s('vat'))}</td><td>${box(so('net'))}</td>
  <td>${p1(div(so('net'),s('sales')))}</td><td>${p1(div(so('net'),s('zakup')))}</td></tr>
- <tr><td colspan="13" class="dim" style="text-align:left;font-size:11px;padding:6px 8px">
+ <tr><td colspan="12" class="dim" style="text-align:left;white-space:normal;font-size:11px;padding:6px 8px">
  «Итого» здесь — прямая сумма дневных оценок (не из недельной вкладки), поэтому чистая прибыль по дням
  (${money(so('net'))}) немного отличается от точного факта по неделям (${money(sumOrNull(D.weeks,'net'))}):
  разница — известный и уже описанный в комментарии к неделе 24–30.08 остаточный разрыв между дневным и
@@ -424,7 +423,7 @@ document.getElementById('tbM').innerHTML=D.months.map(m=>{if(!m.exact)anyEst=tru
  return `<tr class="${m.exact?'':'est'}"><td>${m.name}</td><td>${f0(m.sales)}</td>
  <td class="adsc">${adsCell(m.ads,m.sales)}</td><td class="dim">${mi}${f0(m.other)}</td>
  <td class="dim">${mi}${f0(m.zakup)}</td><td class="${m.exact?cls(m.profit_before):''}">${f0(m.profit_before)}</td>
- <td class="loanc">${signed(m.loan)}${m.credit_note?'<br><span class="dim" style="font-size:10px">'+m.credit_note+'</span>':''}</td>
+ <td class="loanc">${signed(m.loan)}${m.credit_note?'*':''}</td>
  <td class="katya ${cls(m.after_kred)}">${f0(m.after_kred)}</td>
  <td class="dim">${vatFmt(m.vat)}</td><td>${box(m.net)}</td>
  <td class="payc">${f0(m.payout)}</td>
