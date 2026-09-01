@@ -95,6 +95,7 @@ th.cmtcol{color:var(--muted)}
 </div>
 
 <h2>Окна ДО / ПОСЛЕ — сравнение</h2>
+<div class="tiles" style="margin-bottom:14px" id="drrBigTiles"></div>
 <div class="card scroll">
 <table><thead><tr>
  <th>Окно</th><th>Дней</th><th>Расход<br>всего</th><th>из них<br>клики</th><th>из них<br>оплата за заказ</th>
@@ -102,6 +103,10 @@ th.cmtcol{color:var(--muted)}
  <th>Бюджет<br>на них</th><th>Заказы,<br>шт</th><th>Заказано<br>на сумму</th><th>ДРР</th>
 </tr></thead><tbody id="tbWin"></tbody></table>
 </div>
+<p class="note">
+  <b>Окна расхода и заказанной суммы совпадают день в день</b> — оба числа идут из одного файла
+  (<code>ads_sku_60d.json</code>), один и тот же период, рассинхрона по датам нет.
+</p>
 <p class="note">
   <b>Как считаю.</b> «Заказы» и «ДРР» посчитаны только по кликовой части — это единственное, что
   Ozon показывает по товарам. «ДРР» = расход / «Заказано на сумму» (это официальная метрика
@@ -136,7 +141,7 @@ th.cmtcol{color:var(--muted)}
 </div>
 
 <div id="tab-wk" class="card scroll">
-  <table><thead><tr><th>Неделя</th><th>Расход</th><th>Заказано на сумму</th><th>ДРР</th><th>Заказы, шт</th><th>Клики, шт</th><th class="cmtcol">Комментарий</th></tr></thead>
+  <table><thead><tr><th>Неделя</th><th>Расход</th><th>Заказано на сумму</th><th>Расход−Заказано, ₽</th><th>ДРР, %</th><th>Заказы, шт</th><th>Клики, шт</th><th class="cmtcol">Комментарий</th></tr></thead>
   <tbody id="tbWeekly"></tbody></table>
 </div>
 
@@ -230,12 +235,8 @@ th.cmtcol{color:var(--muted)}
 </div>
 
 <div class="foot">
-  Источники: Ozon Performance API — асинхронный отчёт по SKU (кампании «оплата за клик»,
-  advObjectType=SKU), собран по дням в <code>_daily/sku_2026-{07-02…08-30}.json</code> — 60/60 дней,
-  без пропусков (<code>ads_sku_60d.json</code>). Кампания «Оплата за заказ — все товары»
-  (ALL_SKU_PROMO, id 35913206) — из <code>_daily/camp_2026-*.json</code>, доступно 7 из 60 дней.
-  Артикулы и названия — <code>live_snapshot.json</code>. CPO-отчёт по SKU (ALL_SKU_PROMO
-  orders/products) в этом прогоне не сохранён (см. страницы 4/5, «Как считаю»).
+  Источники: Ozon Performance API, клики по SKU — <code>ads_sku_60d.json</code> (60/60 дней) ·
+  «Оплата за заказ» — <code>_daily/camp_*.json</code> (7 из 60 дней) · названия — <code>live_snapshot.json</code>.
 </div>
 
 </div>
@@ -271,6 +272,18 @@ document.getElementById('tbWin').innerHTML = winRow('before','Начало ок�
   <td class="dim">${p1((D.windows.after.sku_orderedSum/D.windows.before.sku_orderedSum-1)*100)}</td>
   <td class="pos">${p1(D.windows.after.drr-D.windows.before.drr)} пп</td></tr>`;
 
+function drrTile(w,label){
+ const gap = w.clicks_spend - w.sku_orderedSum;
+ return `<div class="tile">
+  <div class="cap">${label}<br>${dd(w.date_from)}–${dd(w.date_to)}</div>
+  <div class="big" style="font-size:22px">${money(w.clicks_spend)} <span class="dim" style="font-size:14px">расход</span></div>
+  <div class="big pos" style="font-size:28px">${p1(w.drr)}</div>
+  <div class="sup">ДРР = расход / заказано на сумму (${money(w.sku_orderedSum)}). Расход − заказано: ${signed_or_plus(gap)} ₽ (реклама уже принесла заказов больше, чем на неё потрачено)</div>
+ </div>`;
+}
+function signed_or_plus(n){ return (n>=0? '+':'') + f0(n); }
+document.getElementById('drrBigTiles').innerHTML = drrTile(D.windows.before,'Начало окна') + drrTile(D.windows.after,'Конец окна');
+
 document.getElementById('tbDaily').innerHTML = D.daily_trend.map(r=>{
  const pct = r.total? (r.promo_spend/r.total*100):0;
  return `<tr><td>${dd(r.date)}</td><td>${money(r.total)}</td>
@@ -288,7 +301,8 @@ document.getElementById('tbWeekly').innerHTML = D.weekly.map((w,i)=>{
    : (i===D.weekly.length-2 ? 'Последняя полная неделя перед запуском «оплаты за заказ» (15.08).' : '');
  return `<tr class="${partial?'est':''}"><td>${dd(w.beg)}–${dd(w.end)}${partial?' <span class="dim">('+w.days_real+' дн)</span>':''}</td>
  <td>${money(w.expense)}</td><td>${money(w.orderedSum)}</td>
- <td class="${cls(w.drr,true)}">${p1(w.drr)}</td><td>${f0(w.orders)}</td><td>${f0(w.clicks)}</td>
+ <td class="dim">${signed_or_plus(w.expense-w.orderedSum)}</td>
+ <td class="${cls(w.drr,true)}" style="font-weight:700;font-size:14px">${p1(w.drr)}</td><td>${f0(w.orders)}</td><td>${f0(w.clicks)}</td>
  <td class="cmtcol">${cmt}</td></tr>`;
 }).join('');
 

@@ -84,6 +84,8 @@ a.navlink:hover{text-decoration:underline}
   padding:7px 13px;border-radius:8px;font-size:12.5px;text-decoration:none;white-space:nowrap}
 .pagenav a:hover{border-color:var(--accent);color:var(--accent)}
 .pagenav a.on{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600}
+.nmc{text-align:left!important;white-space:normal!important;min-width:220px;max-width:320px;line-height:1.35}
+.chg{color:#c98a2a}
 </style>
 </head>
 <body>
@@ -93,6 +95,9 @@ a.navlink:hover{text-decoration:underline}
 
 <h1>Ozon — общие показатели по API</h1>
 <p class="sub">Живой снимок кабинета на 2026-09-01 10:50 · 2169 товаров в каталоге</p>
+<p class="sub" style="font-size:15px;font-weight:700;color:var(--ink);margin-top:-16px">
+  Последний успешный прогон: 01.09.2026, 11:00 (начат 10:50, занял 10 мин) — 12 из 12 скриптов ок, 0 упало.
+</p>
 
 <div class="tiles">
   <div class="tile">
@@ -130,6 +135,43 @@ a.navlink:hover{text-decoration:underline}
     <div class="big">409</div>
     <div class="sup">активна: 87 · выключена: 35 · архив: 287</div>
   </div>
+</div>
+
+<h2>План на неделю — 20 SKU с максимальным эффектом</h2>
+<p class="note" style="margin-top:0">
+  Топ-20 по сумме «потеря за 32 дня» среди действий «Поднять цену» и «Починить рекламу» (стоки &gt; 0,
+  411 позиций с ненулевой потерей в сумме дают 586 234 ₽/32 дня, топ-20 — 225 937 ₽ из них). «Нет продаж»
+  сюда не входит — там иначе считается потеря, это отдельно на странице 5. ⚡ — действие изменилось
+  с прошлого прогона планировщика (28.08.2026 → 01.09.2026; это не «вчера» в буквальном смысле — планировщик
+  не запускается каждый день, между прогонами были реформа комиссии и починка бага логистики, поэтому
+  почти весь каталог сменил действие; здесь показаны только те 2 из топ-20, что реально изменились).
+</p>
+<div class="card scroll">
+<table><thead><tr>
+ <th>SKU</th><th>Название</th><th>Действие</th><th>Текущая цена</th><th>Предлагаемая цена</th>
+ <th>Реклама</th><th>Потеря/32д</th>
+</tr></thead><tbody>
+<tr><td>1420847090</td><td class="nmc">Подрозетник шнайдер глубокий 10ШТ 68(65)х60 (коробка установочная) для сплошных стен (кирпич, бетон, пенобетон) Systeme Electric (ранее Schneider Electric)</td><td>Поднять цену</td><td>775 ₽</td><td>1 202 ₽</td><td>без изменений</td><td class="neg">41 264 ₽</td></tr>
+<tr><td>744311013</td><td class="nmc">Розетка встраиваемая двойная, для столешницы стены офисного стола, Atlas Design с раздвижными крышками</td><td>Починить рекламу</td><td>1 800 ₽</td><td>—</td><td>уменьшить</td><td class="neg">29 256 ₽</td></tr>
+<tr><td>1738119865</td><td class="nmc">Розетка двойная внутренняя с заземлением Systeme Schneider Electric ATLASDESIGN, 16А, цвет белый 2 шт</td><td>Починить рекламу</td><td>1 362 ₽</td><td>—</td><td>уменьшить</td><td class="neg">12 846 ₽</td></tr>
+<tr><td>929177473</td><td class="nmc">Розетка двойная влагозащищенная IP44 с крышкой с заземлением и защитными шторками Glossa Systeme(Schneider) Electric Белая GSL000147</td><td>Починить рекламу</td><td>1 755 ₽</td><td>—</td><td>уменьшить</td><td class="neg">11 838 ₽</td></tr>
+<tr><td>821456425</td><td class="nmc">Розетка накладная Systeme Electric BLANCA четверная без заземления, без штор, цвет ясень BLNRA000415</td><td>Починить рекламу</td><td>2 186 ₽</td><td>—</td><td>уменьшить</td><td class="neg">11 180 ₽</td></tr>
+<tr><td>1742647876</td><td class="nmc">Розетка бежевая без заземления Systeme (Schneider) Electric AtlasDesign 16А механизм ATN000241</td><td>Поднять цену</td><td>315 ₽</td><td>793 ₽</td><td>без изменений</td><td class="neg">10 830 ₽</td></tr>
+<tr><td>1454501897</td><td class="nmc">Пакеты фасовочные 600 шт., 24х37</td><td>Поднять цену</td><td>999 ₽</td><td>1 277 ₽</td><td>без изменений</td><td class="neg">10 638 ₽</td></tr>
+<tr><td>1785974671</td><td class="nmc">Розетка тройная (трехместная) наружная Systeme (Schneider) Electric Blanca ясень , с заземлением, 16А, 250В, без шторок SE BLNRA010315</td><td>Поднять цену</td><td>1 974 ₽</td><td>2 543 ₽</td><td>без изменений</td><td class="neg">10 160 ₽</td></tr>
+<tr><td>488988346</td><td class="nmc">Выключатель двухклавишный встраиваемый с рамкой Systeme Schneider Electric AtlasDesign, цвет белый</td><td>Починить рекламу</td><td>857 ₽</td><td>—</td><td>уменьшить</td><td class="neg">9 781 ₽</td></tr>
+<tr><td>2898878611 <span class="chg">⚡</span></td><td class="nmc">Розетка двойная встраиваемая с заземлением и рамкой Systeme Schneider Electric Atlas Design цвет черный карбон</td><td>Починить рекламу</td><td>2 800 ₽</td><td>—</td><td>уменьшить</td><td class="neg">9 344 ₽</td></tr>
+<tr><td>821453130</td><td class="nmc">Розетка двухместная без заземления Systeme Electric(Schneider Electric) BLANCA 16А 250В ясень BLNRA000215</td><td>Починить рекламу</td><td>1 327 ₽</td><td>—</td><td>уменьшить</td><td class="neg">8 633 ₽</td></tr>
+<tr><td>1438922989</td><td class="nmc">Изолента профессиональная ПВХ для проводов и проводки Systeme Schneider Electric цвет синий</td><td>Починить рекламу</td><td>273 ₽</td><td>—</td><td>уменьшить</td><td class="neg">7 535 ₽</td></tr>
+<tr><td>875404743</td><td class="nmc">Розетка Шнайдер Systeme Electric AtlasDesign черная (карбон) с заземлением со шторками с крышкой, 16А, IP20, механизм ATN001046</td><td>Починить рекламу</td><td>1 766 ₽</td><td>—</td><td>уменьшить</td><td class="neg">7 389 ₽</td></tr>
+<tr><td>2905344794</td><td class="nmc">Розетка двойная Бежевая глянцевая с заземлением Шнайдер Systeme (Schneider) Electric Atlas Design</td><td>Починить рекламу</td><td>1 416 ₽</td><td>—</td><td>уменьшить</td><td class="neg">7 312 ₽</td></tr>
+<tr><td>550332419 <span class="chg">⚡</span></td><td class="nmc">Выключатель одноклавишный встраиваемый Systeme Schneider Electric AtlasDesign, цвет белый 1 шт</td><td>Починить рекламу</td><td>299 ₽</td><td>—</td><td>уменьшить</td><td class="neg">7 160 ₽</td></tr>
+<tr><td>4008095638</td><td class="nmc">Розетка тройная с заземлением Шнайдер (Systeme Electric) Art Gallery внутренняя, песочная</td><td>Починить рекламу</td><td>3 663 ₽</td><td>—</td><td>уменьшить</td><td class="neg">6 448 ₽</td></tr>
+<tr><td>3123178722</td><td class="nmc">Розетка четверная(четырехместная) накладная с заземлением со шторками Systeme Electric(Schneider Electric) BLANCA 16А 250В Бежевый BLNRA011417</td><td>Поднять цену</td><td>1 581 ₽</td><td>2 070 ₽</td><td>без изменений</td><td class="neg">6 408 ₽</td></tr>
+<tr><td>3995123382</td><td class="nmc">Выключатель света одноклавишный внутренний Шнайдер (Systeme Electric) Art Gallery, цвет песочный</td><td>Починить рекламу</td><td>1 079 ₽</td><td>—</td><td>уменьшить</td><td class="neg">6 146 ₽</td></tr>
+<tr><td>566645063</td><td class="nmc">Розетка двойная черная без заземления Systeme (Schneider) Electric AtlasDesign 16А карбон ATN001022</td><td>Починить рекламу</td><td>1 816 ₽</td><td>—</td><td>уменьшить</td><td class="neg">5 908 ₽</td></tr>
+<tr><td>746138882</td><td class="nmc">Рамка для розетки и выключателя 3 поста Systeme Schneider Electric atlas design, цвет белый 1 шт</td><td>Починить рекламу</td><td>299 ₽</td><td>—</td><td>уменьшить</td><td class="neg">5 861 ₽</td></tr>
+</tbody></table>
 </div>
 
 <h2>Главная находка</h2>
@@ -174,14 +216,8 @@ a.navlink:hover{text-decoration:underline}
 
 
 <div class="foot">
-  <b>Источники.</b> POST /v3/product/list (постранично, весь каталог) → POST /v3/product/info/list
-  (цены, остатки по схемам, статус карточки, комиссия) → GET /v1/actions (акции кабинета) →
-  POST /api/client/token + GET /api/client/campaign (Performance API, рекламные кампании).
-  Все четыре вызова — только чтение, ничего не меняют в кабинете.<br>
-  <b>Ограничения.</b> (1) Это снимок одного момента времени, не окно — для трендов см. страницы 2–5.
-  (2) «Готов к продаже» — статус Ozon, означающий carточка прошла модерацию, но не видна покупателю;
-  подтверждено, что в этом снимке причина всегда нулевой остаток, а не что-то ещё. (3) У 2
-  карточек нет данных о комиссии (не включены в среднюю 46.3%).
+  Источники: /v3/product/list, /v3/product/info/list, /v1/actions, /api/client/campaign (только чтение) ·
+  снимок одного момента, не окно (тренды — страницы 2–5) · у 2 карточек нет данных о комиссии.
 </div>
 
 </div>
