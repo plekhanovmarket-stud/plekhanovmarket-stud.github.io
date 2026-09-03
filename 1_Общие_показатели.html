@@ -138,42 +138,14 @@ a.navlink:hover{text-decoration:underline}
 </div>
 
 <h2>План на неделю — 20 SKU с максимальным эффектом</h2>
-<p class="note" style="margin-top:0">
-  Планировщик v3, прогон 2026-09-03 (отдельно от снимка кабинета выше — тот датирован 01.09, здесь
-  своя, более свежая, дата пересчёта цен/рекламы). Топ-20 по сумме «потеря за 32 дня» среди действий
-  «Поднять цену» и «Починить рекламу» (стоки &gt; 0,
-  391 позиция с ненулевой потерей в сумме дают 449 926 ₽/32 дня, топ-20 — 155 146 ₽ из них). «Нет продаж»
-  сюда не входит — там иначе считается потеря, это отдельно на странице 5. Для «Починить рекламу»
-  колонка «Новая ставка рекламы» — конкретная рекомендация из живого запроса Performance API (страница 5):
-  либо снижение ставки (текущая → новая, ₽), либо «проверить карточку» — когда проблема не в ставке,
-  а в низкой конверсии (обоснование на странице 5).
+<p class="note" style="margin-top:0" id="planNote">
+  Загрузка…
 </p>
 <div class="card scroll">
 <table><thead><tr>
  <th>SKU</th><th>Название</th><th>Действие</th><th>Текущая цена</th><th>Новая ставка рекламы</th>
  <th>Рекомендуемая цена</th><th>Эффект, ₽</th>
-</tr></thead><tbody>
-<tr><td>744311013</td><td class="nmc">Розетка встраиваемая двойная, для столешницы стены офисного стола, Atlas Design с раздвижными крышками</td><td>Починить рекламу</td><td>1 800 ₽</td><td>проверить карточку</td><td>—</td><td class="neg">21 905 ₽</td></tr>
-<tr><td>1785974671</td><td class="nmc">Розетка тройная (трехместная) наружная Systeme (Schneider) Electric Blanca ясень , с заземлением, 16А, 250В, без шторок SE BLNRA010315</td><td>Поднять цену</td><td>1 974 ₽</td><td>—</td><td>2 574 ₽</td><td class="neg">10 645 ₽</td></tr>
-<tr><td>1742647876</td><td class="nmc">Розетка бежевая без заземления Systeme (Schneider) Electric AtlasDesign 16А механизм ATN000241</td><td>Поднять цену</td><td>315 ₽</td><td>—</td><td>775 ₽</td><td class="neg">10 371 ₽</td></tr>
-<tr><td>566649289</td><td class="nmc">Розетка черная с заземлением и шторками Systeme (Schneider) Electric AtlasDesign 16А карбон, механизм ATN001045</td><td>Поднять цену</td><td>1 180 ₽</td><td>—</td><td>1 698 ₽</td><td class="neg">9 968 ₽</td></tr>
-<tr><td>1447573131</td><td class="nmc">Розетка механизм встраиваемая одинарная с заземлением Systeme Schneider Electric AtlasDesign цвет черный карбон 20 шт</td><td>Поднять цену</td><td>15 758 ₽</td><td>—</td><td>21 411 ₽</td><td class="neg">9 548 ₽</td></tr>
-<tr><td>1738119865</td><td class="nmc">Розетка двойная внутренняя с заземлением Systeme Schneider Electric ATLASDESIGN, 16А, цвет белый 2 шт</td><td>Починить рекламу</td><td>1 420 ₽</td><td>проверить карточку</td><td>—</td><td class="neg">9 097 ₽</td></tr>
-<tr><td>2898878611</td><td class="nmc">Розетка двойная встраиваемая с заземлением и рамкой Systeme Schneider Electric Atlas Design цвет черный карбон</td><td>Починить рекламу</td><td>2 800 ₽</td><td>проверить карточку</td><td>—</td><td class="neg">8 998 ₽</td></tr>
-<tr><td>3996657589</td><td class="nmc">Выключатель света Шнайдер (Systeme Electric) Art Gallery одноклавишный внутренний</td><td>Поднять цену</td><td>1 360 ₽</td><td>—</td><td>1 943 ₽</td><td class="neg">7 791 ₽</td></tr>
-<tr><td>821456425</td><td class="nmc">Розетка накладная Systeme Electric BLANCA четверная без заземления, без штор, цвет ясень BLNRA000415</td><td>Починить рекламу</td><td>2 280 ₽</td><td>7 → 2.96 ₽</td><td>—</td><td class="neg">7 780 ₽</td></tr>
-<tr><td>875404743</td><td class="nmc">Розетка Шнайдер Systeme Electric AtlasDesign черная (карбон) с заземлением со шторками с крышкой, 16А, IP20, механизм ATN001046</td><td>Починить рекламу</td><td>1 850 ₽</td><td>7.8 → 1.96 ₽</td><td>—</td><td class="neg">7 064 ₽</td></tr>
-<tr><td>929177473</td><td class="nmc">Розетка двойная влагозащищенная IP44 с крышкой с заземлением и защитными шторками Glossa Systeme(Schneider) Electric Белая GSL000147</td><td>Починить рекламу</td><td>1 850 ₽</td><td>проверить карточку</td><td>—</td><td class="neg">6 712 ₽</td></tr>
-<tr><td>488988346</td><td class="nmc">Выключатель двухклавишный встраиваемый с рамкой Systeme Schneider Electric AtlasDesign, цвет белый</td><td>Починить рекламу</td><td>920 ₽</td><td>7.8 → 2.39 ₽</td><td>—</td><td class="neg">5 718 ₽</td></tr>
-<tr><td>550332419</td><td class="nmc">Выключатель одноклавишный встраиваемый Systeme Schneider Electric AtlasDesign, цвет белый 1 шт</td><td>Починить рекламу</td><td>299 ₽</td><td>5 → 0.64 ₽</td><td>—</td><td class="neg">5 628 ₽</td></tr>
-<tr><td>3995123382</td><td class="nmc">Выключатель света одноклавишный внутренний Шнайдер (Systeme Electric) Art Gallery, цвет песочный</td><td>Починить рекламу</td><td>1 079 ₽</td><td>6.2 → 1.95 ₽</td><td>—</td><td class="neg">5 402 ₽</td></tr>
-<tr><td>825324465</td><td class="nmc">Розетка двойная с рамкой и с заземлением Systeme (Schneider) Electric AtlasDesign 16А грифель ATN000726</td><td>Поднять цену</td><td>1 793 ₽</td><td>—</td><td>2 316 ₽</td><td class="neg">5 333 ₽</td></tr>
-<tr><td>3996652558</td><td class="nmc">Выключатель двухклавишный с рамкой Шнайдер (Systeme Electric) Art Gallery внутренний, песочный</td><td>Поднять цену</td><td>1 969 ₽</td><td>—</td><td>3 062 ₽</td><td class="neg">5 020 ₽</td></tr>
-<tr><td>928526391</td><td class="nmc">Розетка влагозащищенная IP44 с крышкой, заземлением и защитными шторками Glossa Systeme Schneider Electric цвет черный антрацит GSL000748</td><td>Поднять цену</td><td>1 583 ₽</td><td>—</td><td>1 968 ₽</td><td class="neg">4 747 ₽</td></tr>
-<tr><td>1719569833</td><td class="nmc">Рамка для розетки и выключателя одинарная Systeme Schneider Electric ATLAS DESIGN, цвет белый 10шт</td><td>Поднять цену</td><td>1 283 ₽</td><td>—</td><td>1 928 ₽</td><td class="neg">4 621 ₽</td></tr>
-<tr><td>1438922989</td><td class="nmc">Изолента профессиональная ПВХ для проводов и проводки Systeme Schneider Electric цвет синий</td><td>Починить рекламу</td><td>273 ₽</td><td>нет кампании</td><td>—</td><td class="neg">4 500 ₽</td></tr>
-<tr><td>1420861068</td><td class="nmc">Подрозетник шнайдер монтажная коробка круглая желтая для полых стен из гипсокартона Systeme Schneider Electric 5 шт</td><td>Починить рекламу</td><td>884 ₽</td><td>5.5 → 2.35 ₽</td><td>—</td><td class="neg">4 297 ₽</td></tr>
-</tbody></table>
+</tr></thead><tbody id="tbPlan"></tbody></table>
 </div>
 
 <h2>Главная находка</h2>
@@ -219,9 +191,41 @@ a.navlink:hover{text-decoration:underline}
 
 <div class="foot">
   Источники: /v3/product/list, /v3/product/info/list, /v1/actions, /api/client/campaign (только чтение) ·
-  снимок одного момента, не окно (тренды — страницы 2–5) · у 2 карточек нет данных о комиссии.
+  снимок одного момента, не окно (тренды — страницы 2–5). «План на неделю» — отдельный, более свежий
+  прогон планировщика v3, данные из <code>data/page1.json</code>.
 </div>
 
 </div>
+<script>
+function f0(x){ if(x===null||x===undefined) return '—'; return Math.round(x).toLocaleString('ru-RU'); }
+function moneyRow(x){ return f0(x)+' ₽'; }
+function renderPlanRow(c){
+  var newBid = '—', recPrice = '—';
+  if (c.action === 'Поднять цену') {
+    recPrice = c.target_price!==null && c.target_price!==undefined ? f0(c.target_price)+' ₽' : '—';
+  } else {
+    if (c.verdict === 'Снизить ставку' && c.cur_bid!==null && c.rec_bid!==null) {
+      newBid = c.cur_bid+' → '+c.rec_bid+' ₽';
+    } else if (c.verdict === 'Проверить карточку/конверсию') {
+      newBid = 'проверить карточку';
+    } else {
+      newBid = 'нет кампании';
+    }
+  }
+  return '<tr><td>'+c.sku+'</td><td class="nmc">'+c.name+'</td><td>'+c.action+'</td><td>'+
+    f0(c.price)+' ₽</td><td>'+newBid+'</td><td>'+recPrice+'</td><td class="neg">'+f0(c.effect)+' ₽</td></tr>';
+}
+fetch('data/page1.json').then(function(r){ return r.json(); }).then(function(d){
+  document.getElementById('planNote').textContent =
+    'Планировщик v3, прогон '+d.generated+'. Топ-20 по сумме «потеря за 32 дня» среди действий «Поднять цену» '+
+    'и «Починить рекламу» ('+d.candidates_n+' позиций с ненулевой потерей в сумме дают '+f0(d.candidates_sum)+
+    ' ₽/32 дня, топ-20 — '+f0(d.top20_sum)+' ₽ из них). «Нет продаж» сюда не входит — это отдельно на странице 5. '+
+    'Для «Починить рекламу» колонка «Новая ставка рекламы» — рекомендация из Performance API (страница 5): '+
+    'снижение ставки (текущая → новая, ₽) либо «проверить карточку», когда проблема не в ставке.';
+  document.getElementById('tbPlan').innerHTML = d.top20.map(renderPlanRow).join('');
+}).catch(function(e){
+  document.getElementById('planNote').textContent = 'Не удалось загрузить data/page1.json: '+e;
+});
+</script>
 </body>
 </html>
