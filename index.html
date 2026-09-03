@@ -124,7 +124,7 @@ a.navlink:hover{text-decoration:underline}
 <div class="tile" style="cursor:pointer">
   <div class="cap"><span class="small" style="color:var(--pos)">готово</span></div>
   <div class="big small">4. Топ локомотивов прибыли</div>
-  <div class="sup">Топ-100 SKU по вкладу в прибыль + план на 7 дней.</div>
+  <div class="sup" id="sup4">SKU по вкладу в прибыль + план на 7 дней.</div>
 </div>
 </a>
 
@@ -132,17 +132,23 @@ a.navlink:hover{text-decoration:underline}
 <div class="tile" style="cursor:pointer">
   <div class="cap"><span class="small" style="color:var(--pos)">готово</span></div>
   <div class="big small">5. Слабая маржа</div>
-  <div class="sup">Топ-100 SKU по наименьшей марже + план на 7 дней.</div>
+  <div class="sup" id="sup5">SKU по наименьшей марже + план на 7 дней.</div>
 </div>
 </a>
 
 </div>
 
-<div class="foot">
+<div class="foot" id="footline">
   Все 5 страниц готовы. Страница 1 — разовый снимок кабинета (обновляется повторным запуском
   <code>get_live_snapshot.ps1</code>), страницы 2–5 — данные за окно, указанное на каждой странице.
 </div>
 
 </div>
+<script>
+fetch('data/index.json').then(function(r){ return r.json(); }).then(function(d){
+  document.getElementById('sup4').textContent = d.page4_n+' SKU по вкладу в прибыль (потеря '+Math.round(d.page4_loss_sum).toLocaleString('ru-RU')+' ₽/32д) + план на 7 дней.';
+  document.getElementById('sup5').textContent = d.page5_ads_n+' SKU «Починить рекламу» (потеря '+Math.round(d.page5_ads_loss_sum).toLocaleString('ru-RU')+' ₽/32д) + план на 7 дней.';
+}).catch(function(){});
+</script>
 </body>
 </html>
