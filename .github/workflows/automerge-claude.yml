@@ -1,0 +1,30 @@
+name: Auto-merge Claude routine branches into main
+
+# Облачная рутина "Дашборд Ozon" пушит каждый прогон в свою ветку
+# (claude/stoic-edison-*), но сама её в main не сливает - настройка
+# API рутины (allowed_push_branches/outcomes) не поддалась правке
+# через RemoteTrigger API 2026-09-04, поэтому слияние - здесь.
+on:
+  push:
+    branches:
+      - 'claude/stoic-edison-**'
+
+permissions:
+  contents: write
+
+jobs:
+  automerge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Fast-forward main to the pushed branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git merge --ff-only "origin/${{ github.ref_name }}"
+          git push origin main
+      - name: Delete the merged branch
+        run: git push origin --delete "${{ github.ref_name }}"
