@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ozon — Методология</title>
+<style>
+:root{
+  --bg:#f7f7f5; --card:#ffffff; --ink:#0b0b0b; --ink2:#52514e; --muted:#898781;
+  --line:#e4e3dd; --pos:#0a7d34; --neg:#c0392b; --accent:#1c5cab; --warnbg:#fff8e6; --warnln:#e8c56a;
+}
+@media (prefers-color-scheme: dark){
+  :root{--bg:#0e0e0d;--card:#1a1a19;--ink:#fff;--ink2:#c3c2b7;--muted:#8a8880;--line:#2c2c2a;
+        --pos:#4ec46e;--neg:#e87b6f;--accent:#7fb0f0;--warnbg:#2a2415;--warnln:#5c4d20;}
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:900px;margin:0 auto;padding:26px 18px 70px}
+h1{font-size:23px;margin:0 0 3px;letter-spacing:-.01em}
+.sub{color:var(--ink2);font-size:13.5px;margin:0 0 26px}
+h2{font-size:16px;margin:32px 0 10px;font-weight:700}
+h3{font-size:13px;margin:20px 0 8px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+p,li{font-size:13.5px;line-height:1.7;color:var(--ink2)}
+p b, li b{color:var(--ink)}
+code{background:var(--line);padding:1px 5px;border-radius:4px;font-size:12.5px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 20px;margin:12px 0}
+.flag{background:var(--warnbg);border:1px solid var(--warnln);border-radius:10px;
+      padding:13px 15px;font-size:13px;line-height:1.6;color:var(--ink2);margin-top:13px}
+.flag b{color:var(--ink)}
+table{width:100%;border-collapse:collapse;font-size:12.5px;margin:10px 0}
+th,td{padding:7px 8px;text-align:left;border-bottom:1px solid var(--line)}
+th{color:var(--muted);font-size:10.5px;text-transform:uppercase}
+.pagenav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.pagenav a{border:1px solid var(--line);background:var(--card);color:var(--ink2);
+  padding:7px 13px;border-radius:8px;font-size:12.5px;text-decoration:none;white-space:nowrap}
+.pagenav a:hover{border-color:var(--accent);color:var(--accent)}
+.pagenav a.on{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600}
+.foot{font-size:11.5px;color:var(--muted);line-height:1.7;border-top:1px solid var(--line);
+      margin-top:34px;padding-top:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="pagenav"><a href="index.html">Обзор</a><a href="1_Общие_показатели.html">1. API</a><a href="2_Партнёрская.html">2. Прибыль</a><a href="3_Реклама.html">3. Реклама</a><a href="4_Топ_локомотивов_прибыли.html">4. Топ прибыли</a><a href="5_Слабая_маржа.html">5. Слабая маржа</a><a href="6_Журнал_изменений.html">Журнал изменений</a><a href="7_Методология.html" class="on">Методология</a></div>
+
+<h1>Методология расчёта</h1>
+<p class="sub">Проверенные формулы (сверено с бухгалтерским файлом Кати до рубля) — менять только по явному запросу Андрея.</p>
+
+<div class="flag">
+  <b>Эта страница — черновой первый шаг переноса.</b> Полный перенос всех разделов
+  «Как считаю» / «Как читать» со всех 5 страниц сюда ещё не завершён (задача 04.09.2026,
+  «Убрать из основного потока» — в процессе). Пока здесь только базовая, самая важная
+  часть — цепочка расчёта прибыли (страница 2) и её защищённые формулы.
+</div>
+
+<h2>Прибыль (страница 2)</h2>
+
+<h3>Цепочка расчёта</h3>
+<p>
+  Продажи (Реализовано) − Реклама − Прочее Ozon − Закупка = <b>Прибыль до кредитов и НДС</b><br>
+  − Кредиты = <b>«как у Кати»</b> (её строка «Условная прибыль до налогообложения после выплаты кредитов»)<br>
+  − НДС = <b>Чистая прибыль</b><br>
+  Налог на прибыль не считается (решение Андрея, 19.08.2026).
+</p>
+
+<h3>Защищённые формулы (не менять без явного запроса Андрея)</h3>
+<table>
+<tr><th>Показатель</th><th>Формула</th></tr>
+<tr><td>Начислено Ozon (баланс-метод)</td><td><code>остаток на конец − остаток на начало + выплаты + удержанный кредит</code></td></tr>
+<tr><td>Кредит</td><td><code>152 336,33 ₽/нед = 117960×2/30×7 + 416950/30×7</code> (фиксированная сумма, два кредита)</td></tr>
+<tr><td>НДС</td><td><code>операционная прибыль × 22/122</code></td></tr>
+</table>
+
+<h3>Заказано vs Реализовано</h3>
+<p>
+  <b>Заказано</b> — оформлено покупателем, может быть отменено (источник: <code>orders_amount</code>, cash-flow).<br>
+  <b>Реализовано</b> — Ozon подтвердил продажу, используется в расчёте прибыли. Для дневной таблицы источник —
+  <code>sale_amount</code> из начислений Ozon (accrual). Для недель, закрытых <b>до 04.09.2026</b>, «Реализовано»
+  исторически считалось из <code>orders_amount</code> (тот же источник, что и «Заказано») — между двумя
+  источниками есть системное расхождение ~3%, которое сейчас на уточнении у Андрея (см.
+  <a href="6_Журнал_изменений.html">Журнал изменений</a>). Недели, закрытые после этой даты, будут считаться
+  единообразно — как только вопрос решится.
+</p>
+
+<h3>Диагностика — сверка с файлом Кати</h3>
+<p>
+  Разовый ручной аудит, проведённый 2026-09-02 по неделям 20.07–30.08.2026: постатейная расшифровка
+  начислений Ozon (<code>/v1/finance/accrual/by-day</code>), сверка каждой строки с файлом Кати.
+  Результат: комиссия и эквайринг совпадают на 0,00 ₽ на всех 6 неделях; логистика — почти точно
+  (расхождение 17–320 ₽, &lt;0,1%); единственное превышение порога сверки (0,1%) — неделя 17–23.08
+  (0,33%, 828,89 ₽), объяснено округлением одной статьи (<code>type_id_54</code>, «оплата за заказ»).
+  Таблица не растёт дальше 30.08 — у нас нет автоматического доступа к файлу Кати для продолжения сверки.
+</p>
+
+<h3>Словарь type_id (расшифровка статей начислений)</h3>
+<table>
+<tr><th>type_id</th><th>Статья</th><th>Куда идёт</th></tr>
+<tr><td>type_id_41</td><td>Оплата за клик</td><td>Реклама</td></tr>
+<tr><td>type_id_52</td><td>Подписка Premium Plus</td><td>Реклама</td></tr>
+<tr><td>type_id_54</td><td>Продвижение с оплатой за заказ</td><td>Реклама</td></tr>
+<tr><td>type_id_96</td><td>Ускоренный сбор отзывов</td><td>Реклама</td></tr>
+<tr><td>type_id_116</td><td>Сбор первых отзывов</td><td>Реклама</td></tr>
+<tr><td>sale_commission</td><td>Комиссия по прайс-листу</td><td>Прочее Ozon</td></tr>
+<tr><td>type_id_32</td><td>Логистика</td><td>Прочее Ozon</td></tr>
+<tr><td>type_id_1</td><td>Эквайринг</td><td>Прочее Ozon</td></tr>
+<tr><td>commission.bonus / commission.coinvestment</td><td>Баллы за скидки / Программы партнёров</td><td>Не входит ни в Рекламу, ни в Прочее Ozon (не влияет на баланс)</td></tr>
+</table>
+
+<h2>Ценообразование (страницы 1, 4, 5)</h2>
+<p>
+  PCT = комиссия(<code>sales_percent_fbo</code>, живая) + эквайринг 1% + возвраты 4,13% + прочие услуги 3,95%.<br>
+  FIX = себестоимость + логистика(факт из <code>accrual/by-day</code> или резервная тарифная таблица) +
+  последняя миля + хранение(3% от себестоимости) + кросс-докинг(3,21% от закупки).<br>
+  Безубыточная цена (целевой ДРР 5%) = <code>FIX / (1 − PCT − 0,05)</code> — на целевом ДРР, не на фактическом.<br>
+  Действие: qty=0 → «Нет продаж 28 дней»; цена &lt; безубыточной → «Поднять цену»; маржа сейчас &lt; 0 ≤ маржа
+  при целевом ДРР → «Починить рекламу»; иначе «ОК».
+</p>
+
+<h2>Как обновляется дашборд</h2>
+<p>
+  Утро: PowerShell на компьютере Андрея собирает сырые данные из Ozon API, пушит в приватный репозиторий
+  <code>ozon-data</code>. День: облачная рутина «Дашборд Ozon» (GitHub-webhook на пуш в <code>ozon-data</code>)
+  считает все формулы скриптами (<code>scripts/lib_pricing.py</code>, <code>lib_profit.py</code>,
+  <code>build_all.py</code>) и публикует готовые числа в <code>data/*.json</code> публичного репозитория сайта.
+  Никаких чисел вручную в HTML не вписывается — вся логика в скриптах.
+</p>
+
+<div class="foot">
+  Обновлено 2026-09-04. Полный перенос текстов «Как считаю»/«Как читать» со всех страниц — не завершён.
+</div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ozon — Журнал изменений</title>
+<style>
+:root{
+  --bg:#f7f7f5; --card:#ffffff; --ink:#0b0b0b; --ink2:#52514e; --muted:#898781;
+  --line:#e4e3dd; --pos:#0a7d34; --neg:#c0392b; --accent:#1c5cab; --warnbg:#fff8e6; --warnln:#e8c56a;
+}
+@media (prefers-color-scheme: dark){
+  :root{--bg:#0e0e0d;--card:#1a1a19;--ink:#fff;--ink2:#c3c2b7;--muted:#8a8880;--line:#2c2c2a;
+        --pos:#4ec46e;--neg:#e87b6f;--accent:#7fb0f0;--warnbg:#2a2415;--warnln:#5c4d20;}
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1100px;margin:0 auto;padding:26px 18px 70px}
+h1{font-size:23px;margin:0 0 3px;letter-spacing:-.01em}
+.sub{color:var(--ink2);font-size:13.5px;margin:0 0 26px}
+h2{font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);
+   margin:34px 0 12px;font-weight:700}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+table{width:100%;border-collapse:collapse;font-size:12.2px}
+th,td{padding:7px 8px;text-align:left;font-variant-numeric:tabular-nums;vertical-align:top}
+th{font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);
+   font-weight:700;border-bottom:1px solid var(--line);background:var(--card)}
+td{border-bottom:1px solid var(--line)}
+tr:last-child td{border-bottom:none}
+.pos{color:var(--pos);font-weight:600}
+.neg{color:var(--neg);font-weight:600}
+.dim{color:var(--muted)}
+.scroll{overflow-x:auto}
+.note{font-size:12.5px;color:var(--ink2);line-height:1.65;margin:11px 2px 0}
+.note b{color:var(--ink)}
+.flag{background:var(--warnbg);border:1px solid var(--warnln);border-radius:10px;
+      padding:13px 15px;font-size:13px;line-height:1.6;color:var(--ink2);margin-top:13px}
+.flag b{color:var(--ink)}
+.flag.pending{background:color-mix(in srgb,var(--neg) 10%,var(--card));border-color:var(--neg)}
+.foot{font-size:11.5px;color:var(--muted);line-height:1.7;border-top:1px solid var(--line);
+      margin-top:34px;padding-top:14px}
+.pagenav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.pagenav a{border:1px solid var(--line);background:var(--card);color:var(--ink2);
+  padding:7px 13px;border-radius:8px;font-size:12.5px;text-decoration:none;white-space:nowrap}
+.pagenav a:hover{border-color:var(--accent);color:var(--accent)}
+.pagenav a.on{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600}
+.badge{padding:2px 8px;border-radius:6px;font-size:11px;font-weight:600;white-space:nowrap}
+.badge.auto{background:color-mix(in srgb,var(--pos) 14%,var(--card));color:var(--pos)}
+.badge.manual{background:color-mix(in srgb,var(--neg) 16%,var(--card));color:var(--neg)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="pagenav"><a href="index.html">Обзор</a><a href="1_Общие_показатели.html">1. API</a><a href="2_Партнёрская.html">2. Прибыль</a><a href="3_Реклама.html">3. Реклама</a><a href="4_Топ_локомотивов_прибыли.html">4. Топ прибыли</a><a href="5_Слабая_маржа.html">5. Слабая маржа</a><a href="6_Журнал_изменений.html" class="on">Журнал изменений</a><a href="7_Методология.html">Методология</a></div>
+
+<h1>Журнал изменений</h1>
+<p class="sub" id="subline">Загрузка…</p>
+
+<p class="note" style="margin-top:0">
+  Правило (ТЗ 2026-09-04): задним числом менять уже опубликованные цифры по закрытым периодам можно
+  только с пометкой — дата, старое значение, новое значение, причина. Если причина не определяется
+  автоматически — число не публикуется, а остаётся в очереди на ручное решение ниже.
+</p>
+
+<div id="pendingBlock"></div>
+
+<h2>Журнал правок</h2>
+<div class="card scroll">
+<table><thead><tr><th>Обнаружено</th><th>Период</th><th>Поле</th><th>Было</th><th>Стало</th><th>Причина</th><th></th></tr></thead>
+<tbody id="tbLog"></tbody></table>
+</div>
+
+<div class="foot">
+  Данные — <code>data/page2.json</code> (поля <code>changelog_recent</code> берётся из <code>derived/changelog.json</code>
+  в ozon-data, полная история). Журнал ведётся скриптом <code>lib_changelog.py</code> при каждой сборке.
+</div>
+
+</div>
+<script>
+function f0(x){ if(x===null||x===undefined) return '—'; return Math.round(x).toLocaleString('ru-RU'); }
+function fieldRu(f){
+  var m = {sales:'Реализовано', ads:'Реклама', other:'Прочее Ozon', zakup:'Закупка',
+    profit_before:'Прибыль до кредитов и НДС', loan:'Кредиты', vat:'НДС', after_kred:'Как у Кати', net:'Чистая прибыль'};
+  return m[f] || f;
+}
+function periodRu(t){
+  return t==='day' ? 'День' : t==='week' ? 'Неделя' : t==='month' ? 'Месяц' : t;
+}
+Promise.all([
+  fetch('data/changelog.json').then(function(r){ return r.ok ? r.json() : []; }).catch(function(){ return []; }),
+  fetch('data/pending_review.json').then(function(r){ return r.ok ? r.json() : []; }).catch(function(){ return []; }),
+]).then(function(res){
+  var log = res[0] || [];
+  var pending = res[1] || [];
+  log = log.slice().reverse(); // новые сверху
+  document.getElementById('subline').textContent = 'Всего записей в журнале: '+log.length+' · в очереди на решение: '+pending.length;
+
+  if (pending.length > 0) {
+    document.getElementById('pendingBlock').innerHTML =
+      '<div class="flag pending"><b>'+pending.length+' изменени'+(pending.length===1?'е':'й')+' закрытых периодов ждут решения Андрея.</b> '+
+      'Показанные на страницах числа — старые (не изменены), пока причина не подтверждена.<br><br>'+
+      pending.map(function(p){
+        return '• '+periodRu(p.period_type)+' '+p.period_key+', '+fieldRu(p.field)+': было '+f0(p.old_value)+' → новый расчёт даёт '+f0(p.new_value)+' (обнаружено '+p.first_detected+')';
+      }).join('<br>')+
+      '</div>';
+  }
+
+  document.getElementById('tbLog').innerHTML = log.length ? log.map(function(e){
+    var cls = e.new_value > e.old_value ? 'pos' : 'neg';
+    return '<tr><td>'+e.detected+'</td><td>'+periodRu(e.period_type)+' '+e.period_key+'</td><td>'+fieldRu(e.field)+
+      '</td><td class="dim">'+f0(e.old_value)+'</td><td class="'+cls+'">'+f0(e.new_value)+'</td><td>'+e.reason+
+      '</td><td><span class="badge '+(e.auto?'auto':'manual')+'">'+(e.auto?'авто':'вручную')+'</span></td></tr>';
+  }).join('') : '<tr><td colspan="7" class="dim" style="text-align:center;padding:20px">Журнал пока пуст — изменений закрытых периодов не зафиксировано.</td></tr>';
+}).catch(function(e){
+  document.getElementById('subline').textContent = 'Не удалось загрузить журнал: '+e;
+});
+</script>
+</body>
+</html>

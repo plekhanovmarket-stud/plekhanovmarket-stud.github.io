@@ -96,7 +96,7 @@ td.katya{font-weight:600}
 <body>
 <div class="wrap">
 
-<div class="pagenav"><a href="index.html">Обзор</a><a href="1_Общие_показатели.html">1. API</a><a href="2_Партнёрская.html" class="on">2. Прибыль</a><a href="3_Реклама.html">3. Реклама</a><a href="4_Топ_локомотивов_прибыли.html">4. Топ прибыли</a><a href="5_Слабая_маржа.html">5. Слабая маржа</a></div>
+<div class="pagenav"><a href="index.html">Обзор</a><a href="1_Общие_показатели.html">1. API</a><a href="2_Партнёрская.html" class="on">2. Прибыль</a><a href="3_Реклама.html">3. Реклама</a><a href="4_Топ_локомотивов_прибыли.html">4. Топ прибыли</a><a href="5_Слабая_маржа.html">5. Слабая маржа</a><a href="6_Журнал_изменений.html">Журнал изменений</a><a href="7_Методология.html">Методология</a></div>
 
 <h1>Ozon — Прибыль и Остатки</h1>
 <p class="sub" id="subline">Загрузка…</p>
@@ -137,6 +137,11 @@ td.katya{font-weight:600}
     <div class="cap">Чистая прибыль<br>за последнюю полную неделю</div>
     <div class="big pos" id="kpiWeekNet">—</div>
     <div class="sup" id="kpiWeekSub">—</div>
+  </div>
+  <div class="tile">
+    <div class="cap">Текущая неделя</div>
+    <div class="big small" id="kpiCurWeek">—</div>
+    <div class="sup" id="kpiCurWeekSub">—</div>
   </div>
   <div class="tile">
     <div class="cap">Чистая прибыль<br>в среднем за день</div>
@@ -187,6 +192,13 @@ td.katya{font-weight:600}
 </p>
 
 <div id="tab-w" class="card scroll hide">
+  <p class="note" style="margin:11px 11px 0">
+    <b>Про колонку «Реализовано» здесь.</b> Для недель, закрытых до 04.09.2026, «Реализовано» посчитано из
+    <code>orders_amount</code> (cash-flow, тот же источник, что и Katина строка «Продажи») — эти недели
+    заморожены и не пересчитываются. Дневная таблица на вкладке «По дням» считает «Реализовано» из
+    другого источника (<code>sale_amount</code>, начисления Ozon) — между ними расхождение ~3%, это не
+    ошибка в одной записи, а разница методик; уточняется у Андрея, к какому источнику приводить недели впредь.
+  </p>
   <table><thead><tr>
     <th>Неделя</th><th>Заказано</th><th>Реализовано</th><th>Реклама</th><th>Прочее Ozon</th><th>Закупка</th>
     <th>Прибыль<br>до кредитов и НДС</th><th>Кредиты</th><th class="katya">как у Кати<br><span style="font-weight:400;text-transform:none;font-size:10px">с кредитом, без НДС</span></th>
@@ -349,12 +361,32 @@ if (ST && ST.available) {
   document.getElementById('stockNote').textContent = 'Не удалось посчитать остатки: '+(ST&&ST.note||'нет данных');
 }
 
-const lastW=D.weeks[D.weeks.length-1];
-document.getElementById('kpiWeekNet').textContent=money(lastW.net);
-document.getElementById('kpiWeekNet').className='big '+cls(lastW.net);
-document.getElementById('kpiWeekSub').textContent=lastW.net===null
- ? fmtRange(lastW.beg,lastW.end)+' · нет источника по кредитам · прибыль до кредитов и НДС '+money(lastW.profit_before)
- : fmtRange(lastW.beg,lastW.end)+' · как у Кати '+money(lastW.after_kred);
+// Баг (аудит 04.09.2026): раньше брали ПОСЛЕДНИЙ элемент D.weeks, а это всегда
+// текущая незакрытая неделя (net===null) - плитка "последняя полная неделя"
+// показывала прочерк. Теперь берём последнюю ЗАКРЫТУЮ (net!==null), а текущую
+// незакрытую показываем отдельной плиткой со статусом "в процессе".
+const closedWeeks = D.weeks.filter(w=>w.net!==null);
+const lastW = closedWeeks[closedWeeks.length-1];
+const curW = D.weeks[D.weeks.length-1];
+if (lastW) {
+  document.getElementById('kpiWeekNet').textContent=money(lastW.net);
+  document.getElementById('kpiWeekNet').className='big '+cls(lastW.net);
+  document.getElementById('kpiWeekSub').textContent=fmtRange(lastW.beg,lastW.end)+' · как у Кати '+money(lastW.after_kred);
+} else {
+  document.getElementById('kpiWeekNet').textContent='—';
+  document.getElementById('kpiWeekSub').textContent='ещё нет ни одной закрытой недели в истории';
+}
+if (curW && curW.net===null) {
+  document.getElementById('kpiCurWeek').textContent='в процессе';
+  document.getElementById('kpiCurWeek').className='big small dim';
+  var curWEndDate = new Date(curW.end+'T00:00:00');
+  var curWEndFmt = String(curWEndDate.getDate()).padStart(2,'0')+'.'+String(curWEndDate.getMonth()+1).padStart(2,'0')+'.'+curWEndDate.getFullYear();
+  document.getElementById('kpiCurWeekSub').textContent='появится после '+curWEndFmt+(curW.note?' · '+curW.note:'');
+} else if (curW) {
+  document.getElementById('kpiCurWeek').textContent=money(curW.net);
+  document.getElementById('kpiCurWeek').className='big small '+cls(curW.net);
+  document.getElementById('kpiCurWeekSub').textContent=fmtRange(curW.beg,curW.end);
+}
 const dN=D.days.length,
       pbS=sumOrNull(D.days,'profit_before'),
       sS=D.days.reduce((a,r)=>a+r.sales,0), zS=D.days.reduce((a,r)=>a+r.zakup,0);
