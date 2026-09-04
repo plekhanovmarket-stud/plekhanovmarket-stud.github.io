@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ozon — Цены и маржа</title>
+<link rel="stylesheet" href="assets/dash.css">
+</head>
+<body>
+<div class="wrap">
+<div id="navmount"></div>
+
+<h1>Цены и маржа</h1>
+<p class="sub" id="subline">Загрузка…</p>
+
+<div id="content"><div class="loading">Загрузка данных…</div></div>
+
+<div class="foot">
+  Данные — <code>data/pricing.json</code>. Целевой ДРР 5% — корпоративная цель, не меняется без согласования.
+  Методика расчёта безубыточной/целевой цены — <a href="methodology.html">Методология</a>.
+</div>
+</div>
+<script src="assets/dash.js"></script>
+<script>
+let ROWS = []; let FILTER = 'Все';
+Dash.loadAll(['data/pricing.json']).then(function(res){
+  const r = res[0];
+  if (!r.ok){ Dash.showFatalError('content', ['data/pricing.json ('+r.error+')']); return; }
+  const d = r.data;
+  document.getElementById('subline').textContent = 'Обновлено ' + (d.generated||'—');
+  ROWS = d.rows;
+  const s = d.summary;
+
+  const pr = d.price_reaction || {};
+  const prHtml = pr.available ? (
+    '<h2>Реакция на рост комиссии с '+Dash.fmtDate(pr.baseline_date)+'</h2><div class="kpi-grid">'+
+    kpi('Подняли цену', pr.raised.n, '+'+Dash.fmtRub(pr.raised.effect_32d)+'/32д', 'pos')+
+    kpi('Не тронули', pr.unchanged.n, null, null)+
+    kpi('Снизили цену', pr.lowered.n, Dash.fmtRub(pr.lowered.effect_32d)+'/32д', pr.lowered.n?'neg':null)+
+    '</div>') : '';
+
+  document.getElementById('content').innerHTML =
+    '<div class="kpi-grid">'+
+      kpi('SKU в наличии/транзите', s.base_n, null)+
+      kpi('Прибыльные SKU', s.profitable_n, null)+
+      kpi('Ниже безубыточной цены', s.below_breakeven_n, Dash.fmtRub(s.loss_sum_32d)+'/32д', 'neg')+
+      kpi('Низкая маржа', s.low_margin_n, null)+
+      kpi('Без себестоимости', s.no_cost_n, null)+
+      kpi('Целевой ДРР', s.target_drr_pct+'%', 'целевая маржа '+Dash.fmtPct(s.target_margin_pct))+
+    '</div>' + prHtml +
+    '<h2>SKU</h2>'+
+    '<div class="filters" id="filters"></div>'+
+    '<div class="card scroll"><table><thead><tr>'+
+    '<th>SKU/Артикул</th><th>Название</th><th>Цена</th><th>Прибыль/ед.</th><th>Прибыль/32д</th>'+
+    '<th>Безубыточная</th><th>Целевая</th><th>ДРР факт</th><th>Индекс</th><th>Продано</th><th>Рекомендация</th><th>Эффект/32д</th>'+
+    '</tr></thead><tbody id="rowsBody"></tbody></table></div>'+
+    buildPriceChanges(d.price_changes);
+
+  document.getElementById('filters').innerHTML = ['Все','Поднять цену','Починить рекламу','ОК','Нет продаж 28 дней']
+    .map(function(f){ return '<button data-f="'+f+'" class="'+(f===FILTER?'on':'')+'">'+f+'</button>'; }).join('');
+  document.querySelectorAll('#filters button').forEach(function(b){
+    b.onclick = function(){ FILTER=b.dataset.f; renderRows(); };
+  });
+  renderRows();
+}).catch(function(e){ Dash.showFatalError('content', ['pricing.json ('+e+')']); });
+
+function renderRows(){
+  const rows = (FILTER==='Все' ? ROWS : ROWS.filter(function(r){return r.action===FILTER;})).slice(0,300);
+  document.getElementById('rowsBody').innerHTML = rows.map(function(r){
+    return '<tr><td>'+esc(r.artikul)+'</td><td class="wrap-cell">'+esc(r.name)+'</td>'+
+      '<td>'+Dash.fmtRub(r.price)+'</td><td class="'+Dash.signClass(r.margin_now)+'">'+Dash.fmtRub(r.margin_now)+'</td>'+
+      '<td>'+Dash.fmtRub(r.margin_now_total_32d)+'</td>'+
+      '<td>'+(r.breakeven_target!=null?Dash.fmtRub(r.breakeven_target):'—')+'</td>'+
+      '<td>'+(r.target_price!=null?Dash.fmtRub(r.target_price):'—')+'</td>'+
+      '<td>'+Dash.fmtPct(r.drr_fact)+'</td><td>'+esc(r.price_index_color||'—')+'</td><td>'+r.qty_32d+'</td>'+
+      '<td>'+actionBadge(r.action)+'</td><td>'+(r.effect_32d?Dash.fmtRub(r.effect_32d):'—')+'</td></tr>';
+  }).join('') || '<tr><td colspan="12" class="dim" style="text-align:center;padding:14px">Нет строк</td></tr>';
+}
+function actionBadge(a){
+  const cls = a==='Поднять цену' ? 'bad' : a==='Починить рекламу' ? 'risk' : a==='ОК' ? 'ok' : 'grey';
+  return '<span class="badge '+cls+'">'+esc(a)+'</span>';
+}
+function buildPriceChanges(pc){
+  if (!pc || !pc.available) return '<h2>Было → стало (изменения цены)</h2><p class="dim">'+esc((pc&&pc.note)||'Нет данных')+'</p>';
+  const trs = pc.rows.map(function(c){
+    return '<tr><td>'+Dash.fmtDate(c.date)+'</td><td>'+esc(c.offer_id)+'</td><td class="wrap-cell">'+esc(c.name)+'</td>'+
+      '<td>'+Dash.fmtRub(c.old_price)+'</td><td>'+Dash.fmtRub(c.new_price)+'</td>'+
+      '<td class="'+Dash.signClass(c.delta_abs||0)+'">'+(c.delta_abs>0?'+':'')+Dash.fmtRub(c.delta_abs)+' ('+Dash.fmtPct(c.delta_pct)+')</td></tr>';
+  }).join('');
+  return '<h2>Было → стало (изменения цены за 30 дней)</h2>'+
+    '<p class="dim" style="font-size:12px">История цен ведётся с '+Dash.fmtDate(pc.tracking_started_from)+
+    ' — более ранние изменения не восстановить. Всего записей: '+pc.n+'.</p>'+
+    '<div class="card scroll"><table><thead><tr><th>Дата</th><th>Артикул</th><th>Название</th><th>Было</th><th>Стало</th><th>Дельта</th></tr></thead>'+
+    '<tbody>'+trs+'</tbody></table></div>';
+}
+function kpi(label, val, sub, cls){
+  return '<div class="kpi"><div class="lbl">'+esc(label)+'</div><div class="val small'+(cls?' '+cls:'')+'">'+val+'</div>'+
+    (sub?'<div class="period">'+esc(String(sub))+'</div>':'')+'</div>';
+}
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+</script>
+</body>
+</html>

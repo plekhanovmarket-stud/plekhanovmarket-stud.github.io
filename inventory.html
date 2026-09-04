@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ozon — Товар</title>
+<link rel="stylesheet" href="assets/dash.css">
+</head>
+<body>
+<div class="wrap">
+<div id="navmount"></div>
+
+<h1>Товар</h1>
+<p class="sub" id="subline">Загрузка…</p>
+
+<div id="content"><div class="loading">Загрузка данных…</div></div>
+
+<div class="foot">Данные — <code>data/inventory.json</code>.</div>
+</div>
+<script src="assets/dash.js"></script>
+<script>
+Dash.loadAll(['data/inventory.json']).then(function(res){
+  const r = res[0];
+  if (!r.ok){ Dash.showFatalError('content', ['data/inventory.json ('+r.error+')']); return; }
+  const d = r.data;
+  const st = d.stock_tile || {};
+  document.getElementById('subline').textContent = 'Остатки на ' + Dash.fmtDate(d.stocks_as_of) +
+    ' · себестоимость по файлу от ' + Dash.fmtDate(d.cost_file_date);
+
+  const kpiHtml =
+    '<div class="kpi-grid">'+
+      kpi('Остаток FBO/FBS, шт.', st.total_units, st.n_positions+' позиций')+
+      kpi('Запас в закупочных ценах', Dash.fmtRub(st.cost_value), null)+
+      kpi('SKU без себестоимости', d.no_cost.positions, d.no_cost.units+' шт. на складе')+
+      kpi('Товар в транзите', d.in_transit_only.n, 'SKU')+
+      kpi('Продававшиеся SKU без остатка', d.zero_recent_sales.n, 'кандидаты на пополнение')+
+      kpi('Замороженный товар (60+ дн. без продаж)', Dash.fmtRub(d.frozen.sum_cost_value), d.frozen.n+' SKU')+
+    '</div>';
+
+  const costWarn = d.cost_file_warning ? '<div class="flag bad">'+esc(d.cost_file_warning)+'</div>' : '';
+
+  const sections = [
+    ['Кандидаты на пополнение (были продажи за 32 дня, остаток 0)', d.zero_recent_sales.rows,
+      ['sku','name','qty_32d'], ['SKU','Название','Продано за 32д']],
+    ['Продажи были, но давно — ручная проверка', d.zero_old_sales.rows,
+      ['sku','name','days_without_sales'], ['SKU','Название','Дней без продаж']],
+    ['Уже в транзите', d.in_transit_only.rows, ['sku','name','transit'], ['SKU','Название','В транзите, шт']],
+    ['Замороженный товар — деньги стоят на складе', d.frozen.rows,
+      ['sku','name','available','days_without_sales','cost_value'],
+      ['SKU','Название','Остаток','Дней без продаж','Сумма, ₽']],
+  ].map(function(s){
+    const trs = s[1].map(function(row){
+      return '<tr>'+s[2].map(function(k){
+        const v = row[k];
+        return '<td class="'+(k==='name'?'wrap-cell':'')+'">'+(k==='cost_value'&&v!=null?Dash.fmtRub(v):(v==null?'—':esc(String(v))))+'</td>';
+      }).join('')+'</tr>';
+    }).join('') || '<tr><td colspan="'+s[2].length+'" class="dim" style="text-align:center;padding:14px">Пусто</td></tr>';
+    return '<h2>'+s[0]+'</h2><div class="card scroll"><table><thead><tr>'+
+      s[3].map(function(h){return '<th>'+h+'</th>';}).join('')+'</tr></thead><tbody>'+trs+'</tbody></table></div>';
+  }).join('');
+
+  document.getElementById('content').innerHTML = kpiHtml + costWarn +
+    '<div class="flag">'+esc(d.note_zero_recent)+'<br>'+esc(d.note_zero_old)+
+    '<br>Продававшихся SKU, по которым продаж не было никогда за всё время наблюдения: '+d.zero_never_sold.n+'.</div>' +
+    sections;
+}).catch(function(e){ Dash.showFatalError('content', ['inventory.json ('+e+')']); });
+
+function kpi(label, val, sub){
+  return '<div class="kpi"><div class="lbl">'+esc(label)+'</div><div class="val small">'+val+'</div>'+
+    (sub?'<div class="period">'+esc(String(sub))+'</div>':'')+'</div>';
+}
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+</script>
+</body>
+</html>

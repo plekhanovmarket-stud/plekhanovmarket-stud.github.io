@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ozon — Продажи</title>
+<link rel="stylesheet" href="assets/dash.css">
+</head>
+<body>
+<div class="wrap">
+<div id="navmount"></div>
+
+<h1>Продажи</h1>
+<p class="sub" id="subline">Загрузка…</p>
+
+<div id="content"><div class="loading">Загрузка данных…</div></div>
+
+<div class="foot">Данные — <code>data/sales.json</code>. Период везде один и тот же — последние закрытые недели/дни.</div>
+</div>
+<script src="assets/dash.js"></script>
+<script>
+Dash.loadAll(['data/sales.json']).then(function(res){
+  const r = res[0];
+  if (!r.ok){ Dash.showFatalError('content', ['data/sales.json ('+r.error+')']); return; }
+  const d = r.data;
+  document.getElementById('subline').textContent = 'Обновлено ' + (d.generated||'—');
+
+  const weeksTrs = d.weeks.slice().reverse().map(function(w){
+    return '<tr><td>'+Dash.fmtDate(w.beg)+'—'+Dash.fmtDate(w.end)+'</td><td>'+Dash.fmtRub(w.realized)+'</td>'+
+      '<td class="dim">'+(w.ordered!=null?Dash.fmtRub(w.ordered):'—')+'</td>'+
+      '<td>'+(w.diff!=null?Dash.fmtRub(w.diff):'—')+'</td></tr>';
+  }).join('');
+
+  const top20Trs = d.top20.rows.map(function(r,i){
+    return '<tr><td>'+(i+1)+'</td><td>'+esc(r.artikul)+'</td><td class="wrap-cell">'+esc(r.name)+'</td>'+
+      '<td>'+r.qty+'</td><td>'+Dash.fmtRub(r.revenue_32d)+'</td></tr>';
+  }).join('');
+
+  document.getElementById('content').innerHTML =
+    '<div class="kpi-grid">'+
+      '<div class="kpi"><div class="lbl">Средний реализованный чек</div><div class="val small">'+Dash.fmtRub(d.avg_check)+'</div></div>'+
+      '<div class="kpi"><div class="lbl">Вклад топ-20 SKU в выручку</div><div class="val small">'+Dash.fmtPct(d.top20.pct_of_total)+'</div>'+
+      '<div class="period">'+Dash.fmtRub(d.top20.sum)+' за 32 дня</div></div>'+
+      '<div class="kpi"><div class="lbl">SKU, потерявшие продажи</div><div class="val small">'+d.lost_sellers_n+'</div>'+
+      '<div class="period">продавались раньше, сейчас нет остатка</div></div>'+
+    '</div>'+
+    '<div class="flag">'+esc(d.ordered_gap_note)+'</div>'+
+    '<h2>Заказано vs Реализовано — по неделям</h2>'+
+    '<div class="card scroll"><table><thead><tr><th>Неделя</th><th>Реализовано</th><th>Заказано</th><th>Разница</th></tr></thead>'+
+    '<tbody>'+weeksTrs+'</tbody></table></div>'+
+    '<h2>Топ-20 SKU по выручке (32 дня)</h2>'+
+    '<div class="card scroll"><table><thead><tr><th>#</th><th>Артикул</th><th>Название</th><th>Продано, шт</th><th>Выручка</th></tr></thead>'+
+    '<tbody>'+top20Trs+'</tbody></table></div>'+
+    '<div class="flag">'+esc(d.note)+'</div>';
+}).catch(function(e){ Dash.showFatalError('content', ['sales.json ('+e+')']); });
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+</script>
+</body>
+</html>
