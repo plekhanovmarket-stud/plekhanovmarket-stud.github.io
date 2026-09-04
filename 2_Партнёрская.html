@@ -106,31 +106,27 @@ td.katya{font-weight:600}
 <div class="tiles">
   <div class="tile">
     <div class="cap">Товар на складах Ozon (FBO)<br>в закупочных ценах</div>
-    <div class="big">8,39 млн ₽</div>
-    <div class="sup">сейчас 25 544 шт · 746 позиций · себестоимость — combined_cost_price.csv</div>
+    <div class="big" id="tStockCost">—</div>
+    <div class="sup" id="tStockCostSup">—</div>
   </div>
   <div class="tile">
     <div class="cap">Тот же товар<br>в продажных ценах Ozon</div>
-    <div class="big">33,56 млн ₽</div>
-    <div class="sup">наценка ×4,00</div>
+    <div class="big" id="tStockRetail">—</div>
+    <div class="sup" id="tStockRetailSup">—</div>
   </div>
   <div class="tile">
     <div class="cap">Ozon должен нам<br>(баланс на счёте Ozon)</div>
-    <div class="big">782 585 ₽</div>
-    <div class="sup">на 2 сентября</div>
+    <div class="big" id="tBalance">—</div>
+    <div class="sup" id="tBalanceSup">—</div>
   </div>
   <div class="tile">
     <div class="cap">Выплачено на счёт<br>(реально пришло от Ozon)</div>
     <div class="big" style="color:#1c5cab">24,04 млн ₽</div>
-    <div class="sup">за 23 периода · не обновлялось с прошлого снимка</div>
+    <div class="sup">за 23 периода · обновляется вручную, не входит в ежедневный прогон</div>
   </div>
 </div>
-<p class="note">
-  <b>Обновлено 2026-09-02.</b> На складах Ozon (FBO) сейчас 25 544 шт по 746 позициям в закупочных ценах —
-  8,39 млн ₽; при продаже по текущим ценам это даст 33,56 млн ₽ выручки (наценка ×4,00). Плюс Ozon
-  держит у себя ещё <b>782 585 ₽</b> уже заработанных нами денег на момент снимка. «Выплачено на счёт» —
-  та же цифра, что и раньше: источник (полная история кассовых периодов) не входит в ежедневный прогон,
-  обновляется отдельно.
+<p class="note" id="stockNote">
+  Загрузка…
 </p>
 
 <!-- ══════════ ОТЧЁТ 1: ПРИБЫЛЬ ══════════ -->
@@ -327,6 +323,31 @@ fetch('data/page2.json').then(function(r){ return r.json(); }).then(function(pay
 const D = payload;
 const DIAG = payload.diag || {weekly:[], decode:[], unknown:[]};
 document.getElementById('subline').textContent = 'Данные на '+payload.generated+' · дневной факт по '+(D.days[D.days.length-1]||{}).date;
+
+const ST = payload.stock_tile;
+if (ST && ST.available) {
+  document.getElementById('tStockCost').textContent = (ST.cost_value/1e6).toFixed(2).replace('.',',')+' млн ₽';
+  document.getElementById('tStockCostSup').textContent = 'сейчас '+f0(ST.total_units)+' шт · '+ST.n_positions+' позиций · себестоимость — combined_cost_price.csv от '+ST.cost_file_date+(ST.cost_file_stale?' (устарела)':'');
+  document.getElementById('tStockRetail').textContent = (ST.retail_value/1e6).toFixed(2).replace('.',',')+' млн ₽';
+  const markup = ST.cost_value ? (ST.retail_value/ST.cost_value).toFixed(2).replace('.',',') : '—';
+  document.getElementById('tStockRetailSup').textContent = 'наценка ×'+markup;
+  if (ST.ozon_balance!==null && ST.ozon_balance!==undefined) {
+    document.getElementById('tBalance').textContent = f0(ST.ozon_balance)+' ₽';
+    document.getElementById('tBalanceSup').textContent = 'на '+ST.generated;
+  } else {
+    document.getElementById('tBalance').textContent = '—';
+    document.getElementById('tBalanceSup').textContent = 'нет данных';
+  }
+  document.getElementById('stockNote').innerHTML =
+    '<b>Обновлено '+ST.generated+'.</b> На складах Ozon (FBO) сейчас '+f0(ST.total_units)+' шт по '+ST.n_positions+
+    ' позициям в закупочных ценах — '+(ST.cost_value/1e6).toFixed(2).replace('.',',')+' млн ₽; при продаже по текущим ценам '+
+    'это даст '+(ST.retail_value/1e6).toFixed(2).replace('.',',')+' млн ₽ выручки (наценка ×'+markup+'). Плюс Ozon держит у себя ещё <b>'+
+    (ST.ozon_balance!==null?f0(ST.ozon_balance)+' ₽':'—')+'</b> уже заработанных нами денег на момент снимка.'+
+    (ST.missing_cost_skus?' У '+ST.missing_cost_skus+' SKU на складе нет себестоимости в справочнике — не учтены в сумме.':'')+
+    ' «Выплачено на счёт» — источник (полная история кассовых периодов) не входит в ежедневный прогон, обновляется вручную.';
+} else {
+  document.getElementById('stockNote').textContent = 'Не удалось посчитать остатки: '+(ST&&ST.note||'нет данных');
+}
 
 const lastW=D.weeks[D.weeks.length-1];
 document.getElementById('kpiWeekNet').textContent=money(lastW.net);
