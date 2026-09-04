@@ -57,7 +57,13 @@ Dash.loadAll(['data/ads.json']).then(function(res){
       ['artikul','name','price','drr_fact','loss_32d','verdict'],
       ['Артикул','Название','Цена','ДРР факт','Потеря/32д','Вердикт'])+
     section('Расход без атрибутированных заказов (28+ дней без продаж)', d.wasted_rows,
-      ['artikul','name','clicks','spend32'], ['Артикул','Название','Клики 60д','Расход/32д']);
+      ['artikul','name','clicks','spend32'], ['Артикул','Название','Клики 60д','Расход/32д'])+
+    section('SKU с максимальным расходом (окно диагностики)', d.top_spend,
+      ['sku','name','expense','clicks','orders','drr'], ['SKU','Название','Расход','Клики','Заказы','ДРР'])+
+    section('SKU с высоким ДРР (окно диагностики)', d.top_drr,
+      ['sku','name','expense','orders','drr'], ['SKU','Название','Расход','Заказы','ДРР'])+
+    section('Расход без заказов вообще (окно диагностики)', d.zero_orders_top,
+      ['sku','name','expense','clicks','views'], ['SKU','Название','Расход','Клики','Показы']);
 }).catch(function(e){ Dash.showFatalError('content', ['ads.json ('+e+')']); });
 
 function section(title, rows, keys, heads){
@@ -65,8 +71,8 @@ function section(title, rows, keys, heads){
   const trs = rows.slice(0,50).map(function(row){
     return '<tr>'+keys.map(function(k){
       const v = row[k];
-      const isRub = k==='loss_32d'||k==='spend32'||k==='price';
-      const isPct = k==='drr_fact';
+      const isRub = k==='loss_32d'||k==='spend32'||k==='price'||k==='expense';
+      const isPct = k==='drr_fact'||k==='drr';
       return '<td class="'+(k==='name'?'wrap-cell':'')+'">'+(v==null?'—':isRub?Dash.fmtRub(v):isPct?Dash.fmtPct(v):esc(String(v)))+'</td>';
     }).join('')+'</tr>';
   }).join('') || '<tr><td colspan="'+keys.length+'" class="dim" style="text-align:center;padding:14px">Пусто</td></tr>';
@@ -74,9 +80,12 @@ function section(title, rows, keys, heads){
     heads.map(function(h){return '<th>'+h+'</th>';}).join('')+'</tr></thead><tbody>'+trs+'</tbody></table></div>';
 }
 function kpi(label, val, sub, delta){
+  // раздел 5.2 ТЗ: рост расхода рекламы - не однозначно плохо/хорошо (может быть и
+  // ростом продаж), поэтому дельта здесь всегда нейтрального цвета, а не "зелёное/красное
+  // по знаку числа".
   return '<div class="kpi"><div class="lbl">'+esc(label)+'</div><div class="val small">'+val+'</div>'+
     (sub?'<div class="period">'+esc(String(sub))+'</div>':'')+
-    (delta?'<div class="delta '+Dash.signClass(delta.abs||0)+'">'+Dash.deltaHtml(delta)+'</div>':'')+'</div>';
+    (delta?'<div class="delta dim">'+Dash.deltaHtml(delta)+'</div>':'')+'</div>';
 }
 function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
 </script>
