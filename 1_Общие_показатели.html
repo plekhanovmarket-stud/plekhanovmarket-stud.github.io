@@ -137,6 +137,26 @@ a.navlink:hover{text-decoration:underline}
   </div>
 </div>
 
+<h2>Реакция на рост комиссии — что реально сделали с ценой</h2>
+<p class="note" style="margin-top:0" id="reactionNote">Загрузка…</p>
+<div class="tiles" style="grid-template-columns:repeat(3,1fr)" id="reactionTiles">
+  <div class="tile">
+    <div class="cap">Подняли цену</div>
+    <div class="big" style="color:var(--pos)" id="rRaisedN">—</div>
+    <div class="sup" id="rRaisedSup">—</div>
+  </div>
+  <div class="tile">
+    <div class="cap">Не тронули</div>
+    <div class="big" id="rUnchangedN">—</div>
+    <div class="sup" id="rUnchangedSup">—</div>
+  </div>
+  <div class="tile">
+    <div class="cap">Снизили цену</div>
+    <div class="big" style="color:var(--neg)" id="rLoweredN">—</div>
+    <div class="sup" id="rLoweredSup">—</div>
+  </div>
+</div>
+
 <h2>План на неделю — 20 SKU с максимальным эффектом</h2>
 <p class="note" style="margin-top:0" id="planNote">
   Загрузка…
@@ -223,6 +243,21 @@ fetch('data/page1.json').then(function(r){ return r.json(); }).then(function(d){
     'Для «Починить рекламу» колонка «Новая ставка рекламы» — рекомендация из Performance API (страница 5): '+
     'снижение ставки (текущая → новая, ₽) либо «проверить карточку», когда проблема не в ставке.';
   document.getElementById('tbPlan').innerHTML = d.top20.map(renderPlanRow).join('');
+
+  var pr = d.price_reaction;
+  if (pr && pr.available) {
+    document.getElementById('reactionNote').textContent =
+      'Из '+pr.base_n+' продающихся SKU (за 32 дня, не весь каталог) — сравнение цены с '+pr.baseline_date+
+      ' по сегодня. Эффект — (новая цена − старая) × продано за 32 дня, при том же объёме продаж, что сейчас.';
+    document.getElementById('rRaisedN').textContent = f0(pr.raised.n);
+    document.getElementById('rRaisedSup').textContent = (pr.raised.n ? '+'+f0(pr.raised.effect_32d) : '0')+' ₽/32д к выручке';
+    document.getElementById('rUnchangedN').textContent = f0(pr.unchanged.n);
+    document.getElementById('rUnchangedSup').textContent = 'цена как на '+pr.baseline_date;
+    document.getElementById('rLoweredN').textContent = f0(pr.lowered.n);
+    document.getElementById('rLoweredSup').textContent = (pr.lowered.n ? f0(pr.lowered.effect_32d) : '0')+' ₽/32д к выручке';
+  } else {
+    document.getElementById('reactionNote').textContent = 'Нет данных для сравнения цены с базовой датой: '+(pr && pr.note || '—');
+  }
 }).catch(function(e){
   document.getElementById('planNote').textContent = 'Не удалось загрузить data/page1.json: '+e;
 });
