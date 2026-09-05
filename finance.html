@@ -28,6 +28,7 @@ Dash.loadAll(['data/finance.json']).then(function(res){
   if (!r.ok){ Dash.showFatalError('content', ['data/finance.json ('+r.error+')']); return; }
   const d = r.data;
   document.getElementById('subline').textContent = 'Обновлено ' + (d.generated||'—');
+  Dash.setCalculatedAt(d.calculated_at);
   window.__fin = d;
   renderTop(d);
   renderTabs(d);
@@ -43,7 +44,8 @@ function renderTop(d){
   ] : [];
   const kpiHtml = kpi.map(function(k){
     return '<div class="kpi"><div class="lbl">'+k[0]+'</div><div class="val small">'+
-      (k[2]==='pct' ? Dash.fmtPct(k[1]) : Dash.fmtRub(k[1]))+'</div></div>';
+      (k[2]==='pct' ? Dash.fmtPct(k[1]) : Dash.fmtRub(k[1]))+'</div>'+
+      Dash.renderMeta(d.chain_last_week_meta, 'Неделя')+'</div>';
   }).join('');
 
   const chainHtml = c ? [

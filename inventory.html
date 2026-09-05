@@ -26,69 +26,85 @@ Dash.loadAll(['data/inventory.json']).then(function(res){
   const st = d.stock_tile || {};
   document.getElementById('subline').textContent = 'Остатки на ' + Dash.fmtDate(d.stocks_as_of) +
     ' · себестоимость по файлу от ' + Dash.fmtDate(d.cost_file_date);
+  Dash.setCalculatedAt(d.calculated_at);
 
   const cov = d.coverage || {};
   const kpiHtml =
     '<div class="kpi-grid">'+
-      kpi('Остаток FBO/FBS, шт.', st.total_units, st.n_positions+' позиций')+
-      kpi('Запас в закупочных ценах', Dash.fmtRub(st.cost_value), null)+
-      kpi('SKU без себестоимости', d.no_cost.positions, d.no_cost.units+' шт. на складе')+
-      kpi('Товар в транзите', d.in_transit.n, 'SKU')+
-      kpi('Продававшийся товар закончился', d.zero_stock_selling.n, 'кандидаты на пополнение')+
-      kpi('Есть остаток, но не продаётся', d.has_stock_no_sales.n, 'за доступные 32 дня')+
+      kpi('Остаток FBO/FBS, шт.', st.total_units, st.n_positions+' позиций', d.stock_tile_meta, 'Остатки')+
+      kpi('Запас в закупочных ценах', Dash.fmtRub(st.cost_value), null, d.stock_tile_meta)+
+      kpi('SKU без себестоимости', d.no_cost.positions, d.no_cost.units+' шт. на складе', d.no_cost.meta)+
+      kpi('Товар в транзите', d.in_transit.n, 'SKU', d.in_transit.meta, 'Состояние')+
+      kpi('Продававшийся товар закончился', d.zero_stock_selling.n, 'кандидаты на пополнение', d.zero_stock_selling.meta)+
+      kpi('Есть остаток, но не продаётся', d.has_stock_no_sales.n, 'за доступные 32 дня', d.has_stock_no_sales.meta)+
       kpi('Дни покрытия (в среднем)', cov.avg_days!=null?cov.avg_days:'—',
-          (cov.reliability==='оценка'?'оценка · ':'')+cov.n+' SKU с продажами и остатком')+
-      kpi('Мало покрытия (<14 дней)', cov.low_n, 'SKU — риск закончиться скоро')+
+          (cov.reliability==='оценка'?'оценка · ':'')+cov.n+' SKU с продажами и остатком', cov.meta)+
+      kpi('Мало покрытия (<14 дней)', cov.low_n, 'SKU — риск закончиться скоро', cov.meta)+
     '</div>';
 
   const costWarn = d.cost_file_warning ? '<div class="flag bad">'+esc(d.cost_file_warning)+'</div>' : '';
-  const dwsNote = '<div class="flag">'+esc(d.dws_source_note)+'</div>';
+  const dwsNote = '<div class="flag">'+esc(d.dws_source_note)+
+    '<br><span style="font-size:11.5px">Статус по кандидатам порогов: '+
+    Object.keys(d.dws_tier_status||{}).map(function(t){
+      return t+'+ дн. — <b>'+esc(d.dws_tier_status[t])+'</b>';
+    }).join(' · ')+'</span></div>';
   const covNote = '<div class="flag">Дни покрытия — <b>оценка</b>: '+esc(cov.method)+
     '. Не считается для SKU без продаж за 32 дня (нет скорости продаж для деления).</div>';
 
   const groups = [
     ['Группа 1 — продаётся и закончился на складе', d.zero_stock_selling.rows,
-      ['sku','name','qty_32d'], ['SKU','Название','Продано за 32д'], d.zero_stock_selling.note],
+      ['sku','name','qty_32d'], ['SKU','Название','Продано за 32д'], d.zero_stock_selling.note, d.zero_stock_selling.meta],
     ['Группа 2 — есть остаток, но нет продаж за доступный период', d.has_stock_no_sales.rows,
       ['sku','name','available','days_without_sales'], ['SKU','Название','Остаток','Дней без продаж (макс. '+d.dws_max_observed+')'],
-      d.has_stock_no_sales.note],
+      d.has_stock_no_sales.note, d.has_stock_no_sales.meta],
     ['Группа 3 — товар в транзите', d.in_transit.rows,
-      ['sku','name','transit','available'], ['SKU','Название','В транзите, шт','Остаток на складе'], null],
-  ].map(function(s){ return section(s[0], s[1], s[2], s[3], s[4]); }).join('');
+      ['sku','name','transit','available'], ['SKU','Название','В транзите, шт','Остаток на складе'], null, d.in_transit.meta],
+  ].map(function(s){ return section(s[0], s[1], s[2], s[3], s[4], s[5]); }).join('');
+
+  // Раздел "обязательное дополнение" 2026-09-05 п.6: дата остатков, период проверки продаж,
+  // критерий заморозки и источник days_without_sales - явно, одним блоком над таблицей.
+  const fr = d.frozen;
+  const frozenHeader =
+    '<div class="flag"><b>Критерий заморозки:</b> '+esc(fr.criterion)+'<br>'+
+    '<b>Остатки на:</b> '+Dash.fmtDT(fr.stock_as_of)+' · <b>Продажи проверены за период:</b> '+
+    Dash.fmtDT(fr.sales_checked_period.period_from)+'–'+Dash.fmtDT(fr.sales_checked_period.period_to)+'<br>'+
+    '<b>Источник дней без продаж:</b> '+esc(fr.dws_source)+'</div>';
 
   const detailGroups = [
     ['Остаток 0, продажи были, но не за последние 32 дня', d.zero_old_sales.rows,
-      ['sku','name','days_without_sales'], ['SKU','Название','Дней без продаж']],
-    ['«Заморожен» — остаток есть, продаж нет весь доступный период ('+d.frozen.threshold_days+' дн.)', d.frozen.rows,
-      ['sku','name','available','days_without_sales','cost_value'],
-      ['SKU','Название','Остаток','Дней без продаж','Сумма, ₽']],
+      ['sku','name','days_without_sales'], ['SKU','Название','Дней без продаж'], null, d.zero_old_sales.meta],
     ['Дни покрытия — самые низкие (риск закончиться)', cov.rows_low || [],
       ['sku','name','available','qty_32d','coverage_days'],
-      ['SKU','Название','Остаток','Продано/32д','Дней покрытия']],
-  ].map(function(s){ return section(s[0], s[1], s[2], s[3], null); }).join('');
+      ['SKU','Название','Остаток','Продано/32д','Дней покрытия'], null, cov.meta],
+  ].map(function(s){ return section(s[0], s[1], s[2], s[3], s[4], s[5]); }).join('');
 
   document.getElementById('content').innerHTML = kpiHtml + costWarn + dwsNote + covNote +
-    '<h2>Три группы остатков (дополнение к ТЗ 2026-09-05)</h2>' + groups +
+    '<h2>Три группы остатков</h2>' + groups +
+    '<h2>«Заморожен» — остаток есть, продаж нет весь доступный период ('+fr.threshold_days+' дн.)</h2>' +
+    frozenHeader + section(null, fr.rows, ['sku','name','available','days_without_sales','cost_value'],
+      ['SKU','Название','Остаток','Дней без продаж','Сумма, ₽'], fr.note, fr.meta) +
     '<h2>Детализация</h2>' +
     '<div class="flag">Продававшихся SKU, по которым продаж не было никогда за всё время наблюдения: '+d.zero_never_sold.n+'.</div>' +
     detailGroups;
 }).catch(function(e){ Dash.showFatalError('content', ['inventory.json ('+e+')']); });
 
-function section(title, rows, keys, heads, note){
+function section(title, rows, keys, heads, note, meta){
   const trs = rows.map(function(row){
     return '<tr>'+keys.map(function(k){
       const v = row[k];
       return '<td class="'+(k==='name'?'wrap-cell':'')+'">'+(k==='cost_value'&&v!=null?Dash.fmtRub(v):(v==null?'—':esc(String(v))))+'</td>';
     }).join('')+'</tr>';
   }).join('') || '<tr><td colspan="'+keys.length+'" class="dim" style="text-align:center;padding:14px">Пусто</td></tr>';
-  return '<h3 style="font-size:13px;margin:18px 0 6px">'+title+'</h3>'+
+  return (title ? '<h3 style="font-size:13px;margin:18px 0 6px">'+title+'</h3>' : '')+
     (note ? '<p class="dim" style="font-size:11.5px;margin:0 0 6px">'+esc(note)+'</p>' : '') +
+    (meta ? Dash.renderMeta(meta) : '') +
     '<div class="card scroll"><table><thead><tr>'+
     heads.map(function(h){return '<th>'+h+'</th>';}).join('')+'</tr></thead><tbody>'+trs+'</tbody></table></div>';
 }
-function kpi(label, val, sub){
+function kpi(label, val, sub, meta, metaLabel){
   return '<div class="kpi"><div class="lbl">'+esc(label)+'</div><div class="val small">'+val+'</div>'+
-    (sub?'<div class="period">'+esc(String(sub))+'</div>':'')+'</div>';
+    (sub?'<div class="period">'+esc(String(sub))+'</div>':'')+
+    (meta ? Dash.renderMeta(meta, metaLabel) : '')+'</div>';
 }
 function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
 </script>

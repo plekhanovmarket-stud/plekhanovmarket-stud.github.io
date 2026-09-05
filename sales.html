@@ -24,6 +24,7 @@ Dash.loadAll(['data/sales.json']).then(function(res){
   if (!r.ok){ Dash.showFatalError('content', ['data/sales.json ('+r.error+')']); return; }
   const d = r.data;
   document.getElementById('subline').textContent = 'Обновлено ' + (d.generated||'—');
+  Dash.setCalculatedAt(d.calculated_at);
 
   const weeksTrs = d.weeks.slice().reverse().map(function(w){
     return '<tr><td>'+Dash.fmtDate(w.beg)+'—'+Dash.fmtDate(w.end)+'</td><td>'+Dash.fmtRub(w.realized)+'</td>'+
@@ -75,12 +76,12 @@ Dash.loadAll(['data/sales.json']).then(function(res){
   document.getElementById('content').innerHTML =
     '<div class="kpi-grid">'+
       '<div class="kpi"><div class="lbl">Реализовано, шт (32 дня)</div><div class="val small">'+Dash.fmt0(d.units.total_units_32d)+'</div>'+
-      '<div class="period">'+d.units.selling_sku_n+' продающихся SKU</div></div>'+
-      '<div class="kpi"><div class="lbl">Средний реализованный чек</div><div class="val small">'+Dash.fmtRub(d.avg_check)+'</div></div>'+
+      '<div class="period">'+d.units.selling_sku_n+' продающихся SKU</div>'+Dash.renderMeta(d.units.meta)+'</div>'+
+      '<div class="kpi"><div class="lbl">Средний реализованный чек</div><div class="val small">'+Dash.fmtRub(d.avg_check)+'</div>'+Dash.renderMeta(d.avg_check_meta)+'</div>'+
       '<div class="kpi"><div class="lbl">Вклад топ-20 SKU в выручку</div><div class="val small">'+Dash.fmtPct(d.top20.pct_of_total)+'</div>'+
-      '<div class="period">'+Dash.fmtRub(d.top20.sum)+' за 32 дня</div></div>'+
+      '<div class="period">'+Dash.fmtRub(d.top20.sum)+' за 32 дня</div>'+Dash.renderMeta(d.top20.meta)+'</div>'+
       '<div class="kpi"><div class="lbl">SKU, потерявшие продажи</div><div class="val small">'+d.lost_sellers_n+'</div>'+
-      '<div class="period">продавались раньше, сейчас нет остатка</div></div>'+
+      '<div class="period">продавались раньше, сейчас нет остатка</div>'+Dash.renderMeta(d.lost_sellers_meta)+'</div>'+
     '</div>'+
     '<p class="dim" style="font-size:11px">Источник штук: '+esc(d.units.source)+'</p>'+
     '<div class="flag">'+esc(d.ordered_gap_note)+'</div>'+

@@ -28,6 +28,7 @@ Dash.loadAll(['data/pricing.json']).then(function(res){
   if (!r.ok){ Dash.showFatalError('content', ['data/pricing.json ('+r.error+')']); return; }
   const d = r.data;
   document.getElementById('subline').textContent = 'Обновлено ' + (d.generated||'—');
+  Dash.setCalculatedAt(d.calculated_at);
   ROWS = d.rows;
   const s = d.summary;
   const CATS = ['Все'].concat(d.categories || []);
@@ -42,12 +43,12 @@ Dash.loadAll(['data/pricing.json']).then(function(res){
 
   document.getElementById('content').innerHTML =
     '<div class="kpi-grid">'+
-      kpi('SKU в наличии/транзите', s.base_n, null)+
-      kpi('Прибыльные SKU', s.profitable_n, null)+
-      kpi('Ниже безубыточной цены', s.below_breakeven_n, Dash.fmtRub(s.loss_sum_32d)+'/32д', 'neg')+
-      kpi('Низкая маржа', s.low_margin_n, null)+
-      kpi('Без себестоимости', s.no_cost_n, null)+
-      kpi('Целевой ДРР', s.target_drr_pct+'%', 'целевая маржа '+Dash.fmtPct(s.target_margin_pct))+
+      kpi('SKU в наличии/транзите', s.base_n, null, null, s.meta)+
+      kpi('Прибыльные SKU', s.profitable_n, null, null, s.meta)+
+      kpi('Ниже безубыточной цены', s.below_breakeven_n, Dash.fmtRub(s.loss_sum_32d)+'/32д', 'neg', s.meta)+
+      kpi('Низкая маржа', s.low_margin_n, null, null, s.meta)+
+      kpi('Без себестоимости', s.no_cost_n, null, null, s.meta)+
+      kpi('Целевой ДРР', s.target_drr_pct+'%', 'целевая маржа '+Dash.fmtPct(s.target_margin_pct), null, s.target_drr_meta)+
     '</div>' + prHtml +
     '<h2>SKU</h2>'+
     '<p class="dim" style="font-size:11.5px;margin:0 0 6px">'+esc(d.category_filter_note||'')+'</p>'+
@@ -107,9 +108,10 @@ function buildPriceChanges(pc){
     '<div class="card scroll"><table><thead><tr><th>Дата</th><th>Артикул</th><th>Название</th><th>Было</th><th>Стало</th><th>Дельта</th></tr></thead>'+
     '<tbody>'+trs+'</tbody></table></div>';
 }
-function kpi(label, val, sub, cls){
+function kpi(label, val, sub, cls, meta){
   return '<div class="kpi"><div class="lbl">'+esc(label)+'</div><div class="val small'+(cls?' '+cls:'')+'">'+val+'</div>'+
-    (sub?'<div class="period">'+esc(String(sub))+'</div>':'')+'</div>';
+    (sub?'<div class="period">'+esc(String(sub))+'</div>':'')+
+    (meta ? Dash.renderMeta(meta) : '')+'</div>';
 }
 function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
 </script>

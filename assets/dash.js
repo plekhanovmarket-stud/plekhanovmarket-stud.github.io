@@ -111,10 +111,66 @@ function reliabilityTag(rel){
   return '<span class="tag-est">неполные данные</span>';
 }
 
+// ── происхождение показателя (ТЗ "Задание №1" 2026-09-05) ──
+// meta приходит ГОТОВЫМ из JSON (lib_meta.py на сборке) - здесь только форматирование,
+// ни одна дата не вписывается на стороне HTML/JS.
+function _metaStatusCls(status){
+  if (status==='актуально') return 'ok';
+  if (status==='задержка' || status==='недостаточная глубина истории') return 'warn';
+  if (status==='требует проверки' || status==='нет данных') return 'bad';
+  return 'grey'; // разовый расчёт / ручное значение
+}
+function _esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+function fmtDT(s){
+  // "2026-09-05 07:20" -> "05.09.2026 07:20"; "2026-09-05" -> "05.09.2026"
+  if (!s) return s;
+  const m = /^(\d{4})-(\d{2})-(\d{2})([ T](\d{2}:\d{2}))?/.exec(s);
+  if (!m) return s;
+  return m[3]+'.'+m[2]+'.'+m[1] + (m[5] ? ' '+m[5] : '');
+}
+// calculated_at/published_at (ТЗ 2026-09-05, "Задание №1 не принято, п.2") - хранятся
+// на верхнем уровне каждого page-JSON (d.calculated_at), не внутри каждого meta -
+// страница вызывает Dash.setCalculatedAt(d.calculated_at) один раз после загрузки,
+// renderMeta() подставляет уже готовое значение. Ни одна дата не пишется в HTML/JS руками.
+let _calculatedAt = null;
+function setCalculatedAt(ts){ _calculatedAt = ts || null; }
+
+function renderMeta(meta, label){
+  label = label || 'Данные';
+  if (!meta) meta = {kind:'unknown', status:'требует проверки'};
+  const badge = '<span class="badge-status '+_metaStatusCls(meta.status)+'">'+_esc(meta.status||'требует проверки')+'</span>';
+  const srcTxt = (meta.sources && meta.sources.length) ? ' · источник: '+meta.sources.filter(Boolean).join(', ') : '';
+  const calcTxt = _calculatedAt ? ' · Рассчитано: '+fmtDT(_calculatedAt) : '';
+  let body;
+  if (meta.kind === 'period' && meta.period_from && meta.period_to) {
+    const periodTxt = 'Период: '+fmtDT(meta.period_from)+'–'+fmtDT(meta.period_to);
+    if (meta.is_full_period === true) body = periodTxt+' · полный период'+srcTxt+calcTxt;
+    else if (meta.is_full_period === false) body = periodTxt+' · не завершён'+srcTxt+calcTxt;
+    else body = periodTxt+srcTxt+calcTxt;
+  } else if (meta.kind === 'snapshot' && meta.source_data_at) {
+    body = label+' на '+fmtDT(meta.source_data_at)+srcTxt+calcTxt;
+  } else if (meta.kind === 'one_off' && meta.source_data_at) {
+    // разовый расчёт - собственная формулировка сохраняется без "Рассчитано" (это и
+    // ЕСТЬ дата расчёта, повторять её вторым способом только запутывает).
+    body = 'Разовый расчёт от '+fmtDT(meta.source_data_at)+' · автоматически не обновляется'+srcTxt;
+  } else if (meta.kind === 'composite' && meta.parts) {
+    body = meta.parts.map(function(p){
+      const d = p.period_from ? (fmtDT(p.period_from)+'–'+fmtDT(p.period_to)) : (p.date ? fmtDT(p.date) : (p.note||'—'));
+      return _esc(p.label)+': '+d;
+    }).join(' · ') + srcTxt + ' · показатель ограничен старейшим источником' + calcTxt;
+  } else if (meta.kind === 'manual') {
+    body = _esc(meta.note || 'Ручное значение, не датировано');
+  } else {
+    body = _esc(meta.note || 'Дата источника не определена');
+  }
+  return '<div class="meta-line">'+badge+body+'</div>';
+}
+
 window.Dash = {
   renderNav: renderNav, fmt0: fmt0, fmtRub: fmtRub, fmtPct: fmtPct, fmtDate: fmtDate,
   signClass: signClass, deltaHtml: deltaHtml, fetchJSON: fetchJSON, loadAll: loadAll,
   showFatalError: showFatalError, sourcePill: sourcePill, reliabilityTag: reliabilityTag,
+  renderMeta: renderMeta, fmtDT: fmtDT, setCalculatedAt: setCalculatedAt,
 };
 
 document.addEventListener('DOMContentLoaded', renderNav);
