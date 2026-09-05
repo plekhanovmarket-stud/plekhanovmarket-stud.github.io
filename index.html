@@ -31,6 +31,7 @@ Dash.loadAll(['data/dashboard.json']).then(function(res){
   const d = r.data;
   const h = d.header || {};
   document.getElementById('subline').textContent = 'Обновлено ' + (d.generated || '—');
+  Dash.setCalculatedAt(d.calculated_at);
 
   const tb = document.getElementById('topbar');
   const curW = h.current_week;

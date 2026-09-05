@@ -28,6 +28,7 @@ Dash.loadAll(['data/pricing.json']).then(function(res){
   if (!r.ok){ Dash.showFatalError('content', ['data/pricing.json ('+r.error+')']); return; }
   const d = r.data;
   document.getElementById('subline').textContent = 'Обновлено ' + (d.generated||'—');
+  Dash.setCalculatedAt(d.calculated_at);
   ROWS = d.rows;
   const s = d.summary;
   const CATS = ['Все'].concat(d.categories || []);

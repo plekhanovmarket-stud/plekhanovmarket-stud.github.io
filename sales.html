@@ -24,6 +24,7 @@ Dash.loadAll(['data/sales.json']).then(function(res){
   if (!r.ok){ Dash.showFatalError('content', ['data/sales.json ('+r.error+')']); return; }
   const d = r.data;
   document.getElementById('subline').textContent = 'Обновлено ' + (d.generated||'—');
+  Dash.setCalculatedAt(d.calculated_at);
 
   const weeksTrs = d.weeks.slice().reverse().map(function(w){
     return '<tr><td>'+Dash.fmtDate(w.beg)+'—'+Dash.fmtDate(w.end)+'</td><td>'+Dash.fmtRub(w.realized)+'</td>'+

@@ -26,6 +26,7 @@ Dash.loadAll(['data/inventory.json']).then(function(res){
   const st = d.stock_tile || {};
   document.getElementById('subline').textContent = 'Остатки на ' + Dash.fmtDate(d.stocks_as_of) +
     ' · себестоимость по файлу от ' + Dash.fmtDate(d.cost_file_date);
+  Dash.setCalculatedAt(d.calculated_at);
 
   const cov = d.coverage || {};
   const kpiHtml =

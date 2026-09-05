@@ -24,6 +24,7 @@ Dash.loadAll(['data/ads.json']).then(function(res){
   if (!r.ok){ Dash.showFatalError('content', ['data/ads.json ('+r.error+')']); return; }
   const d = r.data;
   document.getElementById('subline').textContent = 'Обновлено ' + (d.generated||'—');
+  Dash.setCalculatedAt(d.calculated_at);
   if (!d.available){ document.getElementById('content').innerHTML = '<div class="flag">'+esc(d.note)+'</div>'; return; }
 
   const lw = d.last_week||{}, pw = d.prev_period||{};
