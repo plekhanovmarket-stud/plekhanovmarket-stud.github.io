@@ -46,12 +46,15 @@ Dash.loadAll(['data/ads.json']).then(function(res){
     '<div class="flag">'+esc(d.cpc_attribution_warning)+'</div>'+
     (d.source_note ? '<p class="dim" style="font-size:11.5px">'+esc(d.source_note)+'</p>' : '') +
     '<h2>Сравнение периодов</h2>'+
-    '<div class="card scroll"><table><thead><tr><th></th><th>Последняя полная неделя</th><th>Предыдущий период</th></tr></thead><tbody>'+
-    [['Расход, всего', 'total_spend'],['Клики (CPC)','clicks_spend'],['Продвижение','promo_spend'],
-     ['Заказы (CPC), атрибутированные','sku_orders'],['ДРР, %','drr']].map(function(x){
+    (d.avg_4w ? '<p class="dim" style="font-size:11.5px">Среднее за 4 полные недели: '+d.avg_4w.weeks[0]+' … '+d.avg_4w.weeks[3]+'</p>' : '')+
+    '<div class="card scroll"><table><thead><tr><th></th><th>Последняя полная неделя</th><th>Предыдущий период</th>'+
+    (d.avg_4w?'<th>Среднее за 4 недели</th>':'')+'</tr></thead><tbody>'+
+    [['Расход, всего', 'total_spend', 'expense'],['Клики (CPC)','clicks_spend', null],['Продвижение','promo_spend', null],
+     ['Заказы (CPC), атрибутированные','sku_orders', 'orders'],['ДРР, %','drr', 'drr']].map(function(x){
       const isRub = x[1]!=='drr' && x[1]!=='sku_orders';
+      const avgCell = d.avg_4w ? '<td class="dim">'+(x[2] ? (x[1]==='drr'?Dash.fmtPct(d.avg_4w[x[2]]):(isRub?Dash.fmtRub(d.avg_4w[x[2]]):d.avg_4w[x[2]])) : '—')+'</td>' : '';
       return '<tr><td>'+x[0]+'</td><td>'+(isRub?Dash.fmtRub(lw[x[1]]):(x[1]==='drr'?Dash.fmtPct(lw[x[1]]):(lw[x[1]]||'—')))+
-        '</td><td class="dim">'+(isRub?Dash.fmtRub(pw[x[1]]):(x[1]==='drr'?Dash.fmtPct(pw[x[1]]):(pw[x[1]]||'—')))+'</td></tr>';
+        '</td><td class="dim">'+(isRub?Dash.fmtRub(pw[x[1]]):(x[1]==='drr'?Dash.fmtPct(pw[x[1]]):(pw[x[1]]||'—')))+'</td>'+avgCell+'</tr>';
     }).join('')+'</tbody></table></div>'+
     section('Кампании с высоким ДРР — починить рекламу', d.fix_ads_rows,
       ['artikul','name','price','drr_fact','loss_32d','verdict'],

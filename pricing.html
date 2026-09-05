@@ -22,7 +22,7 @@
 </div>
 <script src="assets/dash.js"></script>
 <script>
-let ROWS = []; let FILTER = 'Все';
+let ROWS = []; let FILTER = 'Все'; let CATEGORY = 'Все';
 Dash.loadAll(['data/pricing.json']).then(function(res){
   const r = res[0];
   if (!r.ok){ Dash.showFatalError('content', ['data/pricing.json ('+r.error+')']); return; }
@@ -30,6 +30,7 @@ Dash.loadAll(['data/pricing.json']).then(function(res){
   document.getElementById('subline').textContent = 'Обновлено ' + (d.generated||'—');
   ROWS = d.rows;
   const s = d.summary;
+  const CATS = ['Все'].concat(d.categories || []);
 
   const pr = d.price_reaction || {};
   const prHtml = pr.available ? (
@@ -49,11 +50,14 @@ Dash.loadAll(['data/pricing.json']).then(function(res){
       kpi('Целевой ДРР', s.target_drr_pct+'%', 'целевая маржа '+Dash.fmtPct(s.target_margin_pct))+
     '</div>' + prHtml +
     '<h2>SKU</h2>'+
+    '<p class="dim" style="font-size:11.5px;margin:0 0 6px">'+esc(d.category_filter_note||'')+'</p>'+
     '<div class="filters" id="filters"></div>'+
+    '<div class="filters" id="catfilters"></div>'+
     '<div class="card scroll"><table><thead><tr>'+
-    '<th>SKU/Артикул</th><th>Название</th><th>Цена</th><th>Прибыль/ед.</th><th>Прибыль/32д</th>'+
-    '<th>Безубыточная</th><th>Целевая</th><th>ДРР факт</th><th>Индекс</th><th>Продано</th><th>Рекомендация</th><th>Эффект/32д</th>'+
+    '<th>SKU/Артикул</th><th>Название</th><th>Категория</th><th>Цена</th><th>Прибыль/ед.</th><th>Прибыль/32д</th>'+
+    '<th>Безубыточная</th><th>Целевая</th><th>ДРР факт</th><th>Безубыт. ДРР</th><th>Индекс</th><th>Продано</th><th>Рекомендация</th><th>Эффект/32д</th>'+
     '</tr></thead><tbody id="rowsBody"></tbody></table></div>'+
+    '<p class="dim" style="font-size:11px">'+esc(d.breakeven_drr_formula||'')+'</p>'+
     buildPriceChanges(d.price_changes);
 
   document.getElementById('filters').innerHTML = ['Все','Поднять цену','Починить рекламу','ОК','Нет продаж 28 дней']
@@ -61,20 +65,30 @@ Dash.loadAll(['data/pricing.json']).then(function(res){
   document.querySelectorAll('#filters button').forEach(function(b){
     b.onclick = function(){ FILTER=b.dataset.f; renderRows(); };
   });
+  document.getElementById('catfilters').innerHTML = CATS.map(function(c){
+    return '<button data-c="'+esc(c)+'" class="'+(c===CATEGORY?'on':'')+'">'+esc(c)+'</button>';
+  }).join('');
+  document.querySelectorAll('#catfilters button').forEach(function(b){
+    b.onclick = function(){ CATEGORY=b.dataset.c; renderRows(); };
+  });
   renderRows();
 }).catch(function(e){ Dash.showFatalError('content', ['pricing.json ('+e+')']); });
 
 function renderRows(){
-  const rows = (FILTER==='Все' ? ROWS : ROWS.filter(function(r){return r.action===FILTER;})).slice(0,300);
+  let rows = FILTER==='Все' ? ROWS : ROWS.filter(function(r){return r.action===FILTER;});
+  if (CATEGORY!=='Все') rows = rows.filter(function(r){return r.category===CATEGORY;});
+  rows = rows.slice(0,300);
   document.getElementById('rowsBody').innerHTML = rows.map(function(r){
-    return '<tr><td>'+esc(r.artikul)+'</td><td class="wrap-cell">'+esc(r.name)+'</td>'+
+    return '<tr><td>'+esc(r.artikul)+'</td><td class="wrap-cell">'+esc(r.name)+'</td><td>'+esc(r.category||'—')+'</td>'+
       '<td>'+Dash.fmtRub(r.price)+'</td><td class="'+Dash.signClass(r.margin_now)+'">'+Dash.fmtRub(r.margin_now)+'</td>'+
       '<td>'+Dash.fmtRub(r.margin_now_total_32d)+'</td>'+
       '<td>'+(r.breakeven_target!=null?Dash.fmtRub(r.breakeven_target):'—')+'</td>'+
       '<td>'+(r.target_price!=null?Dash.fmtRub(r.target_price):'—')+'</td>'+
-      '<td>'+Dash.fmtPct(r.drr_fact)+'</td><td>'+esc(r.price_index_color||'—')+'</td><td>'+r.qty_32d+'</td>'+
+      '<td>'+Dash.fmtPct(r.drr_fact)+'</td>'+
+      '<td>'+(r.breakeven_drr!=null?Dash.fmtPct(r.breakeven_drr):'—')+(r.already_unprofitable_at_zero_ads?' <span class="badge bad">убыток без рекламы</span>':'')+'</td>'+
+      '<td>'+esc(r.price_index_color||'—')+'</td><td>'+r.qty_32d+'</td>'+
       '<td>'+actionBadge(r.action)+'</td><td>'+(r.effect_32d?Dash.fmtRub(r.effect_32d):'—')+'</td></tr>';
-  }).join('') || '<tr><td colspan="12" class="dim" style="text-align:center;padding:14px">Нет строк</td></tr>';
+  }).join('') || '<tr><td colspan="14" class="dim" style="text-align:center;padding:14px">Нет строк</td></tr>';
 }
 function actionBadge(a){
   const cls = a==='Поднять цену' ? 'bad' : a==='Починить рекламу' ? 'risk' : a==='ОК' ? 'ok' : 'grey';
