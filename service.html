@@ -43,9 +43,9 @@ Dash.loadAll(['data/service.json']).then(function(res){
       kpi('Записей в журнале изменений', d.changelog_entries_total)+
       kpi('В очереди на решение', d.pending_review_n)+
     '</div>'+
-    (d.cost_file ? '<div class="flag'+(d.cost_file.stale?' bad':'')+'">Файл себестоимости: '+esc(d.cost_file.path||'')+
-      ' · обновлён '+esc(d.cost_file.updated||'—')+' ('+d.cost_file.age_days+' дн. назад)'+
-      (d.cost_file.stale?' — <b>требует проверки</b>':'')+'</div>' : '')+
+    (d.cost_file ? '<div class="flag'+(d.cost_file.stale?' bad':'')+'">Файл себестоимости обновлён '+
+      esc(d.cost_file.updated||'—')+' ('+d.cost_file.age_days+' дн. назад)'+
+      (d.cost_file.stale?' — <b>'+esc(d.cost_file.warning||'требует проверки')+'</b>':'')+'</div>' : '')+
     '<h2>Источники данных</h2>'+
     '<div class="card scroll"><table><thead><tr><th>Источник</th><th>Обновлён</th><th>Возраст</th><th>Статус</th><th>Примечание</th></tr></thead>'+
     '<tbody>'+srcTrs+'</tbody></table></div>'+
