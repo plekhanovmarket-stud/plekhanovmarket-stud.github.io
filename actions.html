@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ozon — Действия</title>
+<link rel="stylesheet" href="assets/dash.css">
+</head>
+<body>
+<div class="wrap">
+<div id="navmount"></div>
+
+<h1>Действия</h1>
+<p class="sub" id="subline">Загрузка…</p>
+
+<div id="content"><div class="loading">Загрузка данных…</div></div>
+
+<div class="foot">
+  Данные — <code>data/actions.json</code>. Приоритет и денежный эффект считаются автоматически;
+  «Ответственный», «Срок» и «Статус» — вручную в <code>config/actions_state.json</code> (см. <a href="methodology.html">Методология</a>).
+  Один SKU даёт одно первичное действие — вторичные причины не суммируются в общий эффект (раздел 7.2 ТЗ).
+  Дополнение 2026-09-05, п.9: при статусе «выполнено» сохраняется дата и базовый эффект (baseline_effect);
+  через 7 и 14 дней задача получает пометку «ожидает проверки» — автоматический расчёт фактического
+  эффекта ещё не реализован, это следующий этап.
+</div>
+</div>
+<script src="assets/dash.js"></script>
+<script>
+const TYPES = ['Все','Цена','Реклама','Остаток','Данные'];
+const STATUSES = ['Все','новая','принято','в работе','выполнено','отклонено','устранено автоматически'];
+let ALL = [];
+let curType = new URLSearchParams(location.search).get('type') || 'Все';
+let curStatus = 'открытые';
+let showAll = false;
+
+Dash.loadAll(['data/actions.json']).then(function(res){
+  const r = res[0];
+  if (!r.ok){ Dash.showFatalError('content', ['data/actions.json ('+r.error+')']); return; }
+  const d = r.data;
+  ALL = d.tasks || [];
+  document.getElementById('subline').textContent = 'Обновлено ' + (d.generated||'—') + ' · всего задач: ' + ALL.length;
+  render();
+}).catch(function(e){ Dash.showFatalError('content', ['actions.json ('+e+')']); });
+
+function render(){
+  let rows = ALL.filter(function(t){ return curType==='Все' || t.type===curType; });
+  if (curStatus==='открытые') rows = rows.filter(function(t){ return ['новая','принято','в работе'].indexOf(t.status)>=0; });
+  else if (curStatus!=='Все') rows = rows.filter(function(t){ return t.status===curStatus; });
+  const total = rows.length;
+  if (!showAll) rows = rows.slice(0, 10);
+
+  const typeFilters = TYPES.map(function(t){
+    return '<button data-t="'+t+'" class="'+(t===curType?'on':'')+'">'+t+'</button>';
+  }).join('');
+  const statusFilters = ['открытые','Все'].concat(STATUSES.slice(1)).map(function(s){
+    return '<button data-s="'+s+'" class="'+(s===curStatus?'on':'')+'">'+s+'</button>';
+  }).join('');
+
+  const trs = rows.map(function(t){
+    return '<tr><td>'+t.priority+(t.overdue?' <span class="badge overdue">просрочено</span>':'')+'</td>'+
+      '<td>'+esc(t.type)+'</td><td>'+esc(t.object||'—')+'</td>'+
+      '<td class="wrap-cell">'+esc(t.problem)+'</td><td class="wrap-cell">'+esc(t.action)+'</td>'+
+      '<td>'+(t.effect_32d!=null?Dash.fmtRub(t.effect_32d):'—')+'</td>'+
+      '<td>'+Dash.reliabilityTag(t.reliability)+'</td>'+
+      '<td>'+esc(t.owner||'—')+'</td><td>'+(t.due?Dash.fmtDate(t.due):'—')+'</td>'+
+      '<td>'+statusBadge(t.status)+(t.review_stage?'<br><span class="badge risk">'+esc(t.review_stage)+'</span>':'')+'</td>'+
+      '<td>'+esc(t.result||'—')+'</td></tr>';
+  }).join('');
+
+  const cards = rows.map(function(t){
+    return '<div class="rowcard"><div class="title">'+(t.overdue?'<span class="badge overdue">просрочено</span> ':'')+
+      '#'+t.priority+' · '+esc(t.type)+' · '+esc(t.object||'')+'</div>'+
+      '<div class="dim" style="margin-bottom:6px">'+esc(t.problem)+' → '+esc(t.action)+'</div>'+
+      '<div class="grid"><span>Эффект/32д</span><b>'+(t.effect_32d!=null?Dash.fmtRub(t.effect_32d):'—')+'</b>'+
+      '<span>Статус</span><b>'+esc(t.status)+(t.review_stage?' · '+esc(t.review_stage):'')+'</b>'+
+      '<span>Ответственный</span><b>'+esc(t.owner||'—')+'</b>'+
+      '<span>Срок</span><b>'+(t.due?Dash.fmtDate(t.due):'—')+'</b></div></div>';
+  }).join('') || '<p class="dim">Нет задач по выбранным фильтрам.</p>';
+
+  document.getElementById('content').innerHTML =
+    '<div class="filters">'+typeFilters+'</div>'+
+    '<div class="filters">'+statusFilters+'</div>'+
+    '<p class="dim" style="font-size:12px">Показано '+rows.length+' из '+total+
+      (total>10 && !showAll ? ' <a href="#" id="showAllLink">показать все →</a>' : '')+'</p>'+
+    '<div class="card scroll"><table class="to-cards"><thead><tr>'+
+    '<th>#</th><th>Тип</th><th>Объект</th><th>Проблема</th><th>Действие</th><th>Эффект/32д</th>'+
+    '<th>Надёжность</th><th>Ответств.</th><th>Срок</th><th>Статус</th><th>Результат</th></tr></thead>'+
+    '<tbody>'+(trs || '<tr><td colspan="11" class="dim" style="text-align:center;padding:16px">Нет задач</td></tr>')+'</tbody></table></div>'+
+    '<div class="rowcards">'+cards+'</div>';
+
+  document.querySelectorAll('.filters button[data-t]').forEach(function(b){
+    b.onclick = function(){ curType = b.dataset.t; render(); };
+  });
+  document.querySelectorAll('.filters button[data-s]').forEach(function(b){
+    b.onclick = function(){ curStatus = b.dataset.s; render(); };
+  });
+  const link = document.getElementById('showAllLink');
+  if (link) link.onclick = function(e){ e.preventDefault(); showAll = true; render(); };
+}
+
+function statusBadge(s){
+  const cls = s==='выполнено' ? 'ok' : s==='отклонено' ? 'bad' : s==='устранено автоматически' ? 'grey' : 'risk';
+  return '<span class="badge '+cls+'">'+esc(s)+'</span>';
+}
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+</script>
+</body>
+</html>

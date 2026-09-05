@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ozon — Состояние данных</title>
+<link rel="stylesheet" href="assets/dash.css">
+</head>
+<body>
+<div class="wrap">
+<div id="navmount"></div>
+
+<h1>Состояние данных</h1>
+<p class="sub" id="subline">Загрузка…</p>
+
+<div id="content"><div class="loading">Загрузка данных…</div></div>
+
+<div class="foot">Данные — <code>data/service.json</code>.</div>
+</div>
+<script src="assets/dash.js"></script>
+<script>
+Dash.loadAll(['data/service.json']).then(function(res){
+  const r = res[0];
+  if (!r.ok){ Dash.showFatalError('content', ['data/service.json ('+r.error+')']); return; }
+  const d = r.data;
+  document.getElementById('subline').textContent = 'Обновлено ' + (d.generated||'—');
+
+  const fails = d.scripts_fail || [];
+  const runStatus = (d.scripts_ok!=null && d.scripts_total!=null)
+    ? d.scripts_ok+'/'+d.scripts_total+' скриптов ок'+(fails.length?', упало: '+fails.join(', '):', 0 упало')
+    : 'нет данных о последнем прогоне';
+
+  const srcTrs = (d.sources||[]).map(function(s){
+    return '<tr><td>'+esc(s.source)+'</td><td>'+(s.updated||'—')+'</td><td>'+(s.age_h!=null?s.age_h+' ч':'—')+'</td>'+
+      '<td>'+statusBadge(s.status)+'</td><td>'+esc(s.note||'—')+'</td></tr>';
+  }).join('');
+
+  document.getElementById('content').innerHTML =
+    '<div class="kpi-grid">'+
+      kpi('Прогон', runStatus)+
+      kpi('Запущен', d.run_started||'—')+
+      kpi('Завершён', d.run_finished||'—')+
+      kpi('Записей в журнале изменений', d.changelog_entries_total)+
+      kpi('В очереди на решение', d.pending_review_n)+
+    '</div>'+
+    (d.cost_file ? '<div class="flag'+(d.cost_file.stale?' bad':'')+'">Файл себестоимости: '+esc(d.cost_file.path||'')+
+      ' · обновлён '+esc(d.cost_file.updated||'—')+' ('+d.cost_file.age_days+' дн. назад)'+
+      (d.cost_file.stale?' — <b>требует проверки</b>':'')+'</div>' : '')+
+    '<h2>Источники данных</h2>'+
+    '<div class="card scroll"><table><thead><tr><th>Источник</th><th>Обновлён</th><th>Возраст</th><th>Статус</th><th>Примечание</th></tr></thead>'+
+    '<tbody>'+srcTrs+'</tbody></table></div>'+
+    '<h2>Блоки, обновляемые вручную</h2>'+
+    '<ul>'+(d.manual_blocks||[]).map(function(m){return '<li>'+esc(m)+'</li>';}).join('')+'</ul>';
+}).catch(function(e){ Dash.showFatalError('content', ['service.json ('+e+')']); });
+
+function statusBadge(s){
+  const cls = s==='актуально' ? 'ok' : s==='задержка' ? 'risk' : s==='ошибка' ? 'bad' : 'grey';
+  return '<span class="badge '+cls+'">'+esc(s)+'</span>';
+}
+function kpi(label, val){
+  return '<div class="kpi"><div class="lbl">'+esc(label)+'</div><div class="val small">'+esc(String(val==null?'—':val))+'</div></div>';
+}
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+</script>
+</body>
+</html>

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ozon — Журнал изменений</title>
+<link rel="stylesheet" href="assets/dash.css">
+</head>
+<body>
+<div class="wrap">
+<div id="navmount"></div>
+
+<h1>Журнал изменений</h1>
+<p class="sub" id="subline">Загрузка…</p>
+
+<div class="flag" style="margin-top:0">
+  Правило (ТЗ 2026-09-04): задним числом менять уже опубликованные цифры по закрытым периодам можно
+  только с пометкой — дата, старое значение, новое значение, причина. Если причина не определяется
+  автоматически — число не публикуется, а остаётся в очереди на ручное решение ниже. Дополнение
+  2026-09-05, п.7: это ДВА разных объекта — <b>неизменяемая история</b> уже одобренных корректировок
+  (ниже, ничего из неё не удаляется и не переписывается) и <b>очередь актуальных нерешённых
+  расхождений</b> (обновляется каждый прогон — решённые пункты пропадают сами).
+</div>
+
+<h2>Очередь актуальных нерешённых расхождений</h2>
+<div id="pendingBlock"></div>
+
+<h2>Неизменяемая история корректировок (журнал правок)</h2>
+<div class="filters" id="filterPeriod"></div>
+<div class="filters" id="filterField"></div>
+<div class="filters" id="filterReason"></div>
+<div class="card scroll">
+<table><thead><tr><th>Обнаружено</th><th>Период</th><th>Поле</th><th>Было</th><th>Стало</th><th>Причина</th><th></th></tr></thead>
+<tbody id="tbLog"></tbody></table>
+</div>
+
+<div class="foot">
+  Данные — <code>data/changelog.json</code> (неизменяемая история, только дописывается) и
+  <code>data/pending_review.json</code> (актуальная очередь, пересобирается каждый прогон). Ведётся
+  скриптом <code>lib_changelog.py</code>. Пустой журнал не считается ошибкой.
+</div>
+</div>
+<script src="assets/dash.js"></script>
+<script>
+let LOG = [];
+let F_PERIOD = 'Все', F_FIELD = 'Все', F_REASON = 'Все';
+
+function fieldRu(f){
+  var m = {sales:'Реализовано', ads:'Реклама', other:'Прочее Ozon', zakup:'Закупка',
+    profit_before:'Операционная прибыль Ozon', loan:'Кредиты', vat:'НДС',
+    after_kred:'Денежный результат после кредитов и расчётного НДС', net:'Денежный результат после кредитов и расчётного НДС'};
+  return m[f] || f;
+}
+function periodRu(t){ return t==='day' ? 'День' : t==='week' ? 'Неделя' : t==='month' ? 'Месяц' : t; }
+
+Dash.loadAll(['data/changelog.json', 'data/pending_review.json']).then(function(res){
+  if (!res[0].ok){ Dash.showFatalError('tbLog', ['data/changelog.json ('+res[0].error+')']); return; }
+  LOG = (res[0].data || []).slice().reverse();
+  var pending = res[1].ok ? (res[1].data || []) : [];
+  document.getElementById('subline').textContent = 'Всего записей в неизменяемой истории: '+LOG.length+' · в очереди на решение: '+pending.length;
+
+  document.getElementById('pendingBlock').innerHTML = pending.length ?
+      '<div class="flag bad"><b>'+pending.length+' изменени'+(pending.length===1?'е':'й')+' закрытых периодов ждут решения Андрея.</b> '+
+      'Показанные на страницах числа — старые (не изменены), пока причина не подтверждена.<br><br>'+
+      pending.map(function(p){
+        return '• '+periodRu(p.period_type)+' '+p.period_key+', '+fieldRu(p.field)+': было '+Dash.fmt0(p.old_value)+' → новый расчёт даёт '+Dash.fmt0(p.new_value)+' (обнаружено '+p.first_detected+')';
+      }).join('<br>')+'</div>'
+    : '<div class="flag">Очередь пуста — нерешённых расхождений по закрытым периодам нет.</div>';
+
+  const periods = ['Все'].concat(Array.from(new Set(LOG.map(function(e){return e.period_type;}))));
+  const fields = ['Все'].concat(Array.from(new Set(LOG.map(function(e){return e.field;}))));
+  document.getElementById('filterPeriod').innerHTML = periods.map(function(p){
+    return '<button data-p="'+p+'" class="'+(p===F_PERIOD?'on':'')+'">'+(p==='Все'?'Все периоды':periodRu(p))+'</button>';
+  }).join('');
+  document.getElementById('filterField').innerHTML = fields.map(function(f){
+    return '<button data-f="'+f+'" class="'+(f===F_FIELD?'on':'')+'">'+(f==='Все'?'Все поля':fieldRu(f))+'</button>';
+  }).join('');
+  document.getElementById('filterReason').innerHTML = ['Все','авто','вручную'].map(function(rs){
+    return '<button data-r="'+rs+'" class="'+(rs===F_REASON?'on':'')+'">'+rs+'</button>';
+  }).join('');
+  document.querySelectorAll('#filterPeriod button').forEach(function(b){ b.onclick=function(){F_PERIOD=b.dataset.p; render();}; });
+  document.querySelectorAll('#filterField button').forEach(function(b){ b.onclick=function(){F_FIELD=b.dataset.f; render();}; });
+  document.querySelectorAll('#filterReason button').forEach(function(b){ b.onclick=function(){F_REASON=b.dataset.r; render();}; });
+
+  render();
+}).catch(function(e){ document.getElementById('subline').textContent = 'Не удалось загрузить журнал: '+e; });
+
+function render(){
+  let rows = LOG;
+  if (F_PERIOD!=='Все') rows = rows.filter(function(e){return e.period_type===F_PERIOD;});
+  if (F_FIELD!=='Все') rows = rows.filter(function(e){return e.field===F_FIELD;});
+  if (F_REASON!=='Все') rows = rows.filter(function(e){return (e.auto?'авто':'вручную')===F_REASON;});
+  document.querySelectorAll('#filterPeriod button').forEach(function(b){ b.classList.toggle('on', b.dataset.p===F_PERIOD); });
+  document.querySelectorAll('#filterField button').forEach(function(b){ b.classList.toggle('on', b.dataset.f===F_FIELD); });
+  document.querySelectorAll('#filterReason button').forEach(function(b){ b.classList.toggle('on', b.dataset.r===F_REASON); });
+
+  document.getElementById('tbLog').innerHTML = rows.length ? rows.map(function(e){
+    var cls = e.new_value > e.old_value ? 'pos' : 'neg';
+    return '<tr><td>'+e.detected+'</td><td>'+periodRu(e.period_type)+' '+e.period_key+'</td><td>'+fieldRu(e.field)+
+      '</td><td class="dim">'+Dash.fmt0(e.old_value)+'</td><td class="'+cls+'">'+Dash.fmt0(e.new_value)+'</td><td class="wrap-cell">'+e.reason+
+      '</td><td><span class="badge '+(e.auto?'ok':'bad')+'">'+(e.auto?'авто':'вручную')+'</span></td></tr>';
+  }).join('') : '<tr><td colspan="7" class="dim" style="text-align:center;padding:20px">Нет записей по выбранным фильтрам.</td></tr>';
+}
+</script>
+</body>
+</html>

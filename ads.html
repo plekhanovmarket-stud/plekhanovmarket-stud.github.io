@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ozon — Реклама</title>
+<link rel="stylesheet" href="assets/dash.css">
+</head>
+<body>
+<div class="wrap">
+<div id="navmount"></div>
+
+<h1>Реклама</h1>
+<p class="sub" id="subline">Загрузка…</p>
+
+<div id="content"><div class="loading">Загрузка данных…</div></div>
+
+<div class="foot">Данные — <code>data/ads.json</code>.</div>
+</div>
+<script src="assets/dash.js"></script>
+<script>
+Dash.loadAll(['data/ads.json']).then(function(res){
+  const r = res[0];
+  if (!r.ok){ Dash.showFatalError('content', ['data/ads.json ('+r.error+')']); return; }
+  const d = r.data;
+  document.getElementById('subline').textContent = 'Обновлено ' + (d.generated||'—');
+  if (!d.available){ document.getElementById('content').innerHTML = '<div class="flag">'+esc(d.note)+'</div>'; return; }
+
+  const lw = d.last_week||{}, pw = d.prev_period||{};
+  function delta(cur,prev){ if(prev==null||cur==null) return null; return {abs:cur-prev, pct:prev?((cur-prev)/prev*100):null}; }
+
+  const fixLoss = (d.fix_ads_rows||[]).reduce(function(s,x){return s+(x.loss_32d||0);},0);
+  const wastedSum = (d.wasted_rows||[]).reduce(function(s,x){return s+(x.spend32||0);},0);
+
+  const kpiHtml =
+    '<div class="kpi-grid">'+
+      kpi('Расход рекламы — последняя полная неделя', Dash.fmtRub(lw.total_spend), null, delta(lw.total_spend,pw.total_spend))+
+      kpi('Кликовая реклама (CPC)', Dash.fmtRub(lw.clicks_spend), null, null)+
+      kpi('Продвижение с оплатой за заказ', Dash.fmtRub(lw.promo_spend), null, null)+
+      kpi('ДРР кликовой рекламы', Dash.fmtPct(lw.drr), null, null)+
+      kpi('Оценённые потери от неэффективной рекламы', Dash.fmtRub(fixLoss+wastedSum), (d.fix_ads_rows||[]).length+' SKU чинить, '+(d.wasted_rows||[]).length+' — вхолостую', null)+
+      kpi('SKU, требующих решения', (d.fix_ads_rows||[]).length+(d.wasted_rows||[]).length, null, null)+
+    '</div>';
+
+  document.getElementById('content').innerHTML = kpiHtml +
+    '<div class="flag">'+esc(d.cpc_attribution_warning)+'</div>'+
+    (d.source_note ? '<p class="dim" style="font-size:11.5px">'+esc(d.source_note)+'</p>' : '') +
+    '<h2>Сравнение периодов</h2>'+
+    (d.avg_4w ? '<p class="dim" style="font-size:11.5px">Среднее за 4 полные недели: '+d.avg_4w.weeks[0]+' … '+d.avg_4w.weeks[3]+'</p>' : '')+
+    '<div class="card scroll"><table><thead><tr><th></th><th>Последняя полная неделя</th><th>Предыдущий период</th>'+
+    (d.avg_4w?'<th>Среднее за 4 недели</th>':'')+'</tr></thead><tbody>'+
+    [['Расход, всего', 'total_spend', 'expense'],['Клики (CPC)','clicks_spend', null],['Продвижение','promo_spend', null],
+     ['Заказы (CPC), атрибутированные','sku_orders', 'orders'],['ДРР, %','drr', 'drr']].map(function(x){
+      const isRub = x[1]!=='drr' && x[1]!=='sku_orders';
+      const avgCell = d.avg_4w ? '<td class="dim">'+(x[2] ? (x[1]==='drr'?Dash.fmtPct(d.avg_4w[x[2]]):(isRub?Dash.fmtRub(d.avg_4w[x[2]]):d.avg_4w[x[2]])) : '—')+'</td>' : '';
+      return '<tr><td>'+x[0]+'</td><td>'+(isRub?Dash.fmtRub(lw[x[1]]):(x[1]==='drr'?Dash.fmtPct(lw[x[1]]):(lw[x[1]]||'—')))+
+        '</td><td class="dim">'+(isRub?Dash.fmtRub(pw[x[1]]):(x[1]==='drr'?Dash.fmtPct(pw[x[1]]):(pw[x[1]]||'—')))+'</td>'+avgCell+'</tr>';
+    }).join('')+'</tbody></table></div>'+
+    section('Кампании с высоким ДРР — починить рекламу', d.fix_ads_rows,
+      ['artikul','name','price','drr_fact','loss_32d','verdict'],
+      ['Артикул','Название','Цена','ДРР факт','Потеря/32д','Вердикт'])+
+    section('Расход без атрибутированных заказов (28+ дней без продаж)', d.wasted_rows,
+      ['artikul','name','clicks','spend32'], ['Артикул','Название','Клики 60д','Расход/32д'])+
+    section('SKU с максимальным расходом (окно диагностики)', d.top_spend,
+      ['sku','name','expense','clicks','orders','drr'], ['SKU','Название','Расход','Клики','Заказы','ДРР'])+
+    section('SKU с высоким ДРР (окно диагностики)', d.top_drr,
+      ['sku','name','expense','orders','drr'], ['SKU','Название','Расход','Заказы','ДРР'])+
+    section('Расход без заказов вообще (окно диагностики)', d.zero_orders_top,
+      ['sku','name','expense','clicks','views'], ['SKU','Название','Расход','Клики','Показы']);
+}).catch(function(e){ Dash.showFatalError('content', ['ads.json ('+e+')']); });
+
+function section(title, rows, keys, heads){
+  rows = rows||[];
+  const trs = rows.slice(0,50).map(function(row){
+    return '<tr>'+keys.map(function(k){
+      const v = row[k];
+      const isRub = k==='loss_32d'||k==='spend32'||k==='price'||k==='expense';
+      const isPct = k==='drr_fact'||k==='drr';
+      return '<td class="'+(k==='name'?'wrap-cell':'')+'">'+(v==null?'—':isRub?Dash.fmtRub(v):isPct?Dash.fmtPct(v):esc(String(v)))+'</td>';
+    }).join('')+'</tr>';
+  }).join('') || '<tr><td colspan="'+keys.length+'" class="dim" style="text-align:center;padding:14px">Пусто</td></tr>';
+  return '<h2>'+title+' ('+rows.length+')</h2><div class="card scroll"><table><thead><tr>'+
+    heads.map(function(h){return '<th>'+h+'</th>';}).join('')+'</tr></thead><tbody>'+trs+'</tbody></table></div>';
+}
+function kpi(label, val, sub, delta){
+  // раздел 5.2 ТЗ: рост расхода рекламы - не однозначно плохо/хорошо (может быть и
+  // ростом продаж), поэтому дельта здесь всегда нейтрального цвета, а не "зелёное/красное
+  // по знаку числа".
+  return '<div class="kpi"><div class="lbl">'+esc(label)+'</div><div class="val small">'+val+'</div>'+
+    (sub?'<div class="period">'+esc(String(sub))+'</div>':'')+
+    (delta?'<div class="delta dim">'+Dash.deltaHtml(delta)+'</div>':'')+'</div>';
+}
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+</script>
+</body>
+</html>

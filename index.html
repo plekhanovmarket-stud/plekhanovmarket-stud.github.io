@@ -3,152 +3,123 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ozon — отчёты</title>
-<style>
-:root{
-  --bg:#f7f7f5; --card:#ffffff; --ink:#0b0b0b; --ink2:#52514e; --muted:#898781;
-  --line:#e4e3dd; --pos:#0a7d34; --neg:#c0392b; --accent:#1c5cab; --warnbg:#fff8e6; --warnln:#e8c56a;
-}
-@media (prefers-color-scheme: dark){
-  :root{--bg:#0e0e0d;--card:#1a1a19;--ink:#fff;--ink2:#c3c2b7;--muted:#8a8880;--line:#2c2c2a;
-        --pos:#4ec46e;--neg:#e87b6f;--accent:#7fb0f0;--warnbg:#2a2415;--warnln:#5c4d20;}
-}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);
-  font-family:system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
-.wrap{max-width:1400px;margin:0 auto;padding:26px 18px 70px}
-h1{font-size:23px;margin:0 0 3px;letter-spacing:-.01em}
-.sub{color:var(--ink2);font-size:13.5px;margin:0 0 26px}
-h2{font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);
-   margin:34px 0 12px;font-weight:700}
-.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
-@media(max-width:480px){.tiles{grid-template-columns:1fr}}
-.tile{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 17px}
-.tile .cap{font-size:12px;color:var(--muted);margin-bottom:9px;line-height:1.35}
-.tile .big{font-size:27px;font-weight:700;letter-spacing:-.02em;line-height:1.1}
-.tile .big.small{font-size:20px}
-.tile .sup{font-size:12.5px;color:var(--ink2);margin-top:7px;line-height:1.45}
-.card{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
-table{width:100%;border-collapse:collapse;font-size:12.2px}
-th,td{padding:7px 5px;text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
-th{font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);
-   font-weight:700;border-bottom:1px solid var(--line);background:var(--card);position:sticky;top:0}
-td{border-bottom:1px solid var(--line)}
-tr:last-child td{border-bottom:none}
-th:first-child,td:first-child{text-align:left}
-th:nth-child(2),td:nth-child(2){text-align:left;white-space:normal;min-width:220px;max-width:280px;line-height:1.35}
-tr.tot td{font-weight:700;background:color-mix(in srgb,var(--accent) 7%,transparent)}
-.pos{color:var(--pos);font-weight:600}
-.neg{color:var(--neg);font-weight:600}
-.dim{color:var(--muted)}
-.scroll{overflow-x:auto;max-height:78vh;overflow-y:auto}
-.cmtcol{white-space:normal!important;text-align:left!important;font-size:11.6px;
-  line-height:1.5;color:var(--ink2);min-width:190px;max-width:220px;padding-left:9px}
-th.cmtcol{color:var(--muted)}
-.adsc{color:#b06a1f;font-weight:600}
-@media(prefers-color-scheme:dark){.adsc{color:#e0a253}}
-.promoc{color:#8a5cc4;font-weight:600}
-@media(prefers-color-scheme:dark){.promoc{color:#b79ae0}}
-.note{font-size:12.5px;color:var(--ink2);line-height:1.65;margin:11px 2px 0}
-.note b{color:var(--ink)}
-.flag{background:var(--warnbg);border:1px solid var(--warnln);border-radius:10px;
-      padding:13px 15px;font-size:13px;line-height:1.6;color:var(--ink2);margin-top:13px}
-.flag b{color:var(--ink)}
-.flag.good{background:color-mix(in srgb,var(--pos) 10%,var(--card));border-color:var(--pos)}
-.flag.bad{background:color-mix(in srgb,var(--neg) 9%,var(--card));border-color:var(--neg)}
-.tabs{display:flex;gap:6px;margin-bottom:11px;flex-wrap:wrap}
-.tabs button{border:1px solid var(--line);background:var(--card);color:var(--ink2);
-  padding:7px 14px;border-radius:8px;font-size:13px;cursor:pointer;font-family:inherit}
-.tabs button.on{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600}
-.hide{display:none}
-.foot{font-size:11.5px;color:var(--muted);line-height:1.7;border-top:1px solid var(--line);
-      margin-top:34px;padding-top:14px}
-.small{font-size:11px;color:var(--muted)}
-.plan{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--accent);
-      border-radius:10px;padding:16px 18px;margin-top:16px}
-.plan h3{font-size:13.5px;margin:0 0 10px;color:var(--ink)}
-.plan ol{margin:0 0 12px;padding-left:20px}
-.plan ol li{margin-bottom:8px;line-height:1.5;font-size:13px;color:var(--ink2)}
-.plan ol li b{color:var(--ink)}
-.plan .deadline{font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:10px;margin-top:4px}
-table.miniplan{width:100%;border-collapse:collapse;font-size:11.3px;margin:6px 0 12px}
-table.miniplan th,table.miniplan td{padding:5px 7px;text-align:left;white-space:nowrap;border-bottom:1px solid var(--line)}
-table.miniplan th{color:var(--muted);font-size:10px;text-transform:uppercase;letter-spacing:.03em;
-  position:sticky;top:0;background:var(--card)}
-table.miniplan td:first-child,table.miniplan th:first-child{font-variant-numeric:tabular-nums}
-.rownum{color:var(--muted);font-variant-numeric:tabular-nums}
-a.navlink{color:var(--accent);text-decoration:none}
-a.navlink:hover{text-decoration:underline}
-.pagenav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
-.pagenav a{border:1px solid var(--line);background:var(--card);color:var(--ink2);
-  padding:7px 13px;border-radius:8px;font-size:12.5px;text-decoration:none;white-space:nowrap}
-.pagenav a:hover{border-color:var(--accent);color:var(--accent)}
-.pagenav a.on{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600}
-</style>
+<title>Ozon — Пульт</title>
+<link rel="stylesheet" href="assets/dash.css">
 </head>
 <body>
 <div class="wrap">
+<div id="navmount"></div>
 
-<div class="pagenav"><a href="index.html" class="on">Обзор</a><a href="1_Общие_показатели.html">1. API</a><a href="2_Партнёрская.html">2. Прибыль</a><a href="3_Реклама.html">3. Реклама</a><a href="4_Топ_локомотивов_прибыли.html">4. Топ прибыли</a><a href="5_Слабая_маржа.html">5. Слабая маржа</a><a href="6_Журнал_изменений.html">Журнал изменений</a><a href="7_Методология.html">Методология</a></div>
+<h1>Пульт</h1>
+<p class="sub" id="subline">Загрузка…</p>
+<div class="topbar" id="topbar"></div>
 
-<h1>Ozon — отчёты</h1>
-<p class="sub">5 страниц: живой снимок кабинета, прибыль по периодам, реклама, топ по прибыли, топ по слабой марже.</p>
-
-<div class="tiles" style="grid-template-columns:repeat(auto-fit,minmax(230px,1fr))">
-
-<a href="1_Общие_показатели.html" style="text-decoration:none;color:inherit">
-<div class="tile" style="cursor:pointer">
-  <div class="cap"><span class="small" style="color:var(--pos)">готово</span></div>
-  <div class="big small">1. Общие показатели по API</div>
-  <div class="sup">Живой снимок кабинета: остатки, цены, статусы карточек, акции, кампании.</div>
-</div>
-</a>
-
-<a href="2_Партнёрская.html" style="text-decoration:none;color:inherit">
-<div class="tile" style="cursor:pointer">
-  <div class="cap"><span class="small" style="color:var(--pos)">готово</span></div>
-  <div class="big small">2. Прибыль и остатки</div>
-  <div class="sup">Прибыльность по дням / неделям / месяцам, остатки в закупочных ценах.</div>
-</div>
-</a>
-
-<a href="3_Реклама.html" style="text-decoration:none;color:inherit">
-<div class="tile" style="cursor:pointer">
-  <div class="cap"><span class="small" style="color:var(--pos)">готово</span></div>
-  <div class="big small">3. Реклама</div>
-  <div class="sup">Расход и эффективность рекламных кампаний, переброска бюджета.</div>
-</div>
-</a>
-
-<a href="4_Топ_локомотивов_прибыли.html" style="text-decoration:none;color:inherit">
-<div class="tile" style="cursor:pointer">
-  <div class="cap"><span class="small" style="color:var(--pos)">готово</span></div>
-  <div class="big small">4. Топ локомотивов прибыли</div>
-  <div class="sup" id="sup4">SKU по вкладу в прибыль + план на 7 дней.</div>
-</div>
-</a>
-
-<a href="5_Слабая_маржа.html" style="text-decoration:none;color:inherit">
-<div class="tile" style="cursor:pointer">
-  <div class="cap"><span class="small" style="color:var(--pos)">готово</span></div>
-  <div class="big small">5. Слабая маржа</div>
-  <div class="sup" id="sup5">SKU по наименьшей марже + план на 7 дней.</div>
-</div>
-</a>
-
+<div id="content">
+<div class="loading">Загрузка данных…</div>
 </div>
 
-<div class="foot" id="footline">
-  Все 5 страниц готовы. Страница 1 — разовый снимок кабинета (обновляется повторным запуском
-  <code>get_live_snapshot.ps1</code>), страницы 2–5 — данные за окно, указанное на каждой странице.
+<div class="foot">
+  Данные — <code>data/dashboard.json</code>, собирается скриптом <code>build_all.py</code> из ozon-data.
+  Формулы прибыли/НДС/кредитов — см. <a href="methodology.html">Методология</a>.
 </div>
-
 </div>
+<script src="assets/dash.js"></script>
 <script>
-fetch('data/index.json').then(function(r){ return r.json(); }).then(function(d){
-  document.getElementById('sup4').textContent = d.page4_n+' SKU по вкладу в прибыль (потеря '+Math.round(d.page4_loss_sum).toLocaleString('ru-RU')+' ₽/32д) + план на 7 дней.';
-  document.getElementById('sup5').textContent = d.page5_ads_n+' SKU «Починить рекламу» (потеря '+Math.round(d.page5_ads_loss_sum).toLocaleString('ru-RU')+' ₽/32д) + план на 7 дней.';
-}).catch(function(){});
+Dash.loadAll(['data/dashboard.json']).then(function(res){
+  const r = res[0];
+  if (!r.ok){ Dash.showFatalError('content', ['data/dashboard.json ('+r.error+')']); return; }
+  const d = r.data;
+  const h = d.header || {};
+  document.getElementById('subline').textContent = 'Обновлено ' + (d.generated || '—');
+
+  const tb = document.getElementById('topbar');
+  const curW = h.current_week;
+  tb.innerHTML =
+    '<span class="pill">Последний закрытый день: '+Dash.fmtDate(h.last_closed_day)+'</span>'+
+    (h.last_full_week ? '<span class="pill">Последняя полная неделя: '+Dash.fmtDate(h.last_full_week.beg)+'—'+Dash.fmtDate(h.last_full_week.end)+'</span>' : '')+
+    (curW ? '<span class="pill">Текущая неделя: '+Dash.fmtDate(curW.beg)+'—'+Dash.fmtDate(curW.end)+' · '+(curW.closed?'закрыта':'не завершена')+'</span>' : '');
+
+  const k = d.kpi;
+  const kpiHtml =
+    '<div class="kpi-grid">'+
+      kpiCard('Реализовано', Dash.fmtRub(k.realized.value), k.realized.period, k.realized.delta, null)+
+      kpiCard('Операционная прибыль Ozon', Dash.fmtRub(k.profit_before.value),
+              k.profit_before.pct_of_realized!=null ? Dash.fmtPct(k.profit_before.pct_of_realized)+' от реализованного' : null,
+              k.profit_before.delta, null)+
+      kpiCard('Денежный результат после кредитов и расчётного НДС', Dash.fmtRub(k.net.value), null, k.net.delta, null)+
+      kpiCard('Ozon должен нам', Dash.fmtRub(k.ozon_balance.value), k.ozon_balance.payout_note, null, null)+
+      kpiCard('Потенциальные потери, ₽/30 дней', Dash.fmtRub(k.risk_30d.value), k.risk_30d.note, null, null)+
+    '</div>';
+
+  const probs = d.top_problems.map(function(p){
+    return '<div class="problem"><div class="txt">'+Dash.reliabilityTag(p.reliability)+' <b>'+esc(p.type)+'</b> · '+
+      esc(p.name||p.object)+'<br><span class="dim">'+esc(p.problem)+' → '+esc(p.action)+'</span></div>'+
+      '<div class="eff">'+(p.effect_32d!=null ? Dash.fmtRub(p.effect_32d) : '—')+'</div>'+
+      '<a class="go" href="actions.html?type='+encodeURIComponent(p.type)+'">В «Действия» →</a></div>';
+  }).join('') || '<p class="dim">Нет активных проблем с рассчитанным эффектом.</p>';
+
+  const chart = renderWeeksChart(d.weeks_chart || []);
+
+  const cs = d.cost_structure;
+  const csHtml = cs ? [
+      ['Реклама', cs.ads], ['Прочее Ozon', cs.other], ['Закупка', cs.zakup],
+      ['Расчётный НДС', cs.vat], ['Кредиты', cs.loan],
+    ].map(function(x){ return '<div class="rowcard"><div class="grid"><span>'+x[0]+'</span><b>'+Dash.fmtRub(x[1])+'</b></div></div>'; }).join('')
+    : '<p class="dim">Нет данных за последнюю полную неделю.</p>';
+
+  const inv = d.inventory_brief || {};
+  const invHtml =
+    '<div class="kpi-grid">'+
+      kpiCard('Запас в закупочных ценах', Dash.fmtRub(inv.cost_value), inv.n_positions+' позиций', null, 'inventory.html')+
+      kpiCard('Замороженный товар', Dash.fmtRub(inv.frozen_cost_value), inv.frozen_n+' SKU без движения 60+ дней', null, 'inventory.html')+
+      kpiCard('Продававшиеся SKU без остатка', inv.zero_recent_sales_n, 'кандидаты на пополнение', null, 'inventory.html')+
+      kpiCard('Товар в транзите', inv.in_transit_n+' SKU', null, null, 'inventory.html')+
+    '</div>';
+
+  document.getElementById('content').innerHTML =
+    kpiHtml +
+    '<h2>Требует решения</h2><div class="problem-list">'+probs+'</div>'+
+    '<h2>Реализовано / прибыль / результат по неделям</h2>'+chart+
+    '<h2>Структура расходов — последняя полная неделя</h2><div class="rowcards" style="display:flex">'+csHtml+'</div>'+
+    '<h2>Товар и склад — кратко</h2>'+invHtml+
+    '<h2>Выполнение задач</h2><p>Открыто: <b>'+d.actions_open_n+'</b> · выполнено: <b>'+d.actions_done_n+'</b> · '+
+    '<a href="actions.html">все действия →</a></p>';
+}).catch(function(e){ Dash.showFatalError('content', ['dashboard.json ('+e+')']); });
+
+function kpiCard(label, val, sub, delta, moreHref){
+  return '<div class="kpi"><div class="lbl">'+esc(label)+'</div><div class="val">'+val+'</div>'+
+    (sub ? '<div class="period">'+esc(String(sub))+'</div>' : '')+
+    (delta ? '<div class="delta '+Dash.signClass(delta.abs||0)+'">'+Dash.deltaHtml(delta)+'</div>' : '')+
+    (moreHref ? '<a class="more" href="'+moreHref+'">подробнее →</a>' : '')+
+    '</div>';
+}
+
+function renderWeeksChart(weeks){
+  if (!weeks.length) return '<p class="dim">Недостаточно закрытых недель для графика.</p>';
+  const W=680,H=200,pad=30;
+  const vals = weeks.map(function(w){return w.sales||0}).concat(weeks.map(function(w){return w.profit_before||0}));
+  const max = Math.max.apply(null, vals.concat([0])), min = Math.min.apply(null, vals.concat([0]));
+  const bw = (W-2*pad)/weeks.length;
+  function y(v){ return H-pad - (v-min)/(max-min||1)*(H-2*pad); }
+  function pts(key){
+    return weeks.map(function(w,i){ return (pad+bw*i+bw/2)+','+y(w[key]||0); }).join(' ');
+  }
+  const bars = weeks.map(function(w,i){
+    const bh = (H-pad) - y(w.sales||0);
+    return '<rect x="'+(pad+bw*i+bw*0.15)+'" y="'+y(w.sales||0)+'" width="'+(bw*0.7)+'" height="'+Math.max(bh,0)+
+      '" fill="var(--line)"><title>'+w.beg+' — '+w.sales+' ₽</title></rect>';
+  }).join('');
+  return '<div class="card" style="padding:10px 6px"><svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto" xmlns="http://www.w3.org/2000/svg">'+
+    bars+
+    '<polyline points="'+pts('profit_before')+'" fill="none" stroke="var(--accent)" stroke-width="2"/>'+
+    '<polyline points="'+pts('net')+'" fill="none" stroke="var(--neg)" stroke-width="2" stroke-dasharray="4 3"/>'+
+    '<line x1="'+pad+'" y1="'+y(0)+'" x2="'+(W-pad)+'" y2="'+y(0)+'" stroke="var(--muted)" stroke-width="1"/>'+
+    '</svg><div style="display:flex;gap:14px;font-size:11px;color:var(--ink2);padding:4px 10px">'+
+    '<span>▭ Реализовано</span><span style="color:var(--accent)">— Операционная прибыль</span>'+
+    '<span style="color:var(--neg)">┄ Денежный результат</span></div></div>';
+}
+
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
 </script>
 </body>
 </html>
