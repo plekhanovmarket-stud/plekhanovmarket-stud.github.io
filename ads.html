@@ -34,12 +34,12 @@ Dash.loadAll(['data/ads.json']).then(function(res){
 
   const kpiHtml =
     '<div class="kpi-grid">'+
-      kpi('Расход рекламы — последняя полная неделя', Dash.fmtRub(lw.total_spend), null, delta(lw.total_spend,pw.total_spend))+
-      kpi('Кликовая реклама (CPC)', Dash.fmtRub(lw.clicks_spend), null, null)+
-      kpi('Продвижение с оплатой за заказ', Dash.fmtRub(lw.promo_spend), null, null)+
-      kpi('ДРР кликовой рекламы', Dash.fmtPct(lw.drr), null, null)+
-      kpi('Оценённые потери от неэффективной рекламы', Dash.fmtRub(fixLoss+wastedSum), (d.fix_ads_rows||[]).length+' SKU чинить, '+(d.wasted_rows||[]).length+' — вхолостую', null)+
-      kpi('SKU, требующих решения', (d.fix_ads_rows||[]).length+(d.wasted_rows||[]).length, null, null)+
+      kpi('Расход рекламы — последняя полная неделя', Dash.fmtRub(lw.total_spend), null, delta(lw.total_spend,pw.total_spend), d.windows_meta)+
+      kpi('Кликовая реклама (CPC)', Dash.fmtRub(lw.clicks_spend), null, null, d.windows_meta)+
+      kpi('Продвижение с оплатой за заказ', Dash.fmtRub(lw.promo_spend), null, null, d.windows_meta)+
+      kpi('ДРР кликовой рекламы', Dash.fmtPct(lw.drr), null, null, d.windows_meta)+
+      kpi('Оценённые потери от неэффективной рекламы', Dash.fmtRub(fixLoss+wastedSum), (d.fix_ads_rows||[]).length+' SKU чинить, '+(d.wasted_rows||[]).length+' — вхолостую', null, d.fix_ads_meta)+
+      kpi('SKU, требующих решения', (d.fix_ads_rows||[]).length+(d.wasted_rows||[]).length, null, null, d.fix_ads_meta)+
     '</div>';
 
   document.getElementById('content').innerHTML = kpiHtml +
@@ -82,13 +82,14 @@ function section(title, rows, keys, heads){
   return '<h2>'+title+' ('+rows.length+')</h2><div class="card scroll"><table><thead><tr>'+
     heads.map(function(h){return '<th>'+h+'</th>';}).join('')+'</tr></thead><tbody>'+trs+'</tbody></table></div>';
 }
-function kpi(label, val, sub, delta){
+function kpi(label, val, sub, delta, meta){
   // раздел 5.2 ТЗ: рост расхода рекламы - не однозначно плохо/хорошо (может быть и
   // ростом продаж), поэтому дельта здесь всегда нейтрального цвета, а не "зелёное/красное
   // по знаку числа".
   return '<div class="kpi"><div class="lbl">'+esc(label)+'</div><div class="val small">'+val+'</div>'+
     (sub?'<div class="period">'+esc(String(sub))+'</div>':'')+
-    (delta?'<div class="delta dim">'+Dash.deltaHtml(delta)+'</div>':'')+'</div>';
+    (delta?'<div class="delta dim">'+Dash.deltaHtml(delta)+'</div>':'')+
+    (meta ? Dash.renderMeta(meta) : '')+'</div>';
 }
 function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
 </script>

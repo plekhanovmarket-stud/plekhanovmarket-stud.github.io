@@ -42,13 +42,13 @@ Dash.loadAll(['data/dashboard.json']).then(function(res){
   const k = d.kpi;
   const kpiHtml =
     '<div class="kpi-grid">'+
-      kpiCard('Реализовано', Dash.fmtRub(k.realized.value), k.realized.period, k.realized.delta, null)+
+      kpiCard('Реализовано', Dash.fmtRub(k.realized.value), k.realized.period, k.realized.delta, null, k.realized.meta)+
       kpiCard('Операционная прибыль Ozon', Dash.fmtRub(k.profit_before.value),
               k.profit_before.pct_of_realized!=null ? Dash.fmtPct(k.profit_before.pct_of_realized)+' от реализованного' : null,
-              k.profit_before.delta, null)+
-      kpiCard('Денежный результат после кредитов и расчётного НДС', Dash.fmtRub(k.net.value), null, k.net.delta, null)+
-      kpiCard('Ozon должен нам', Dash.fmtRub(k.ozon_balance.value), k.ozon_balance.payout_note, null, null)+
-      kpiCard('Потенциальные потери, ₽/30 дней', Dash.fmtRub(k.risk_30d.value), k.risk_30d.note, null, null)+
+              k.profit_before.delta, null, k.profit_before.meta)+
+      kpiCard('Денежный результат после кредитов и расчётного НДС', Dash.fmtRub(k.net.value), null, k.net.delta, null, k.net.meta)+
+      kpiCard('Ozon должен нам', Dash.fmtRub(k.ozon_balance.value), k.ozon_balance.payout_note, null, null, k.ozon_balance.meta, 'Баланс')+
+      kpiCard('Потенциальные потери, ₽/30 дней', Dash.fmtRub(k.risk_30d.value), k.risk_30d.note, null, null, k.risk_30d.meta)+
     '</div>';
 
   const probs = d.top_problems.map(function(p){
@@ -70,10 +70,10 @@ Dash.loadAll(['data/dashboard.json']).then(function(res){
   const inv = d.inventory_brief || {};
   const invHtml =
     '<div class="kpi-grid">'+
-      kpiCard('Запас в закупочных ценах', Dash.fmtRub(inv.cost_value), inv.n_positions+' позиций', null, 'inventory.html')+
-      kpiCard('Замороженный товар', Dash.fmtRub(inv.frozen_cost_value), inv.frozen_n+' SKU без движения 60+ дней', null, 'inventory.html')+
-      kpiCard('Продававшиеся SKU без остатка', inv.zero_recent_sales_n, 'кандидаты на пополнение', null, 'inventory.html')+
-      kpiCard('Товар в транзите', inv.in_transit_n+' SKU', null, null, 'inventory.html')+
+      kpiCard('Запас в закупочных ценах', Dash.fmtRub(inv.cost_value), inv.n_positions+' позиций', null, 'inventory.html', inv.stock_meta, 'Остатки')+
+      kpiCard('Замороженный товар', Dash.fmtRub(inv.frozen_cost_value), inv.frozen_n+' SKU без движения '+inv.frozen_threshold_days+'+ дней', null, 'inventory.html', inv.frozen_meta, 'Остатки')+
+      kpiCard('Продававшиеся SKU без остатка', inv.zero_recent_sales_n, 'кандидаты на пополнение', null, 'inventory.html', inv.zero_recent_sales_meta)+
+      kpiCard('Товар в транзите', inv.in_transit_n+' SKU', null, null, 'inventory.html', inv.in_transit_meta, 'Состояние')+
     '</div>';
 
   document.getElementById('content').innerHTML =
@@ -86,10 +86,11 @@ Dash.loadAll(['data/dashboard.json']).then(function(res){
     '<a href="actions.html">все действия →</a></p>';
 }).catch(function(e){ Dash.showFatalError('content', ['dashboard.json ('+e+')']); });
 
-function kpiCard(label, val, sub, delta, moreHref){
+function kpiCard(label, val, sub, delta, moreHref, meta, metaLabel){
   return '<div class="kpi"><div class="lbl">'+esc(label)+'</div><div class="val">'+val+'</div>'+
     (sub ? '<div class="period">'+esc(String(sub))+'</div>' : '')+
     (delta ? '<div class="delta '+Dash.signClass(delta.abs||0)+'">'+Dash.deltaHtml(delta)+'</div>' : '')+
+    (meta ? Dash.renderMeta(meta, metaLabel) : '')+
     (moreHref ? '<a class="more" href="'+moreHref+'">подробнее →</a>' : '')+
     '</div>';
 }
