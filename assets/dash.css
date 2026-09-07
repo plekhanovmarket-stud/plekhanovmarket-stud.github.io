@@ -171,15 +171,22 @@ td{border-bottom:1px solid var(--line)}
 tr:last-child td{border-bottom:none}
 tbody tr:hover td{background:color-mix(in srgb, var(--accent) 5%, var(--card))}
 
-/* карточное представление длинных таблиц на телефоне (раздел 14.2) */
+/* карточное представление длинных таблиц на телефоне (раздел 14.2).
+   Задание №1.6 п.1.2 (V4-исправление): внешний вид .rowcard/.grid раньше был
+   объявлен ТОЛЬКО внутри @media(max-width:640px) - секции, использующие
+   .rowcards с inline style="display:flex" НАПРЯМУЮ (например "Структура
+   расходов" на index.html, без табличного двойника на десктопе), на 1366px
+   получали карточки без фона/паддинга/сетки - подписи и суммы слипались в
+   одну строку. Оформление карточки теперь работает на любой ширине; отзывчивым
+   (скрыт/показан) остаётся только сам ПЕРЕКЛЮЧАТЕЛЬ таблица↔карточки. */
 .rowcards{display:none}
+.rowcard{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:12.5px}
+.rowcard .title{font-weight:600;margin-bottom:4px;font-size:13px}
+.rowcard .grid{display:grid;grid-template-columns:1fr 1fr;gap:3px 10px;color:var(--ink2)}
+.rowcard .grid b{color:var(--ink);font-weight:600;text-align:right;overflow-wrap:break-word}
 @media (max-width:640px){
   table.to-cards{display:none}
   .rowcards{display:flex;flex-direction:column;gap:8px}
-  .rowcard{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:12.5px}
-  .rowcard .title{font-weight:600;margin-bottom:4px;font-size:13px}
-  .rowcard .grid{display:grid;grid-template-columns:1fr 1fr;gap:3px 10px;color:var(--ink2)}
-  .rowcard .grid b{color:var(--ink);font-weight:600}
 }
 
 /* ── статусы/бейджи ── */
