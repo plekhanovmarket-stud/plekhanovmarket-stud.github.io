@@ -22,6 +22,9 @@
   При статусе «выполнено» сохраняется дата и базовый эффект (baseline_effect);
   через 7 и 14 дней задача получает пометку «ожидает проверки» — автоматический расчёт фактического
   эффекта ещё не реализован, это следующий этап.
+  <br><span class="stub-note">Назначение исполнителя, срок и сохранение статуса — следующий этап.
+  Пока «Ответственный»/«Срок»/«Статус» read-only и правятся вручную в приватном репозитории — эта
+  страница ничего не сохраняет и не должна создавать видимость обратного.</span>
 </div>
 </div>
 <script src="assets/dash.js"></script>
@@ -29,7 +32,9 @@
 const TYPES = ['Все','Цена','Реклама','Остаток','Данные'];
 const STATUSES = ['Все','новая','принято','в работе','выполнено','отклонено','устранено автоматически'];
 let ALL = [];
-let curType = new URLSearchParams(location.search).get('type') || 'Все';
+const qs = new URLSearchParams(location.search);
+let curType = qs.get('type') || 'Все';
+let curKey = qs.get('key') || null;
 let curStatus = 'открытые';
 let showAll = false;
 
@@ -43,6 +48,15 @@ Dash.loadAll(['data/actions.json']).then(function(res){
 }).catch(function(e){ Dash.showFatalError('content', ['actions.json ('+e+')']); });
 
 function render(){
+  if (curKey){
+    const one = ALL.filter(function(t){ return t.key===curKey; });
+    document.getElementById('content').innerHTML =
+      '<p class="dim" style="font-size:12px"><a href="actions.html">← показать все задачи</a></p>'+
+      (one.length ? rowsTable(one)+cardsBlock(one) :
+        '<p class="dim">Задача с этим идентификатором не найдена (возможно, уже выполнена и попала в архив,'+
+        ' либо устранена автоматически — фильтр «Все» статусы её не покажет).</p>');
+    return;
+  }
   let rows = ALL.filter(function(t){ return curType==='Все' || t.type===curType; });
   if (curStatus==='открытые') rows = rows.filter(function(t){ return ['новая','принято','в работе'].indexOf(t.status)>=0; });
   else if (curStatus!=='Все') rows = rows.filter(function(t){ return t.status===curStatus; });
@@ -56,37 +70,12 @@ function render(){
     return '<button data-s="'+s+'" class="'+(s===curStatus?'on':'')+'">'+s+'</button>';
   }).join('');
 
-  const trs = rows.map(function(t){
-    return '<tr><td>'+t.priority+(t.overdue?' <span class="badge overdue">просрочено</span>':'')+'</td>'+
-      '<td>'+esc(t.type)+'</td><td>'+esc(t.object||'—')+'</td>'+
-      '<td class="wrap-cell">'+esc(t.problem)+'</td><td class="wrap-cell">'+esc(t.action)+'</td>'+
-      '<td>'+(t.effect_32d!=null?Dash.fmtRub(t.effect_32d):'—')+'</td>'+
-      '<td>'+Dash.reliabilityTag(t.reliability)+'</td>'+
-      '<td>'+esc(t.owner||'—')+'</td><td>'+(t.due?Dash.fmtDate(t.due):'—')+'</td>'+
-      '<td>'+statusBadge(t.status)+(t.review_stage?'<br><span class="badge risk">'+esc(t.review_stage)+'</span>':'')+'</td>'+
-      '<td>'+esc(t.result||'—')+'</td></tr>';
-  }).join('');
-
-  const cards = rows.map(function(t){
-    return '<div class="rowcard"><div class="title">'+(t.overdue?'<span class="badge overdue">просрочено</span> ':'')+
-      '#'+t.priority+' · '+esc(t.type)+' · '+esc(t.object||'')+'</div>'+
-      '<div class="dim" style="margin-bottom:6px">'+esc(t.problem)+' → '+esc(t.action)+'</div>'+
-      '<div class="grid"><span>Эффект/32д</span><b>'+(t.effect_32d!=null?Dash.fmtRub(t.effect_32d):'—')+'</b>'+
-      '<span>Статус</span><b>'+esc(t.status)+(t.review_stage?' · '+esc(t.review_stage):'')+'</b>'+
-      '<span>Ответственный</span><b>'+esc(t.owner||'—')+'</b>'+
-      '<span>Срок</span><b>'+(t.due?Dash.fmtDate(t.due):'—')+'</b></div></div>';
-  }).join('') || '<p class="dim">Нет задач по выбранным фильтрам.</p>';
-
   document.getElementById('content').innerHTML =
     '<div class="filters">'+typeFilters+'</div>'+
     '<div class="filters">'+statusFilters+'</div>'+
     '<p class="dim" style="font-size:12px">Показано '+rows.length+' из '+total+
       (total>10 && !showAll ? ' <a href="#" id="showAllLink">показать все →</a>' : '')+'</p>'+
-    '<div class="card scroll"><table class="to-cards"><thead><tr>'+
-    '<th>#</th><th>Тип</th><th>Объект</th><th>Проблема</th><th>Действие</th><th>Эффект/32д</th>'+
-    '<th>Надёжность</th><th>Ответств.</th><th>Срок</th><th>Статус</th><th>Результат</th></tr></thead>'+
-    '<tbody>'+(trs || '<tr><td colspan="11" class="dim" style="text-align:center;padding:16px">Нет задач</td></tr>')+'</tbody></table></div>'+
-    '<div class="rowcards">'+cards+'</div>';
+    rowsTable(rows)+cardsBlock(rows);
 
   document.querySelectorAll('.filters button[data-t]').forEach(function(b){
     b.onclick = function(){ curType = b.dataset.t; render(); };
@@ -98,6 +87,34 @@ function render(){
   if (link) link.onclick = function(e){ e.preventDefault(); showAll = true; render(); };
 }
 
+function rowsTable(rows){
+  const trs = rows.map(function(t){
+    return '<tr><td>'+t.priority+(t.overdue?' <span class="badge overdue">просрочено</span>':'')+'</td>'+
+      '<td>'+esc(t.type)+'</td><td>'+esc(t.object||'—')+'</td>'+
+      '<td class="wrap-cell">'+esc(t.problem)+'</td><td class="wrap-cell">'+esc(t.action)+'</td>'+
+      '<td>'+(t.effect_32d!=null?Dash.fmtRub(t.effect_32d):'—')+'</td>'+
+      '<td>'+Dash.reliabilityTag(t.reliability)+'</td>'+
+      '<td>'+esc(t.owner||'—')+'</td><td>'+(t.due?Dash.fmtDate(t.due):'—')+'</td>'+
+      '<td>'+statusBadge(t.status)+(t.review_stage?'<br><span class="badge risk">'+esc(t.review_stage)+'</span>':'')+'</td>'+
+      '<td>'+esc(t.result||'—')+'</td></tr>';
+  }).join('');
+  return '<div class="card scroll"><table class="to-cards"><thead><tr>'+
+    '<th>#</th><th>Тип</th><th>Объект</th><th>Проблема</th><th>Действие</th><th>Эффект/32д</th>'+
+    '<th>Надёжность</th><th>Ответств.</th><th>Срок</th><th>Статус</th><th>Результат</th></tr></thead>'+
+    '<tbody>'+(trs || '<tr><td colspan="11" class="dim" style="text-align:center;padding:16px">Нет задач</td></tr>')+'</tbody></table></div>';
+}
+function cardsBlock(rows){
+  const cards = rows.map(function(t){
+    return '<div class="rowcard"><div class="title">'+(t.overdue?'<span class="badge overdue">просрочено</span> ':'')+
+      '#'+t.priority+' · '+esc(t.type)+' · '+esc(t.object||'')+'</div>'+
+      '<div class="dim" style="margin-bottom:6px">'+esc(t.problem)+' → '+esc(t.action)+'</div>'+
+      '<div class="grid"><span>Эффект/32д</span><b>'+(t.effect_32d!=null?Dash.fmtRub(t.effect_32d):'—')+'</b>'+
+      '<span>Статус</span><b>'+esc(t.status)+(t.review_stage?' · '+esc(t.review_stage):'')+'</b>'+
+      '<span>Ответственный</span><b>'+esc(t.owner||'—')+'</b>'+
+      '<span>Срок</span><b>'+(t.due?Dash.fmtDate(t.due):'—')+'</b></div></div>';
+  }).join('') || '<p class="dim">Нет задач по выбранным фильтрам.</p>';
+  return '<div class="rowcards">'+cards+'</div>';
+}
 function statusBadge(s){
   const cls = s==='выполнено' ? 'ok' : s==='отклонено' ? 'bad' : s==='устранено автоматически' ? 'grey' : 'risk';
   return '<span class="badge '+cls+'">'+esc(s)+'</span>';

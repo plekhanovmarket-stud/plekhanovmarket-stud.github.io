@@ -135,10 +135,10 @@ function fmtDT(s){
 let _calculatedAt = null;
 function setCalculatedAt(ts){ _calculatedAt = ts || null; }
 
+let _metaSeq = 0;
 function renderMeta(meta, label){
   label = label || 'Данные';
   if (!meta) meta = {kind:'unknown', status:'требует проверки'};
-  const badge = '<span class="badge-status '+_metaStatusCls(meta.status)+'">'+_esc(meta.status||'требует проверки')+'</span>';
   const srcTxt = (meta.sources && meta.sources.length) ? ' · источник: '+meta.sources.filter(Boolean).join(', ') : '';
   const calcTxt = _calculatedAt ? ' · Рассчитано: '+fmtDT(_calculatedAt) : '';
   let body;
@@ -157,13 +157,34 @@ function renderMeta(meta, label){
     body = meta.parts.map(function(p){
       const d = p.period_from ? (fmtDT(p.period_from)+'–'+fmtDT(p.period_to)) : (p.date ? fmtDT(p.date) : (p.note||'—'));
       return _esc(p.label)+': '+d;
-    }).join(' · ') + srcTxt + ' · показатель ограничен старейшим источником' + calcTxt;
+    }).join(' · ') + srcTxt + ' · показатель ограничен старейшим источником (' +
+      _esc(meta.oldest_label||'')+')' + calcTxt;
   } else if (meta.kind === 'manual') {
     body = _esc(meta.note || 'Ручное значение, не датировано');
   } else {
     body = _esc(meta.note || 'Дата источника не определена');
   }
-  return '<div class="meta-line">'+badge+body+'</div>';
+  // Задание №1.6 п.9: в обычном состоянии - только кликабельный короткий статус;
+  // полная техническая строка - в раскрываемой карточке (клик и наведение на
+  // десктопе через :hover в CSS, тап на телефоне через aria-expanded/onclick,
+  // доступно с клавиатуры - это <button>, повторное нажатие закрывает).
+  const id = 'meta-d-'+(++_metaSeq);
+  const badge = '<button type="button" class="badge-status '+_metaStatusCls(meta.status)+
+    '" aria-expanded="false" aria-controls="'+id+'" onclick="Dash.toggleMeta(this,\''+id+'\')">'+
+    _esc(meta.status||'требует проверки')+'</button>';
+  return '<div class="meta-line">'+badge+'<div class="meta-detail" id="'+id+'">'+body+'</div></div>';
+}
+function toggleMeta(btn, id){
+  const el = document.getElementById(id);
+  if (!el) return;
+  const open = el.getAttribute('data-open')==='1';
+  el.setAttribute('data-open', open ? '0' : '1');
+  btn.setAttribute('aria-expanded', open ? 'false' : 'true');
+}
+// ── причина прочерка (Задание №1.6 п.5/7): прочерк ≠ ноль - показываем "—" только
+// когда нет никакой причины (не должно случаться), иначе понятный текст. ──
+function naText(reason){
+  return '<span class="na-reason">'+_esc(reason || 'нет данных')+'</span>';
 }
 
 window.Dash = {
@@ -171,6 +192,7 @@ window.Dash = {
   signClass: signClass, deltaHtml: deltaHtml, fetchJSON: fetchJSON, loadAll: loadAll,
   showFatalError: showFatalError, sourcePill: sourcePill, reliabilityTag: reliabilityTag,
   renderMeta: renderMeta, fmtDT: fmtDT, setCalculatedAt: setCalculatedAt,
+  toggleMeta: toggleMeta, naText: naText,
 };
 
 document.addEventListener('DOMContentLoaded', renderNav);

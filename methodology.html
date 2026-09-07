@@ -48,10 +48,15 @@ code{background:var(--line);padding:1px 5px;border-radius:4px;font-size:12.5px}
 <table>
 <tr><th>Показатель</th><th>Формула</th></tr>
 <tr><td>Начислено Ozon за неделю (баланс-метод)</td><td><code>остаток на конец − остаток на начало + выплаты + удержанный кредит</code></td></tr>
-<tr><td>Кредит</td><td><code>152 336,33 ₽/нед = 117960×2/30×7 + 416950/30×7</code> (652 870 ₽/мес, фиксированная сумма, два кредита Озон Банка)</td></tr>
+<tr><td>Кредит</td><td id="loanWeeklyCell"><code>загрузка…</code></td></tr>
 <tr><td>НДС</td><td><code>операционная прибыль × 22/122</code></td></tr>
-<tr><td>Кредит за календарный месяц</td><td><code>(152 336,33 / 7) × число календарных дней месяца с посчитанной операционной прибылью</code> — дополнение к ТЗ от 2026-09-04: недели Кати не совпадают с границами месяца, кредит — известная фиксированная величина, поэтому не прочерк, а расчёт по умолчанию; для текущего месяца — «накоплено на сегодня, месяц не закончен»</td></tr>
+<tr><td>Кредит за календарный месяц</td><td id="loanMonthlyCell"><code>загрузка…</code></td></tr>
 </table>
+<p class="dim" style="font-size:11px">
+  Сумма кредита и период её действия читаются из <code>data/loan_config_public.json</code> —
+  единственного источника (config/loan_config.json в приватном репозитории данных),
+  эта страница и JSON-файлы дашборда не хранят число отдельно и независимо друг от друга.
+</p>
 
 <h3>Заказано vs Реализовано — переоткрыто и исправлено 2026-09-05</h3>
 <p>
@@ -228,5 +233,30 @@ code{background:var(--line);padding:1px 5px;border-radius:4px;font-size:12.5px}
 
 </div>
 <script src="assets/dash.js"></script>
+<script>
+// Задание №1.6 п.6: число кредита - НЕ хардкод в тексте, читается из
+// data/loan_config_public.json (единственный источник - config/loan_config.json).
+Dash.loadAll(['data/loan_config_public.json']).then(function(res){
+  const r = res[0];
+  const wc = document.getElementById('loanWeeklyCell'), mc = document.getElementById('loanMonthlyCell');
+  if (!r.ok || !wc || !mc) return;
+  const c = r.data;
+  const comps = (c.components||[]).map(function(x){
+    return (x.count>1?x.count+'×':'')+x.amount_per_period+'/'+x.period_days;
+  }).join(' + ');
+  if (c.valid){
+    wc.innerHTML = '<code>'+c.weekly_rub.toLocaleString('ru-RU')+' ₽/нед = ('+comps+')×7</code> '+
+      '(фиксированная сумма, действует по '+Dash.fmtDate(c.valid_until)+', зафиксировано '+Dash.fmtDate(c.recorded_at)+')';
+    mc.innerHTML = '<code>('+c.weekly_rub.toLocaleString('ru-RU')+' / 7) × число календарных дней месяца '+
+      'с посчитанной операционной прибылью</code> — недели Кати не совпадают с границами месяца, кредит — '+
+      'известная фиксированная величина, поэтому не прочерк, а расчёт по умолчанию; для текущего месяца — '+
+      '«накоплено на сегодня, месяц не закончен».';
+  } else {
+    wc.innerHTML = '<span class="badge risk">требует обновления</span> '+esc(c.note||'');
+    mc.innerHTML = '<span class="badge risk">требует обновления</span>';
+  }
+}).catch(function(){});
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+</script>
 </body>
 </html>

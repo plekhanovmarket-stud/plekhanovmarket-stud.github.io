@@ -70,27 +70,94 @@ a{color:var(--accent)}
 @media (max-width:640px){ .kpi-grid{grid-template-columns:1fr 1fr} }
 
 /* ── происхождение показателя (ТЗ "Задание №1" 2026-09-05): всегда видимая подпись,
-   НЕ всплывающая подсказка, минимум 12px, читается на телефоне ── */
-.meta-line{font-size:12px;line-height:1.45;color:var(--ink2);margin-top:6px;
-  border-top:1px dashed var(--line);padding-top:5px}
+   НЕ всплывающая подсказка, минимум 12px, читается на телефоне.
+   Задание №1.6 п.9: под показателем в обычном состоянии - только кликабельный
+   короткий статус; полная техническая строка - в раскрываемой карточке (клик/
+   наведение на десктопе, касание на телефоне, aria-expanded, доступно с клавиатуры). ── */
+.meta-line{margin-top:6px;border-top:1px dashed var(--line);padding-top:5px}
 .meta-line .badge-status{display:inline-block;font-size:11px;font-weight:700;border-radius:5px;
-  padding:1px 6px;margin-right:5px;white-space:nowrap}
+  padding:2px 7px;margin:0;white-space:nowrap;cursor:pointer;border:1px solid transparent;
+  font-family:inherit;line-height:1.4;-webkit-appearance:none;appearance:none}
+.meta-line .badge-status:hover, .meta-line .badge-status:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 .meta-line .badge-status.ok{background:var(--posbg);color:var(--pos)}
 .meta-line .badge-status.warn{background:var(--warnbg);color:var(--warn)}
 .meta-line .badge-status.bad{background:var(--negbg);color:var(--neg)}
 .meta-line .badge-status.grey{background:var(--bg);color:var(--muted);border:1px solid var(--line)}
+.meta-line .meta-detail{display:none;font-size:12px;line-height:1.5;color:var(--ink2);margin-top:6px;
+  padding:8px 10px;background:var(--bg);border:1px solid var(--line);border-radius:8px;max-width:100%;
+  overflow-wrap:break-word}
+.meta-line .meta-detail[data-open="1"]{display:block}
+@media (hover:hover){
+  .meta-line:hover .meta-detail{display:block}
+}
 
-/* ── карточка "проблема" ── */
+/* ── карточка "проблема" (Задание №1.6 п.1): стабильная сетка контент/сумма/
+   действие; сумма по правому краю; кнопка фиксированного размера; длинное
+   название переносится внутри своей колонки без сдвига суммы. ── */
 .problem-list{display:flex;flex-direction:column;gap:8px}
 .problem{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--neg);
-  border-radius:10px;padding:11px 14px;display:flex;justify-content:space-between;gap:12px;align-items:center}
-.problem .txt{font-size:13px;line-height:1.5}
-.problem .txt b{font-weight:600}
-.problem .eff{font-weight:700;color:var(--neg);white-space:nowrap;font-size:14px}
-.problem .go{white-space:nowrap;font-size:12px;border:1px solid var(--line);border-radius:7px;padding:6px 11px;
-  text-decoration:none;color:var(--ink2);background:var(--bg)}
+  border-radius:10px;padding:11px 14px;
+  display:grid;grid-template-columns:1fr 130px 118px;gap:4px 14px;align-items:center}
+.problem .txt{font-size:13px;line-height:1.45;min-width:0;overflow-wrap:break-word}
+.problem .txt .name{font-weight:600;display:block;overflow-wrap:break-word}
+.problem .txt .reason{color:var(--ink2);display:block;margin-top:2px}
+.problem .txt .reason .arrow{color:var(--muted);margin:0 4px}
+.problem .eff{font-weight:700;color:var(--neg);white-space:nowrap;font-size:14px;text-align:right}
+.problem .go{white-space:nowrap;font-size:12px;border:1px solid var(--line);border-radius:7px;
+  padding:6px 0;text-align:center;text-decoration:none;color:var(--ink2);background:var(--bg);
+  width:118px;box-sizing:border-box}
 .problem .go:hover{border-color:var(--accent);color:var(--accent)}
-@media (max-width:640px){ .problem{flex-direction:column;align-items:stretch} .problem .eff{font-size:15px} }
+@media (max-width:640px){
+  .problem{grid-template-columns:1fr;grid-template-areas:"txt" "eff" "go"}
+  .problem .txt{grid-area:txt}
+  .problem .eff{grid-area:eff;text-align:left;font-size:15px}
+  .problem .go{grid-area:go;width:100%}
+}
+
+/* ── компактная динамика (Задание №1.6 п.2, заменяет удалённый большой график) ── */
+.cmp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.cmp-cell{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:11px 13px}
+.cmp-cell .lbl{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;margin-bottom:6px}
+.cmp-cell .row{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:12.5px;color:var(--ink2)}
+.cmp-cell .row b{color:var(--ink);font-size:14px;font-weight:700}
+.cmp-cell .delta{margin-top:6px;font-size:12.5px;font-weight:600}
+@media (max-width:640px){ .cmp-grid{grid-template-columns:1fr} }
+
+/* ── управленческий отчёт - цепочка (Задание №1.6 п.3) ── */
+.chain{display:flex;flex-wrap:wrap;align-items:center;gap:4px}
+.chain-step{background:var(--card);border:1px solid var(--line);border-radius:10px;
+  padding:9px 12px;min-width:132px;flex:1 1 132px}
+.chain-step .lbl{font-size:11px;color:var(--muted);line-height:1.3;margin-bottom:4px}
+.chain-step .val{font-size:15px;font-weight:700;white-space:nowrap}
+.chain-step.final{border-color:var(--accent);border-width:2px;background:color-mix(in srgb, var(--accent) 6%, var(--card))}
+.chain-step.na .val{color:var(--muted);font-weight:600;font-size:13px}
+.chain-op{font-size:18px;color:var(--muted);font-weight:700;flex:0 0 auto;padding:0 2px}
+@media (max-width:640px){
+  .chain{flex-direction:column;align-items:stretch}
+  .chain-step{min-width:0;width:100%}
+  .chain-op{align-self:center;padding:2px 0}
+}
+.chain-prelim{display:inline-block;margin-top:4px;font-size:10.5px;font-weight:700;color:var(--warn);
+  background:var(--warnbg);border:1px solid var(--warnln);border-radius:5px;padding:1px 6px}
+
+/* ── причина прочерка в таблицах (Задание №1.6 п.5/7): прочерк ≠ ноль,
+   текстовая причина видна прямо в ячейке, отличается от простого "—" ── */
+.na-reason{color:var(--muted);font-size:11px;font-style:italic;white-space:normal}
+
+/* ── раскрываемые списки SKU (Задание №1.6 п.8) ── */
+.reaction-btn{display:block;width:100%;text-align:left;border:1px solid var(--line);background:var(--card);
+  border-radius:12px;padding:14px 15px;cursor:pointer;font-family:inherit;color:var(--ink)}
+.reaction-btn:hover, .reaction-btn:focus-visible{border-color:var(--accent)}
+.reaction-btn .lbl{font-size:11.5px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.03em;
+  display:flex;justify-content:space-between}
+.reaction-btn .val{font-size:24px;font-weight:700;letter-spacing:-.01em;line-height:1.15}
+.reaction-btn .val.small{font-size:17px}
+.reaction-btn .period{font-size:11px;color:var(--muted);margin-top:3px}
+.reaction-panel{margin-top:8px}
+
+/* ── подпись о незавершённой функции (Задание №1.6 п.4) ── */
+.stub-note{font-size:11.5px;color:var(--muted);background:var(--bg);border:1px dashed var(--line);
+  border-radius:8px;padding:6px 9px;margin-top:4px;display:inline-block}
 
 /* ── таблицы ── */
 .card{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}

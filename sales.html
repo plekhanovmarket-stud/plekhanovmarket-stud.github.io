@@ -27,10 +27,11 @@ Dash.loadAll(['data/sales.json']).then(function(res){
   Dash.setCalculatedAt(d.calculated_at);
 
   const weeksTrs = d.weeks.slice().reverse().map(function(w){
+    const qr = w.qty_reason || (d.qty_days_note ? d.qty_days_note : null);
     return '<tr><td>'+Dash.fmtDate(w.beg)+'—'+Dash.fmtDate(w.end)+'</td><td>'+Dash.fmtRub(w.realized)+'</td>'+
       '<td class="dim">'+(w.ordered!=null?Dash.fmtRub(w.ordered):'—')+'</td>'+
-      '<td>'+(w.qty_sold!=null?Dash.fmt0(w.qty_sold):'—')+'</td>'+
-      '<td>'+(w.qty_returned!=null?Dash.fmt0(w.qty_returned):'—')+'</td>'+
+      '<td>'+(w.qty_sold!=null?Dash.fmt0(w.qty_sold):Dash.naText(qr))+'</td>'+
+      '<td>'+(w.qty_returned!=null?Dash.fmt0(w.qty_returned):Dash.naText(qr))+'</td>'+
       '<td>'+(w.diff!=null?Dash.fmtRub(w.diff):'—')+'</td></tr>';
   }).join('');
 

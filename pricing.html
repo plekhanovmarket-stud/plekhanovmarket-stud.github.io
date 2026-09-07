@@ -34,12 +34,15 @@ Dash.loadAll(['data/pricing.json']).then(function(res){
   const CATS = ['Все'].concat(d.categories || []);
 
   const pr = d.price_reaction || {};
+  window.__pr = pr;
   const prHtml = pr.available ? (
-    '<h2>Реакция на рост комиссии с '+Dash.fmtDate(pr.baseline_date)+'</h2><div class="kpi-grid">'+
-    kpi('Подняли цену', pr.raised.n, '+'+Dash.fmtRub(pr.raised.effect_32d)+'/32д', 'pos')+
-    kpi('Не тронули', pr.unchanged.n, null, null)+
-    kpi('Снизили цену', pr.lowered.n, Dash.fmtRub(pr.lowered.effect_32d)+'/32д', pr.lowered.n?'neg':null)+
-    '</div>') : '';
+    '<h2>Реакция на рост комиссии с '+Dash.fmtDate(pr.baseline_date)+'</h2>'+
+    '<p class="dim" style="font-size:11px;margin:0 0 8px">Нажмите на карточку, чтобы увидеть список SKU.</p>'+
+    '<div class="kpi-grid">'+
+    reactionCard('raised', 'Подняли цену', pr.raised, 'pos')+
+    reactionCard('unchanged', 'Не тронули', pr.unchanged, null)+
+    reactionCard('lowered', 'Снизили цену', pr.lowered, pr.lowered.n?'neg':null)+
+    '</div><div id="reactionPanel" class="reaction-panel"></div>') : '';
 
   document.getElementById('content').innerHTML =
     '<div class="kpi-grid">'+
@@ -72,8 +75,45 @@ Dash.loadAll(['data/pricing.json']).then(function(res){
   document.querySelectorAll('#catfilters button').forEach(function(b){
     b.onclick = function(){ CATEGORY=b.dataset.c; renderRows(); };
   });
+  document.querySelectorAll('.reaction-btn').forEach(function(b){
+    b.onclick = function(){ toggleReaction(b.dataset.group); };
+  });
   renderRows();
 }).catch(function(e){ Dash.showFatalError('content', ['pricing.json ('+e+')']); });
+
+let openGroup = null;
+function toggleReaction(group){
+  openGroup = (openGroup===group) ? null : group;
+  renderReactionPanel();
+}
+function reactionCard(group, label, g, cls){
+  return '<button type="button" class="reaction-btn" data-group="'+group+'" aria-expanded="false">'+
+    '<div class="lbl"><span>'+esc(label)+'</span><span>'+(openGroup===group?'▾':'▸')+'</span></div>'+
+    '<div class="val small'+(cls?' '+cls:'')+'">'+g.n+'</div>'+
+    (g.n ? '<div class="period">'+(g.effect_32d>0?'+':'')+Dash.fmtRub(g.effect_32d)+'/32д</div>' : '')+
+    '</button>';
+}
+function renderReactionPanel(){
+  const panel = document.getElementById('reactionPanel');
+  if (!panel) return;
+  document.querySelectorAll('.reaction-btn').forEach(function(b){
+    b.setAttribute('aria-expanded', b.dataset.group===openGroup ? 'true' : 'false');
+    b.querySelector('.lbl span:last-child').textContent = b.dataset.group===openGroup ? '▾' : '▸';
+  });
+  if (!openGroup){ panel.innerHTML = ''; return; }
+  const g = window.__pr[openGroup];
+  panel.innerHTML = '<p class="dim" style="font-size:12px;margin:8px 0 4px">Строк в списке: <b>'+
+    g.rows.length+'</b> (совпадает с числом на карточке: <b>'+g.n+'</b>)</p>'+
+    '<div class="card scroll"><table><thead><tr><th>SKU/Артикул</th><th>Название</th>'+
+    '<th>Дата изменения</th><th>Было</th><th>Стало</th><th>Δ ₽</th><th>Δ %</th></tr></thead><tbody>'+
+    g.rows.map(function(e){
+      return '<tr><td>'+esc(e.artikul)+'</td><td class="wrap-cell">'+esc(e.name)+'</td>'+
+        '<td>'+(e.change_date ? Dash.fmtDate(e.change_date) : Dash.naText(e.change_date_note))+'</td>'+
+        '<td>'+Dash.fmtRub(e.old_price)+'</td><td>'+Dash.fmtRub(e.new_price)+'</td>'+
+        '<td class="'+Dash.signClass(e.delta_abs||0)+'">'+(e.delta_abs>0?'+':'')+Dash.fmtRub(e.delta_abs)+'</td>'+
+        '<td class="'+Dash.signClass(e.delta_abs||0)+'">'+(e.delta_pct>0?'+':'')+Dash.fmtPct(e.delta_pct)+'</td></tr>';
+    }).join('') + '</tbody></table></div>';
+}
 
 function renderRows(){
   let rows = FILTER==='Все' ? ROWS : ROWS.filter(function(r){return r.action===FILTER;});
