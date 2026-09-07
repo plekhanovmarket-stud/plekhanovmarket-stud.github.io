@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ozon — Журнал состояния проекта</title>
+<link rel="stylesheet" href="assets/dash.css">
+<style>
+/* Стили только этой страницы — dash.css не менялся, остальные страницы не затронуты. */
+.plog-note{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px;
+  font-size:12.5px;color:var(--ink2);line-height:1.5;margin-bottom:16px}
+.plog-note b{color:var(--ink)}
+.plog-task{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin-bottom:16px}
+.plog-task h3{margin:0 0 4px;font-size:16px}
+.plog-head{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:8px}
+.plog-dates{font-size:11.5px;color:var(--muted)}
+.plog-status{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:700;
+  border-radius:6px;padding:3px 9px;border:1px solid transparent;white-space:nowrap}
+.plog-status .ic{font-size:12px;line-height:1}
+.plog-status.st-postavleno{background:var(--bg);color:var(--muted);border-color:var(--line)}
+.plog-status.st-v-rabote{background:#e8f0fd;color:var(--accent);border-color:var(--accent)}
+:root:not([data-theme="light"]) .plog-status.st-v-rabote{background:#122845}
+.plog-status.st-ozhidaet{background:var(--warnbg);color:var(--warn);border-color:var(--warnln)}
+.plog-status.st-prinyato{background:var(--posbg);color:var(--pos);border-color:var(--pos)}
+.plog-status.st-prinyato-chastichno{background:var(--posbg);color:var(--pos);border-color:var(--warn)}
+.plog-status.st-otkloneno{background:var(--negbg);color:var(--neg);border-color:var(--neg)}
+.plog-status.st-zablokirovano{background:var(--negbg);color:var(--neg);border:1px dashed var(--neg)}
+.plog-section{margin-top:10px}
+.plog-section .lbl{font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:3px}
+.plog-section .val{font-size:13px;color:var(--ink2);line-height:1.5}
+.plog-evidence{list-style:none;margin:4px 0 0;padding:0;display:flex;flex-direction:column;gap:4px}
+.plog-evidence li{font-size:12.5px}
+.plog-evidence a{color:var(--accent);word-break:break-word}
+.plog-hist{margin-top:6px;border-top:1px dashed var(--line);padding-top:8px}
+.plog-hist-row{display:flex;gap:10px;padding:6px 0;border-bottom:1px solid var(--line);font-size:12.5px}
+.plog-hist-row:last-child{border-bottom:none}
+.plog-hist-date{flex:0 0 118px;color:var(--muted);font-variant-numeric:tabular-nums}
+.plog-hist-body{flex:1;min-width:0}
+.plog-hist-type{display:inline-block;font-weight:700;font-size:10.5px;text-transform:uppercase;
+  letter-spacing:.03em;color:var(--ink2);background:var(--bg);border:1px solid var(--line);
+  border-radius:5px;padding:1px 6px;margin-right:6px}
+.plog-hist-commits{margin-top:3px;font-size:11.5px}
+.plog-hist-commits a{color:var(--accent)}
+.plog-hist-commits .priv{color:var(--muted);font-style:italic}
+.plog-legend{display:flex;flex-wrap:wrap;gap:8px 14px;font-size:11.5px;color:var(--ink2);margin-bottom:14px}
+.plog-legend span{display:inline-flex;align-items:center;gap:4px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div id="navmount"></div>
+
+<h1>Журнал состояния проекта</h1>
+<p class="sub" id="subline">Загрузка…</p>
+
+<div id="content"><div class="loading">Загрузка данных…</div></div>
+
+<div class="foot">Канонический источник — <code>data/project_log.json</code>. Эта страница только отображает его; отдельной копии истории здесь нет.</div>
+</div>
+<script src="assets/dash.js"></script>
+<script>
+var STATUS_MAP = {
+  'поставлено':          {cls:'st-postavleno',          ic:'◻'},
+  'в работе':             {cls:'st-v-rabote',             ic:'◐'},
+  'ожидает проверки':     {cls:'st-ozhidaet',             ic:'◔'},
+  'принято':              {cls:'st-prinyato',             ic:'✓'},
+  'принято частично':     {cls:'st-prinyato-chastichno',  ic:'✓±'},
+  'отклонено':            {cls:'st-otkloneno',            ic:'✕'},
+  'заблокировано':        {cls:'st-zablokirovano',        ic:'⧖'}
+};
+var SITE_REPO_URL = 'https://github.com/plekhanovmarket-stud/plekhanovmarket-stud.github.io/commit/';
+
+Dash.loadAll(['data/project_log.json']).then(function(res){
+  var r = res[0];
+  if (!r.ok){ Dash.showFatalError('content', ['data/project_log.json ('+r.error+')']); return; }
+  var d = r.data;
+  document.getElementById('subline').textContent = 'Обновлено ' + (d.updated_at || '—');
+
+  var legend = '<div class="plog-legend">' + Object.keys(STATUS_MAP).map(function(s){
+    return '<span>' + statusBadge(s) + '</span>';
+  }).join('') + '</div>';
+
+  var note = '<div class="plog-note">' +
+    '<div><b>Канонический источник:</b> ' + esc(d.canonical_source||'—') + '</div>' +
+    '<div style="margin-top:6px"><b>Отличие от «Журнала изменений»:</b> ' + esc(d.note_scope||'—') + '</div>' +
+  '</div>';
+
+  var tasksHtml = (d.tasks||[]).map(renderTask).join('');
+
+  document.getElementById('content').innerHTML = note + legend + tasksHtml;
+}).catch(function(e){ Dash.showFatalError('content', ['project_log.json ('+e+')']); });
+
+function renderTask(t){
+  var evidence = (t.public_evidence||[]).length
+    ? '<ul class="plog-evidence">' + t.public_evidence.map(function(ev){
+        return '<li>&#8226; <a href="'+esc(ev.url)+'" target="_blank" rel="noopener">'+esc(ev.label||ev.url)+'</a></li>';
+      }).join('') + '</ul>'
+    : '<div class="val" style="color:var(--muted)">Публичных доказательств пока нет.</div>';
+
+  var history = (t.history||[]).slice().sort(function(a,b){ return (a.date||'').localeCompare(b.date||''); })
+    .map(renderHistRow).join('');
+
+  return '<div class="plog-task">' +
+    '<div class="plog-head">' + statusBadge(t.status) +
+      '<span class="plog-dates">поставлено ' + esc(t.date_opened||'—') +
+      ' &middot; последнее событие ' + esc(t.last_updated||'—') + '</span>' +
+    '</div>' +
+    '<h3>' + esc(t.title||t.task_id) + '</h3>' +
+    section('Требование', t.requirement_summary) +
+    section('Что выполнено', t.done) +
+    section('Что осталось', t.remaining) +
+    '<div class="plog-section"><div class="lbl">Публичный site-коммит</div><div class="val">' +
+      (t.public_site_commit ? '<a href="'+SITE_REPO_URL+esc(t.public_site_commit)+'" target="_blank" rel="noopener">'+esc(t.public_site_commit)+'</a>' : '— (нет)') +
+      (t.private_data_commit ? ' &nbsp;&middot;&nbsp; <span style="color:var(--muted)">приватный data-коммит (для внутренней трассировки, не проверяется публично): '+esc(t.private_data_commit)+'</span>' : '') +
+    '</div></div>' +
+    '<div class="plog-section"><div class="lbl">Публичные доказательства</div>' + evidence + '</div>' +
+    '<div class="plog-hist"><div class="lbl">История событий (' + (t.history||[]).length + ')</div>' + history + '</div>' +
+  '</div>';
+}
+
+function section(label, val){
+  return '<div class="plog-section"><div class="lbl">'+esc(label)+'</div><div class="val">'+esc(val||'—')+'</div></div>';
+}
+
+function renderHistRow(ev){
+  var commits = (ev.commits||[]).map(function(c){
+    var parts = String(c).split(':');
+    var kind = parts[0], hash = parts.slice(1).join(':');
+    if (kind === 'public') {
+      return '<a href="'+SITE_REPO_URL+esc(hash)+'" target="_blank" rel="noopener">'+esc(hash)+'</a>';
+    }
+    return '<span class="priv">' + esc(c) + ' (приватный)</span>';
+  }).join(', ');
+  return '<div class="plog-hist-row">' +
+    '<div class="plog-hist-date">' + esc(ev.date||'—') + '</div>' +
+    '<div class="plog-hist-body">' +
+      '<span class="plog-hist-type">' + esc(ev.type||'—') + '</span>' +
+      esc(ev.summary||'') +
+      (commits ? '<div class="plog-hist-commits">' + commits + '</div>' : '') +
+    '</div>' +
+  '</div>';
+}
+
+function statusBadge(s){
+  var m = STATUS_MAP[s] || {cls:'st-postavleno', ic:'?'};
+  return '<span class="plog-status ' + m.cls + '"><span class="ic">' + m.ic + '</span>' + esc(s) + '</span>';
+}
+function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
+</script>
+</body>
+</html>
