@@ -7,21 +7,50 @@
 <title>Ozon — Финансы</title>
 <link rel="stylesheet" href="assets/dash.css">
 <style>
-.two-results{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
+/* Задание 2026-09-08 (девятый заход), раздел 7: широкая таблица только на этой
+   странице (не трогает .wrap остальных страниц сайта) - от 1280px снимается
+   общий max-width:1180px, оставлены боковые поля ~16px. */
+@media (min-width:1280px){
+  body.finance-wide .wrap{max-width:none; padding-left:20px; padding-right:20px}
+}
+.two-results{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0}
 .two-results .kpi{text-align:center}
-.two-results .kpi .val{font-size:26px}
-@media (max-width:640px){.two-results{grid-template-columns:1fr}}
-table{font-size:12px}
-th{white-space:nowrap}
-.status-row{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
-/* Раздел 2 замечания: компактная раскрываемая расшифровка источника - НЕ
-   расширяет основную таблицу (native <details>, содержимое разворачивается
-   ВНУТРИ той же ячейки/строки, новых столбцов не добавляет). */
+.two-results .kpi .val{font-size:23px}
+@media (max-width:900px){.two-results{grid-template-columns:1fr}}
+.status-row{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0;align-items:center}
 .meta-toggle{cursor:pointer;color:var(--muted);font-size:10px;margin-left:3px;user-select:none}
 .meta-toggle summary{list-style:none;display:inline}
 .meta-toggle summary::-webkit-details-marker{display:none}
 .meta-body{font-size:10px;color:var(--muted);white-space:normal;margin-top:3px;line-height:1.5;
   border-top:1px dashed var(--line);padding-top:3px}
+/* Раздел 7: desktop-таблица - фиксированная раскладка колонок, без горизонтального
+   скролла, весь набор столбцов виден одновременно на 1366px и шире. */
+.fin-table-wrap{display:block}
+.fin-table{width:100%;table-layout:fixed;border-collapse:collapse;font-size:11.5px}
+.fin-table th,.fin-table td{padding:5px 4px;text-align:right;vertical-align:top;
+  overflow-wrap:break-word;word-break:normal;border-bottom:1px solid var(--line)}
+.fin-table th{white-space:normal;line-height:1.25;font-weight:600;color:var(--muted);font-size:10.5px;text-align:right}
+.fin-table td:first-child,.fin-table th:first-child{text-align:left}
+.fin-table td:nth-child(2),.fin-table th:nth-child(2){text-align:left}
+.fin-num{white-space:nowrap}
+/* Технические подробности - свёрнуто по умолчанию (раздел 8), нативный details. */
+.tech-details{margin:10px 0;font-size:12px}
+.tech-details summary{cursor:pointer;color:var(--muted)}
+.tech-details .tech-row{padding:4px 0;border-bottom:1px dashed var(--line)}
+.tech-details .tech-row b{color:var(--fg)}
+/* Мобильные карточки (раздел 7 "На мобильном") - вместо широкой таблицы. */
+.fin-cards{display:none}
+.fin-card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:8px 0}
+.fin-card .fin-card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.fin-card .fin-card-date{font-weight:600}
+.fin-card .fin-card-row{display:flex;justify-content:space-between;font-size:12.5px;padding:2px 0}
+.fin-card .fin-card-row .lbl{color:var(--muted)}
+.fin-card .fin-card-results{margin-top:6px;padding-top:6px;border-top:1px dashed var(--line)}
+.fin-card .fin-card-status-note{margin-top:6px;font-size:11.5px;color:var(--muted)}
+@media (max-width:900px){
+  .fin-table-wrap{display:none}
+  .fin-cards{display:block}
+}
 </style>
 </head>
 <body>
@@ -37,28 +66,85 @@ th{white-space:nowrap}
   Данные — <code>data/dashboard_v2.json</code>. Кредитный резерв показывается отдельно от прибыли —
   неполная реклама/закупка не удаляет известный резерв, только блокирует прибыль/НДС/итог.
   Формулы — см. <a href="methodology.html">Методология</a>, история правок — <a href="changelog.html">Журнал изменений</a>.
+  Подробная диагностика источников — <a href="service.html">Состояние данных</a>.
 </div>
 </div>
 <script src="assets/dash.js"></script>
 <script>
+document.body.classList.add('finance-wide');
 let TAB = 'weeks';
+let GEN_DATE = null;
+
 fetch('data/dashboard_v2.json', {cache:'no-store'}).then(function(r){
   if (!r.ok) throw new Error('HTTP '+r.status);
   return r.json();
 }).then(function(d){
   document.getElementById('subline').textContent = 'Сгенерировано ' + (d.calculated_at||'—') +
     ' · run_date=' + d.run_date + ' · generation_date=' + d.generation_date;
+  GEN_DATE = d.generation_date;
   window.__fin = d;
   renderTop(d);
   renderTabs(d);
 }).catch(function(e){ Dash.showFatalError('content', ['data/dashboard_v2.json ('+e+')']); });
 
+// ─────────────────── Раздел 10: технические статусы -> понятный русский ───────────────────
+// Словарь значений - общий с Пультом (Dash.statusText/Dash.STATUS_VALUES, assets/dash.js),
+// чтобы один и тот же статус не переводился по-разному на разных страницах.
+const STATUS_LABELS = {
+  data_status: 'Данные', cost_reconciliation_status: 'Себестоимость',
+  credit_reserve_status: 'Кредит', result_status: 'Результат',
+};
+function statusText(v){ return Dash.statusText(v); }
 function statusBadge(status, map){
   map = map || {complete:'ok', closed:'ok', fact:'ok', final:'ok',
                 incomplete:'risk', stale:'risk', mixed:'risk', preliminary:'risk', unresolved:'risk',
-                plan:'grey', not_checked:'grey', error:'bad'};
+                plan:'grey', not_checked:'grey', error:'bad', open:'grey'};
   const cls = map[status] || 'grey';
-  return '<span class="badge '+cls+'">'+esc(status||'—')+'</span>';
+  return '<span class="badge '+cls+'">'+esc(statusText(status))+'</span>';
+}
+
+// ─────────────────── Раздел 8-9: короткая причина неполноты вместо сырого текста ───────────────────
+// Один короткий понятный статус в столбце "Статус" - полный технический текст (raw
+// PowerShell/HTTP исключения, source_id/coverage_from/n_records/...) сюда никогда не
+// попадает - уходит только в свёрнутые "Технические подробности" (techNote ниже).
+function shortDayReason(r){
+  if (r.date === GEN_DATE) return 'Сегодня — данные ещё формируются';
+  const raw = [r.gross_sales_reason, r.returns_rub_reason, r.net_realized_reason, r.zakup_reason,
+               r.ads_reason, r.other_reason, r.accrued_reason].filter(Boolean).join(' ');
+  if (r.ads_status === 'stale') return 'Реклама ещё не обновилась';
+  if (r.unknown_cost_skus && r.unknown_cost_skus.length) {
+    const n = r.unknown_cost_skus.length;
+    return 'Нет себестоимости ' + n + ' ' + (n === 1 ? 'товара' : (n < 5 ? 'товаров' : 'товаров'));
+  }
+  if (/вне окна источника/.test(raw)) return 'Ожидаются окончательные данные Ozon';
+  if (/UploadString|Exception|Не найден|Not Found|error/i.test(raw)) return 'Ошибка получения данных';
+  if (r.data_status !== 'complete') return 'Ожидаются окончательные данные Ozon';
+  return null;
+}
+function shortWeekReason(w){
+  const reason = w.result_status_reason || '';
+  if (w.blocked_reasons && w.blocked_reasons.length) return 'Ожидаются окончательные данные Ozon';
+  if (/неизвестна себестоимость/.test(reason)) return 'Нет себестоимости части товаров';
+  if (/реклама недозрела|stale/.test(reason)) return 'Реклама ещё не обновилась';
+  if (/частично на ПЛАНЕ/.test(reason)) return 'Кредитный резерв частично плановый';
+  if (/расходится с балансовым методом/.test(reason)) return 'Расхождение независимых расчётов';
+  if (w.result_status === 'preliminary') return 'Предварительный результат';
+  return null;
+}
+// Полный технический текст (raw-исключения и т.п.) - ТОЛЬКО в свёрнутый блок, и
+// ТОЛЬКО когда у показателя реально нет значения (reason у "формула: ..." полей
+// присутствует ВСЕГДА, включая полностью здоровые дни/недели - это пояснение
+// расчёта, не причина неполноты, и не должно засорять "Технические подробности").
+function techNote(dateOrPeriod, r){
+  const pairs = [[r.gross_sales, r.gross_sales_reason], [r.returns_rub, r.returns_rub_reason],
+                 [r.net_realized, r.net_realized_reason], [r.zakup, r.zakup_reason],
+                 [r.ads, r.ads_reason], [r.other, r.other_reason], [r.accrued, r.accrued_reason]];
+  const raw = pairs.filter(function(p){ return p[0] == null && p[1]; }).map(function(p){ return p[1]; });
+  if (r.result_status_reason) raw.push(r.result_status_reason);
+  if (r.cost_reconciliation_reason) raw.push(r.cost_reconciliation_reason);
+  const clean = raw.filter(function(x){ return x && !/^Сегодня/.test(x); });
+  if (!clean.length) return null;
+  return {label: dateOrPeriod, text: Array.from(new Set(clean)).join(' · ')};
 }
 
 function renderTop(d){
@@ -78,25 +164,29 @@ function renderTop(d){
 function weekResultBlock(w){
   if (!w) return '<p class="dim">Нет закрытой недели.</p>';
   const statuses = '<div class="status-row">'+
-    'data_status: '+statusBadge(w.data_status)+
-    ' cost_reconciliation_status: '+statusBadge(w.cost_reconciliation_status)+
-    ' credit_reserve_status: '+statusBadge(w.credit_reserve_status)+
-    ' result_status: '+statusBadge(w.result_status)+
+    STATUS_LABELS.data_status+': '+statusBadge(w.data_status)+
+    ' '+STATUS_LABELS.cost_reconciliation_status+': '+statusBadge(w.cost_reconciliation_status)+
+    ' '+STATUS_LABELS.credit_reserve_status+': '+statusBadge(w.credit_reserve_status)+
+    ' '+STATUS_LABELS.result_status+': '+statusBadge(w.result_status)+
     '</div>';
   const actual = (w.actual_credit_payment||[]).map(function(p){
     return '<div class="rowcard" style="background:var(--card);border:1px solid var(--line);border-radius:8px;'+
       'padding:6px 10px;font-size:12px;margin:4px 0;display:flex;justify-content:space-between">'+
       '<span>'+esc(p.actual_period)+'</span><b>'+Dash.fmtRub(p.actual_payment)+'</b></div>';
   }).join('') || '<p class="dim">Фактических списаний, привязанных к дате окончания периода внутри этой недели, нет.</p>';
+  const shortReason = shortWeekReason(w);
   return statuses +
+    // Раздел 6: три обязательных результата прибыли всегда рядом, не только в цепочке.
     '<div class="two-results">'+
-      '<div class="kpi"><div class="lbl">Операционная прибыль до резервов</div><div class="val">'+
+      '<div class="kpi"><div class="lbl">До кредита и НДС</div><div class="val">'+
         Dash.fmtRub(w.operating_profit_before_reserves)+'</div></div>'+
-      '<div class="kpi"><div class="lbl">Результат после резервов</div><div class="val">'+
+      '<div class="kpi"><div class="lbl">После кредита, до НДС</div><div class="val">'+
+        Dash.fmtRub(w.after_credit_before_vat)+'</div></div>'+
+      '<div class="kpi"><div class="lbl">После кредита и НДС</div><div class="val">'+
         Dash.fmtRub(w.result_after_reserves)+'</div></div>'+
     '</div>'+
     chainDiagram(w)+
-    (w.result_status_reason ? '<div class="chain-prelim">'+esc(w.result_status_reason)+'</div>' : '')+
+    (shortReason ? '<div class="chain-prelim">'+esc(shortReason)+'</div>' : '')+
     '<h3 style="font-size:12px;color:var(--muted);margin:14px 0 6px">Фактические списания кредита</h3>'+actual;
 }
 
@@ -107,10 +197,11 @@ function chainDiagram(w){
     {lbl:'Прочее Ozon', val:w.other, op:'−'},
     {lbl:'Начислено Ozon', val:w.accrued, op:'='},
     {lbl:'Закупка', val:w.zakup, op:'−'},
-    {lbl:'Операц. прибыль до резервов', val:w.operating_profit_before_reserves, op:'='},
+    {lbl:'До кредита и НДС', val:w.operating_profit_before_reserves, op:'='},
+    {lbl:'Кредитный резерв ('+statusText(w.credit_reserve_status)+')', val:w.credit_reserve, op:'−'},
+    {lbl:'После кредита, до НДС', val:w.after_credit_before_vat, op:'='},
     {lbl:'Резерв НДС', val:w.vat_reserve, op:'−'},
-    {lbl:'Резерв кредита ('+esc(w.credit_reserve_status||'—')+')', val:w.credit_reserve, op:'−'},
-    {lbl:'Результат после резервов', val:w.result_after_reserves, op:'=', final:true},
+    {lbl:'После кредита и НДС', val:w.result_after_reserves, op:'=', final:true},
   ];
   const html = steps.map(function(s){
     const na = s.val==null;
@@ -125,20 +216,16 @@ function chainDiagram(w){
 function renderTabs(d){
   document.querySelectorAll('#tabbar button').forEach(function(b){ b.classList.toggle('on', b.dataset.tab===TAB); });
   let html;
-  if (TAB==='days') html = daysTable(d.days.slice().reverse());
-  else html = weeksTable(d.weeks.slice().reverse());
+  if (TAB==='days') html = daysView(d.days.slice().reverse());
+  else html = weeksView(d.weeks.slice().reverse());
   document.getElementById('tabcontent').innerHTML = html;
 }
 
 function cell(val, reason, fmt){
-  if (val!=null) return fmt(val);
+  if (val!=null) return '<span class="fin-num">'+fmt(val)+'</span>';
   return Dash.naText(reason || 'нет данных');
 }
 
-// Раздел 2 замечания: компактная раскрываемая расшифровка источника/времени
-// обновления по каждому показателю - fetched_at/source_id/source_max_event_at/
-// coverage_from-to/n_records_day/n_records_total из streams[key], без потери
-// provenance. native <details> - не добавляет столбцов, безопасно на мобильном.
 function metaDetails(stream){
   if (!stream) return '';
   const rows = [
@@ -154,47 +241,134 @@ function metaDetails(stream){
   return '<details class="meta-toggle"><summary>ⓘ</summary><div class="meta-body">'+body+'</div></details>';
 }
 
+function techDetailsBlock(notes){
+  if (!notes.length) return '';
+  const rows = notes.map(function(n){
+    return '<div class="tech-row"><b>'+esc(n.label)+':</b> '+esc(n.text)+'</div>';
+  }).join('');
+  return '<details class="tech-details"><summary>Технические подробности ('+notes.length+')</summary>'+rows+'</details>';
+}
+
+// ─────────────────── По дням ───────────────────
+function daysView(rows){
+  return tableWrap(daysTable(rows)) + daysCards(rows) + techDetailsBlock(
+    rows.map(function(r){ return techNote(Dash.fmtDate(r.date)+' '+r.wd, r); }).filter(Boolean));
+}
+
 function daysTable(rows){
   const trs = rows.map(function(r){
-    const costWarn = r.unknown_cost_sales ? ' <span class="badge risk">неизв. себест-ть '+Dash.fmtRub(r.unknown_cost_sales)+'</span>' : '';
+    const shortReason = shortDayReason(r);
+    const isToday = r.date === GEN_DATE;
+    const badge = isToday ? '<span class="badge grey">'+esc(statusText('open'))+'</span>' : statusBadge(r.data_status);
+    const statusCell = badge + (shortReason ? '<div style="font-size:10px;color:var(--muted);margin-top:2px">'+esc(shortReason)+'</div>' : '');
     const st = r.streams || {};
     return '<tr><td>'+Dash.fmtDate(r.date)+' '+r.wd+'</td>'+
-      '<td>'+statusBadge(r.data_status)+'</td>'+
-      '<td>'+cell(r.gross_sales, r.gross_sales_reason, Dash.fmtRub)+metaDetails(st.gross_sales)+'</td>'+
-      '<td>'+cell(r.returns_rub, r.returns_rub_reason, Dash.fmtRub)+metaDetails(st.returns_rub)+'</td>'+
-      '<td>'+cell(r.net_realized, r.net_realized_reason, Dash.fmtRub)+metaDetails(st.net_realized)+'</td>'+
-      '<td>'+cell(r.ads, r.ads_reason, Dash.fmtRub)+(r.ads_status==='stale'?' <span class="badge risk">stale</span>':'')+metaDetails(st.ads)+'</td>'+
-      '<td>'+cell(r.other, r.other_reason, Dash.fmtRub)+metaDetails(st.other)+'</td>'+
-      '<td>'+cell(r.accrued, r.accrued_reason, Dash.fmtRub)+metaDetails(st.accrued)+'</td>'+
-      '<td>'+cell(r.zakup, r.zakup_reason, Dash.fmtRub)+costWarn+metaDetails(st.zakup)+'</td>'+
-      '<td>'+cell(r.operating_profit_before_reserves, 'см. статус дня', Dash.fmtRub)+'</td>'+
-      '<td>'+cell(r.vat_reserve, r.vat_reason, Dash.fmtRub)+'</td>'+
-      '<td>'+Dash.fmtRub(r.credit_reserve)+' <span class="badge grey">'+esc(r.credit_reserve_status||'—')+'</span></td>'+
-      '<td>'+cell(r.result_after_reserves, 'см. статус дня', Dash.fmtRub)+'</td></tr>';
+      '<td>'+statusCell+'</td>'+
+      '<td>'+cell(r.gross_sales, null, Dash.fmtRub)+metaDetails(st.gross_sales)+'</td>'+
+      '<td>'+cell(r.returns_rub, null, Dash.fmtRub)+metaDetails(st.returns_rub)+'</td>'+
+      '<td>'+cell(r.net_realized, null, Dash.fmtRub)+metaDetails(st.net_realized)+'</td>'+
+      '<td>'+cell(r.ads, null, Dash.fmtRub)+metaDetails(st.ads)+'</td>'+
+      '<td>'+cell(r.other, null, Dash.fmtRub)+metaDetails(st.other)+'</td>'+
+      '<td>'+cell(r.accrued, null, Dash.fmtRub)+metaDetails(st.accrued)+'</td>'+
+      '<td>'+cell(r.zakup, null, Dash.fmtRub)+metaDetails(st.zakup)+'</td>'+
+      '<td>'+cell(r.operating_profit_before_reserves, null, Dash.fmtRub)+'</td>'+
+      '<td>'+Dash.fmtRub(r.credit_reserve)+'</td>'+
+      '<td>'+cell(r.after_credit_before_vat, null, Dash.fmtRub)+'</td>'+
+      '<td>'+cell(r.vat_reserve, null, Dash.fmtRub)+'</td>'+
+      '<td>'+cell(r.result_after_reserves, null, Dash.fmtRub)+'</td></tr>';
   }).join('');
-  return tbl(['День','Статус','Вал. продажи','Возвраты','Чистая реализация','Реклама','Прочее Ozon',
-             'Начислено Ozon','Закупка','Прибыль до резервов','Резерв НДС','Резерв кредита','Результат после резервов'], trs);
+  const heads = ['День','Статус','Валовые<br>продажи','Возвраты','Чистая<br>реализация','Реклама',
+    'Прочее<br>Ozon','Начислено<br>Ozon','Себестоимость','До кредита<br>и НДС','Кредитный<br>резерв',
+    'После кредита,<br>до НДС','Резерв<br>НДС','После кредита<br>и НДС'];
+  const widths = [7,9,7,6,7,6,7,7,8,8,7,8,6,7];
+  return tbl(heads, trs, widths);
+}
+
+function daysCards(rows){
+  const cards = rows.map(function(r){
+    const shortReason = shortDayReason(r);
+    const isToday = r.date === GEN_DATE;
+    const badge = isToday ? '<span class="badge grey">'+esc(statusText('open'))+'</span>' : statusBadge(r.data_status);
+    return '<div class="fin-card">'+
+      '<div class="fin-card-head"><span class="fin-card-date">'+Dash.fmtDate(r.date)+' '+r.wd+'</span>'+badge+'</div>'+
+      (shortReason ? '<div class="fin-card-status-note">'+esc(shortReason)+'</div>' : '')+
+      row('Чистая реализация', r.net_realized) + row('Реклама', r.ads) + row('Прочее Ozon', r.other) +
+      row('Начислено Ozon', r.accrued) + row('Себестоимость', r.zakup) +
+      '<div class="fin-card-results">'+
+        row('До кредита и НДС', r.operating_profit_before_reserves) +
+        row('Кредитный резерв', r.credit_reserve) +
+        row('После кредита, до НДС', r.after_credit_before_vat) +
+        row('Резерв НДС', r.vat_reserve) +
+        row('После кредита и НДС', r.result_after_reserves) +
+      '</div></div>';
+  }).join('');
+  return '<div class="fin-cards">'+cards+'</div>';
+  function row(lbl, val){
+    return '<div class="fin-card-row"><span class="lbl">'+lbl+'</span><span>'+
+      (val!=null ? Dash.fmtRub(val) : '—')+'</span></div>';
+  }
+}
+
+// ─────────────────── По неделям ───────────────────
+function weeksView(rows){
+  return tableWrap(weeksTable(rows)) + weeksCards(rows) + techDetailsBlock(
+    rows.map(function(w){ return techNote(Dash.fmtDate(w.beg)+'—'+Dash.fmtDate(w.end), w); }).filter(Boolean));
 }
 
 function weeksTable(rows){
   const trs = rows.map(function(w){
+    const shortReason = shortWeekReason(w);
+    const statusCell = statusBadge(w.result_status) +
+      (shortReason ? '<div style="font-size:10px;color:var(--muted);margin-top:2px">'+esc(shortReason)+'</div>' : '');
     return '<tr><td>'+Dash.fmtDate(w.beg)+'—'+Dash.fmtDate(w.end)+'</td>'+
       '<td>'+statusBadge(w.data_status)+'</td>'+
       '<td>'+statusBadge(w.cost_reconciliation_status)+'</td>'+
       '<td>'+statusBadge(w.credit_reserve_status)+'</td>'+
-      '<td>'+statusBadge(w.result_status)+'</td>'+
-      '<td>'+cell(w.operating_profit_before_reserves, 'см. статус недели', Dash.fmtRub)+'</td>'+
-      '<td>'+cell(w.vat_reserve, 'см. статус недели', Dash.fmtRub)+'</td>'+
+      '<td>'+statusCell+'</td>'+
+      '<td>'+cell(w.operating_profit_before_reserves, null, Dash.fmtRub)+'</td>'+
       '<td>'+Dash.fmtRub(w.credit_reserve)+'</td>'+
-      '<td>'+cell(w.result_after_reserves, 'см. статус недели', Dash.fmtRub)+'</td></tr>';
+      '<td>'+cell(w.after_credit_before_vat, null, Dash.fmtRub)+'</td>'+
+      '<td>'+cell(w.vat_reserve, null, Dash.fmtRub)+'</td>'+
+      '<td>'+cell(w.result_after_reserves, null, Dash.fmtRub)+'</td></tr>';
   }).join('');
-  return tbl(['Неделя','data_status','cost_reconciliation_status','credit_reserve_status','result_status',
-             'Прибыль до резервов','Резерв НДС','Резерв кредита','Результат после резервов'], trs);
+  const heads = ['Неделя','Данные','Себестоимость','Кредит','Результат',
+    'До кредита<br>и НДС','Кредитный<br>резерв','После кредита,<br>до НДС','Резерв<br>НДС','После кредита<br>и НДС'];
+  const widths = [14,9,11,9,11,10,10,10,8,10];
+  return tbl(heads, trs, widths);
 }
 
-function tbl(heads, trs){
-  return '<div class="card scroll"><table><thead><tr>'+heads.map(function(h){return '<th>'+h+'</th>';}).join('')+
-    '</tr></thead><tbody>'+trs+'</tbody></table></div>';
+function weeksCards(rows){
+  const cards = rows.map(function(w){
+    const shortReason = shortWeekReason(w);
+    return '<div class="fin-card">'+
+      '<div class="fin-card-head"><span class="fin-card-date">'+Dash.fmtDate(w.beg)+'—'+Dash.fmtDate(w.end)+'</span>'+
+        statusBadge(w.result_status)+'</div>'+
+      '<div class="status-row" style="margin:4px 0">'+
+        statusBadge(w.data_status)+statusBadge(w.cost_reconciliation_status)+statusBadge(w.credit_reserve_status)+
+      '</div>'+
+      (shortReason ? '<div class="fin-card-status-note">'+esc(shortReason)+'</div>' : '')+
+      row('Чистая реализация', w.sales) + row('Реклама', w.ads) + row('Прочее Ozon', w.other) +
+      row('Начислено Ozon', w.accrued) + row('Себестоимость', w.zakup) +
+      '<div class="fin-card-results">'+
+        row('До кредита и НДС', w.operating_profit_before_reserves) +
+        row('Кредитный резерв', w.credit_reserve) +
+        row('После кредита, до НДС', w.after_credit_before_vat) +
+        row('Резерв НДС', w.vat_reserve) +
+        row('После кредита и НДС', w.result_after_reserves) +
+      '</div></div>';
+  }).join('');
+  return '<div class="fin-cards">'+cards+'</div>';
+  function row(lbl, val){
+    return '<div class="fin-card-row"><span class="lbl">'+lbl+'</span><span>'+
+      (val!=null ? Dash.fmtRub(val) : '—')+'</span></div>';
+  }
+}
+
+function tableWrap(inner){ return '<div class="fin-table-wrap card">'+inner+'</div>'; }
+function tbl(heads, trs, widths){
+  const colgroup = widths ? '<colgroup>'+widths.map(function(w){return '<col style="width:'+w+'%">';}).join('')+'</colgroup>' : '';
+  return '<table class="fin-table">'+colgroup+'<thead><tr>'+heads.map(function(h){return '<th>'+h+'</th>';}).join('')+
+    '</tr></thead><tbody>'+trs+'</tbody></table>';
 }
 function esc(s){ return String(s==null?'':s).replace(/[&<>"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
 </script>
