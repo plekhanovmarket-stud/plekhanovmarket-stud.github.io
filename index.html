@@ -42,13 +42,18 @@ Dash.loadAll(['data/dashboard.json']).then(function(res){
     (curW ? '<span class="pill">Текущая неделя: '+Dash.fmtDate(curW.beg)+'—'+Dash.fmtDate(curW.end)+' · '+(curW.closed?'закрыта':'не завершена')+'</span>' : '');
 
   const k = d.kpi;
+  // Задание 2026-09-08 (девятый заход), раздел 6: три обязательных результата
+  // прибыли - все из ОДНОГО v2-контура (kpi.profit_before/after_credit_before_vat/net),
+  // никакой отдельной формулы здесь нет - только форматирование готовых значений.
   const kpiHtml =
     '<div class="kpi-grid">'+
-      kpiCard('Реализовано', Dash.fmtRub(k.realized.value), k.realized.period, k.realized.delta, null, k.realized.meta)+
-      kpiCard('Операционная прибыль Ozon', Dash.fmtRub(k.profit_before.value),
+      kpiCard('Реализовано (чистое)', Dash.fmtRub(k.realized.value), k.realized.period, k.realized.delta, null, k.realized.meta)+
+      kpiCard('Прибыль до кредита и НДС', Dash.fmtRub(k.profit_before.value),
               k.profit_before.pct_of_realized!=null ? Dash.fmtPct(k.profit_before.pct_of_realized)+' от реализованного' : null,
               k.profit_before.delta, null, k.profit_before.meta)+
-      kpiCard('Денежный результат после кредитов и расчётного НДС', Dash.fmtRub(k.net.value), null, k.net.delta, null, k.net.meta)+
+      kpiCard('Прибыль после кредита, до НДС', Dash.fmtRub(k.after_credit_before_vat.value), null, null, null, null)+
+      kpiCard('Прибыль после кредита и НДС', Dash.fmtRub(k.net.value),
+              k.net.result_status ? Dash.statusText(k.net.result_status) : null, k.net.delta, null, k.net.meta)+
       kpiCard('Ozon должен нам', Dash.fmtRub(k.ozon_balance.value), k.ozon_balance.payout_note, null, null, k.ozon_balance.meta, 'Баланс')+
       kpiCard('Потенциальные потери, ₽/30 дней', Dash.fmtRub(k.risk_30d.value), k.risk_30d.note, null, null, k.risk_30d.meta)+
     '</div>';
@@ -60,12 +65,12 @@ Dash.loadAll(['data/dashboard.json']).then(function(res){
       '<a class="go" href="actions.html?key='+encodeURIComponent(p.key)+'">В «Действия» →</a></div>';
   }).join('') || '<p class="dim">Нет активных проблем с рассчитанным эффектом.</p>';
 
-  const chart = renderWeekCompare(d.weeks_chart || []);
+  const chart = renderWeekCompare(d.weeks_chart || [], k);
 
   const cs = d.cost_structure;
   const csHtml = cs ? [
-      ['Реклама', cs.ads], ['Прочее Ozon', cs.other], ['Закупка', cs.zakup],
-      ['Расчётный НДС', cs.vat], ['Кредиты', cs.loan],
+      ['Реклама', cs.ads], ['Прочее Ozon', cs.other], ['Себестоимость', cs.zakup],
+      ['Резерв НДС', cs.vat], ['Кредитный резерв', cs.loan],
     ].map(function(x){ return '<div class="rowcard"><div class="grid"><span>'+x[0]+'</span><b>'+Dash.fmtRub(x[1])+'</b></div></div>'; }).join('')
     : '<p class="dim">Нет данных за последнюю полную неделю.</p>';
 
@@ -102,28 +107,28 @@ function kpiCard(label, val, sub, delta, moreHref, meta, metaLabel){
 // сравнением последней ПОЛНОЙ недели с предыдущей СОПОСТАВИМОЙ (та же методика, оба
 // периода полные) - без декоративной замены. Источник точных чисел остаётся основная
 // недельная таблица (Финансы → По неделям).
-function renderWeekCompare(weeks){
+// Задание 2026-09-08 (девятый заход), раздел 4: сравнение раньше считало свою
+// собственную дельту/процент прямо здесь (третья формула во фронтенде, помимо
+// backend-расчёта и Dash.deltaHtml) - и не учитывало отрицательную базу (раздел 5).
+// Теперь для последней/предыдущей недели используются УЖЕ ГОТОВЫЕ delta-объекты
+// из d.kpi (тот же расчёт, что показан в самих KPI-плашках выше) - здесь только
+// форматирование через Dash.deltaHtml, без единой арифметической операции.
+function renderWeekCompare(weeks, kpi){
   if (weeks.length < 2){
     return '<p class="dim">Недостаточно закрытых сопоставимых недель для сравнения '+
       '(нужно минимум 2 подряд закрытые полные недели по единой методике).</p>';
   }
   const cur = weeks[weeks.length-1], prev = weeks[weeks.length-2];
   const rows = [
-    ['Реализовано', 'sales'], ['Операционная прибыль', 'profit_before'], ['Денежный результат', 'net'],
+    ['Реализовано', 'sales', kpi.realized.delta], ['Прибыль до кредита и НДС', 'profit_before', kpi.profit_before.delta],
+    ['Прибыль после кредита и НДС', 'net', kpi.net.delta],
   ];
   const cells = rows.map(function(r){
     const cv = cur[r[1]], pv = prev[r[1]];
-    let deltaHtml = '<span class="dim">нет сравнения</span>';
-    if (cv!=null && pv!=null){
-      const abs = cv-pv, pct = pv ? abs/Math.abs(pv)*100 : null;
-      const cls = abs>0?'pos':(abs<0?'neg':'flat');
-      deltaHtml = '<span class="'+cls+'">'+(abs>0?'+':'')+Dash.fmt0(abs)+' ₽'+
-        (pct!=null ? ' ('+(pct>0?'+':'')+Dash.fmtPct(pct)+')' : '')+'</span>';
-    }
     return '<div class="cmp-cell"><div class="lbl">'+r[0]+'</div>'+
       '<div class="row"><span>'+Dash.fmtDate(prev.beg)+'—'+Dash.fmtDate(prev.end)+'</span><b>'+(pv!=null?Dash.fmtRub(pv):'—')+'</b></div>'+
       '<div class="row"><span>'+Dash.fmtDate(cur.beg)+'—'+Dash.fmtDate(cur.end)+'</span><b>'+(cv!=null?Dash.fmtRub(cv):'—')+'</b></div>'+
-      '<div class="delta">'+deltaHtml+'</div></div>';
+      '<div class="delta '+(r[2]?Dash.signClass(r[2].abs||0):'')+'">'+Dash.deltaHtml(r[2])+'</div></div>';
   }).join('');
   return '<div class="cmp-grid">'+cells+'</div>'+
     '<p class="dim" style="font-size:11px;margin:6px 0 0">Точные значения по всем неделям — '+

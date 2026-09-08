@@ -72,6 +72,10 @@ function signClass(x){ return x>0 ? 'pos' : (x<0 ? 'neg' : 'flat'); }
 
 function deltaHtml(delta){
   if (!delta || delta.abs===null || delta.abs===undefined) return '<span class="dim">нет сравнения</span>';
+  // Задание 2026-09-08 (девятый заход), раздел 5: отрицательная база сравнения -
+  // процент не считается (delta.pct уже null с бэкенда), "убыток сменился прибылью"
+  // показывается отдельным текстом вместо процента.
+  if (delta.loss_to_profit) return 'Убыток сменился прибылью — улучшение на '+fmt0(Math.abs(delta.abs))+' ₽';
   const arrow = delta.abs>0 ? '↑' : (delta.abs<0 ? '↓' : '→');
   const pct = delta.pct!==null && delta.pct!==undefined ? ' ('+(delta.pct>0?'+':'')+fmtPct(delta.pct)+')' : '';
   return arrow+' '+(delta.abs>0?'+':'')+fmt0(delta.abs)+' ₽'+pct;
@@ -187,12 +191,24 @@ function naText(reason){
   return '<span class="na-reason">'+_esc(reason || 'нет данных')+'</span>';
 }
 
+// Задание 2026-09-08 (девятый заход), раздел 10: технические статусы v2 (data_status/
+// cost_reconciliation_status/credit_reserve_status/result_status и их значения) -
+// понятный русский текст в интерфейсе, машинные значения остаются в JSON как есть.
+// Общий словарь - чтобы "Финансы" и "Пульт" не разошлись в переводе одного статуса.
+const STATUS_VALUES = {
+  complete: 'Полные', closed: 'Завершена', open: 'Не завершена',
+  preliminary: 'Предварительно', final: 'Итоговый', fact: 'Факт', plan: 'План',
+  mixed: 'Часть факт / часть план', incomplete: 'Неполные',
+  stale: 'Ожидается обновление', error: 'Ошибка данных',
+};
+function statusText(v){ return STATUS_VALUES[v] || v || '—'; }
+
 window.Dash = {
   renderNav: renderNav, fmt0: fmt0, fmtRub: fmtRub, fmtPct: fmtPct, fmtDate: fmtDate,
   signClass: signClass, deltaHtml: deltaHtml, fetchJSON: fetchJSON, loadAll: loadAll,
   showFatalError: showFatalError, sourcePill: sourcePill, reliabilityTag: reliabilityTag,
   renderMeta: renderMeta, fmtDT: fmtDT, setCalculatedAt: setCalculatedAt,
-  toggleMeta: toggleMeta, naText: naText,
+  toggleMeta: toggleMeta, naText: naText, statusText: statusText,
 };
 
 document.addEventListener('DOMContentLoaded', renderNav);
