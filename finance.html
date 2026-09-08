@@ -6,6 +6,23 @@
 <link rel="icon" href="data:,">
 <title>Ozon — Финансы</title>
 <link rel="stylesheet" href="assets/dash.css">
+<style>
+.two-results{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
+.two-results .kpi{text-align:center}
+.two-results .kpi .val{font-size:26px}
+@media (max-width:640px){.two-results{grid-template-columns:1fr}}
+table{font-size:12px}
+th{white-space:nowrap}
+.status-row{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+/* Раздел 2 замечания: компактная раскрываемая расшифровка источника - НЕ
+   расширяет основную таблицу (native <details>, содержимое разворачивается
+   ВНУТРИ той же ячейки/строки, новых столбцов не добавляет). */
+.meta-toggle{cursor:pointer;color:var(--muted);font-size:10px;margin-left:3px;user-select:none}
+.meta-toggle summary{list-style:none;display:inline}
+.meta-toggle summary::-webkit-details-marker{display:none}
+.meta-body{font-size:10px;color:var(--muted);white-space:normal;margin-top:3px;line-height:1.5;
+  border-top:1px dashed var(--line);padding-top:3px}
+</style>
 </head>
 <body>
 <div class="wrap">
@@ -17,74 +34,84 @@
 <div id="content"><div class="loading">Загрузка данных…</div></div>
 
 <div class="foot">
-  Данные — <code>data/finance.json</code>. Налог на прибыль не считается (ограничение 3 ТЗ).
+  Данные — <code>data/dashboard_v2.json</code>. Кредитный резерв показывается отдельно от прибыли —
+  неполная реклама/закупка не удаляет известный резерв, только блокирует прибыль/НДС/итог.
   Формулы — см. <a href="methodology.html">Методология</a>, история правок — <a href="changelog.html">Журнал изменений</a>.
 </div>
 </div>
 <script src="assets/dash.js"></script>
 <script>
 let TAB = 'weeks';
-Dash.loadAll(['data/finance.json']).then(function(res){
-  const r = res[0];
-  if (!r.ok){ Dash.showFatalError('content', ['data/finance.json ('+r.error+')']); return; }
-  const d = r.data;
-  document.getElementById('subline').textContent = 'Обновлено ' + (d.generated||'—');
-  Dash.setCalculatedAt(d.calculated_at);
+fetch('data/dashboard_v2.json', {cache:'no-store'}).then(function(r){
+  if (!r.ok) throw new Error('HTTP '+r.status);
+  return r.json();
+}).then(function(d){
+  document.getElementById('subline').textContent = 'Сгенерировано ' + (d.calculated_at||'—') +
+    ' · run_date=' + d.run_date + ' · generation_date=' + d.generation_date;
   window.__fin = d;
   renderTop(d);
   renderTabs(d);
-}).catch(function(e){ Dash.showFatalError('content', ['finance.json ('+e+')']); });
+}).catch(function(e){ Dash.showFatalError('content', ['data/dashboard_v2.json ('+e+')']); });
+
+function statusBadge(status, map){
+  map = map || {complete:'ok', closed:'ok', fact:'ok', final:'ok',
+                incomplete:'risk', stale:'risk', mixed:'risk', preliminary:'risk', unresolved:'risk',
+                plan:'grey', not_checked:'grey', error:'bad'};
+  const cls = map[status] || 'grey';
+  return '<span class="badge '+cls+'">'+esc(status||'—')+'</span>';
+}
 
 function renderTop(d){
-  const c = d.chain_last_week;
-  const kpi = c ? [
-    ['Реализовано', c.realized, false], ['Операционная прибыль Ozon', c.profit_before, false],
-    ['Операционная рентабельность', c.realized ? (c.profit_before/c.realized*100) : null, 'pct'],
-    ['Результат после расчётного НДС', c.after_vat, false], ['Кредиты', c.loan, false],
-    ['Денежный результат после кредитов и НДС', c.net, false],
-  ] : [];
-  const kpiHtml = kpi.map(function(k){
-    return '<div class="kpi"><div class="lbl">'+k[0]+'</div><div class="val small">'+
-      (k[2]==='pct' ? Dash.fmtPct(k[1]) : Dash.fmtRub(k[1]))+'</div>'+
-      Dash.renderMeta(d.chain_last_week_meta, 'Неделя')+'</div>';
-  }).join('');
-
+  const w = d.chain_last_week;
   document.querySelector('#content').innerHTML =
-    '<div class="kpi-grid">'+kpiHtml+'</div>'+
-    '<h2>Управленческий отчёт — последняя полная неделя</h2>'+
-    chainDiagram(c)+
-    (d.pending_review_n ? '<div class="flag bad"><b>'+d.pending_review_n+'</b> изменени'+(d.pending_review_n===1?'е':'й')+
-      ' закрытых периодов ждут решения Андрея — см. <a href="changelog.html">Журнал изменений</a>.</div>' : '')+
-    '<div class="flag">'+esc(d.ordered_gap_note)+'</div>'+
+    '<h2>Последняя закрытая неделя</h2>' + weekResultBlock(w) +
     '<h2 id="tabsAnchor">По периодам</h2>'+
     '<div class="filters" id="tabbar"></div>'+
     '<div id="tabcontent"></div>';
-
-  document.getElementById('tabbar').innerHTML = [['days','По дням'],['weeks','По неделям'],['months','По месяцам']]
+  document.getElementById('tabbar').innerHTML = [['days','По дням'],['weeks','По неделям']]
     .map(function(t){ return '<button data-tab="'+t[0]+'" class="'+(t[0]===TAB?'on':'')+'">'+t[1]+'</button>'; }).join('');
   document.querySelectorAll('#tabbar button').forEach(function(b){
     b.onclick = function(){ TAB=b.dataset.tab; renderTabs(window.__fin); };
   });
 }
 
-// Задание №1.6 п.3: цепочка, каждый шаг - отдельный блок, знаки видны, итог
-// выделен, вертикально на телефоне (CSS), только утверждённая формула (значения
-// приходят готовыми из chain_last_week - здесь только отрисовка), null не
-// заменяется нулём - становится "—" + пометка "предварительно" с причиной.
-function chainDiagram(c){
-  if (!c) return '<p class="dim">Нет данных за последнюю полную неделю.</p>';
+function weekResultBlock(w){
+  if (!w) return '<p class="dim">Нет закрытой недели.</p>';
+  const statuses = '<div class="status-row">'+
+    'data_status: '+statusBadge(w.data_status)+
+    ' cost_reconciliation_status: '+statusBadge(w.cost_reconciliation_status)+
+    ' credit_reserve_status: '+statusBadge(w.credit_reserve_status)+
+    ' result_status: '+statusBadge(w.result_status)+
+    '</div>';
+  const actual = (w.actual_credit_payment||[]).map(function(p){
+    return '<div class="rowcard" style="background:var(--card);border:1px solid var(--line);border-radius:8px;'+
+      'padding:6px 10px;font-size:12px;margin:4px 0;display:flex;justify-content:space-between">'+
+      '<span>'+esc(p.actual_period)+'</span><b>'+Dash.fmtRub(p.actual_payment)+'</b></div>';
+  }).join('') || '<p class="dim">Фактических списаний, привязанных к дате окончания периода внутри этой недели, нет.</p>';
+  return statuses +
+    '<div class="two-results">'+
+      '<div class="kpi"><div class="lbl">Операционная прибыль до резервов</div><div class="val">'+
+        Dash.fmtRub(w.operating_profit_before_reserves)+'</div></div>'+
+      '<div class="kpi"><div class="lbl">Результат после резервов</div><div class="val">'+
+        Dash.fmtRub(w.result_after_reserves)+'</div></div>'+
+    '</div>'+
+    chainDiagram(w)+
+    (w.result_status_reason ? '<div class="chain-prelim">'+esc(w.result_status_reason)+'</div>' : '')+
+    '<h3 style="font-size:12px;color:var(--muted);margin:14px 0 6px">Фактические списания кредита</h3>'+actual;
+}
+
+function chainDiagram(w){
   const steps = [
-    {lbl:'Реализовано', val:c.realized, op:null},
-    {lbl:'Реклама', val:c.ads, op:'−'},
-    {lbl:'Комиссия и прочее Ozon', val:c.other, op:'−'},
-    {lbl:'Закупка', val:c.zakup, op:'−'},
-    {lbl:'Операционная прибыль Ozon', val:c.profit_before, op:'='},
-    {lbl:'расчётный НДС', val:c.vat, op:'−'},
-    {lbl:'Результат после НДС', val:c.after_vat, op:'='},
-    {lbl:'Кредиты', val:c.loan, op:'−'},
-    {lbl:'Денежный результат', val:c.net, op:'=', final:true},
+    {lbl:'Реализовано (чистое)', val:w.sales, op:null},
+    {lbl:'Реклама', val:w.ads, op:'−'},
+    {lbl:'Прочее Ozon', val:w.other, op:'−'},
+    {lbl:'Начислено Ozon', val:w.accrued, op:'='},
+    {lbl:'Закупка', val:w.zakup, op:'−'},
+    {lbl:'Операц. прибыль до резервов', val:w.operating_profit_before_reserves, op:'='},
+    {lbl:'Резерв НДС', val:w.vat_reserve, op:'−'},
+    {lbl:'Резерв кредита ('+esc(w.credit_reserve_status||'—')+')', val:w.credit_reserve, op:'−'},
+    {lbl:'Результат после резервов', val:w.result_after_reserves, op:'=', final:true},
   ];
-  const prelim = steps.some(function(s){ return s.val==null; });
   const html = steps.map(function(s){
     const na = s.val==null;
     return (s.op?'<span class="chain-op">'+s.op+'</span>':'')+
@@ -92,64 +119,79 @@ function chainDiagram(c){
       '<div class="lbl">'+esc(s.lbl)+'</div>'+
       '<div class="val">'+(na?'—':Dash.fmtRub(s.val))+'</div></div>';
   }).join('');
-  return '<div class="chain">'+html+'</div>'+
-    (prelim ? '<div class="chain-prelim">предварительно — '+esc(c.net_reason||'не все составляющие периода известны')+'</div>' : '');
+  return '<div class="chain">'+html+'</div>';
 }
 
 function renderTabs(d){
   document.querySelectorAll('#tabbar button').forEach(function(b){ b.classList.toggle('on', b.dataset.tab===TAB); });
   let html;
-  if (TAB==='days') html = daysTable(d.days.slice(-30).reverse());
-  else if (TAB==='weeks') html = weeksTable(d.weeks.slice().reverse());
-  else html = monthsTable(d.months.slice().reverse());
+  if (TAB==='days') html = daysTable(d.days.slice().reverse());
+  else html = weeksTable(d.weeks.slice().reverse());
   document.getElementById('tabcontent').innerHTML = html;
 }
 
-// Задание №1.6 п.5: прочерк ≠ ноль - каждое null-поле показывает причину
-// (Dash.naText), а не немой "—". Причины приходят готовыми из сборки
-// (zakup_reason/ordered_reason/qty_reason/net_reason/profit_reason).
 function cell(val, reason, fmt){
   if (val!=null) return fmt(val);
-  return Dash.naText(reason);
+  return Dash.naText(reason || 'нет данных');
 }
+
+// Раздел 2 замечания: компактная раскрываемая расшифровка источника/времени
+// обновления по каждому показателю - fetched_at/source_id/source_max_event_at/
+// coverage_from-to/n_records_day/n_records_total из streams[key], без потери
+// provenance. native <details> - не добавляет столбцов, безопасно на мобильном.
+function metaDetails(stream){
+  if (!stream) return '';
+  const rows = [
+    ['источник', stream.source_id],
+    ['получено', stream.fetched_at],
+    ['время операции в источнике', stream.source_max_event_at],
+    ['охват', (stream.coverage_from||stream.coverage_to) ? (esc(stream.coverage_from)+'..'+esc(stream.coverage_to)) : null],
+    ['записей за день / всего', (stream.n_records_day!=null || stream.n_records_total!=null) ?
+      (esc(stream.n_records_day)+' / '+esc(stream.n_records_total)) : null],
+  ].filter(function(r){ return r[1]!=null && r[1]!=='—'; });
+  if (!rows.length) return '';
+  const body = rows.map(function(r){ return r[0]+': '+r[1]; }).join('<br>');
+  return '<details class="meta-toggle"><summary>ⓘ</summary><div class="meta-body">'+body+'</div></details>';
+}
+
 function daysTable(rows){
   const trs = rows.map(function(r){
-    return '<tr><td>'+Dash.fmtDate(r.date)+' '+r.wd+'</td><td>'+Dash.fmtRub(r.sales)+'</td>'+
-      '<td>'+cell(r.ordered, r.ordered_reason, Dash.fmtRub)+'</td>'+
-      '<td>'+Dash.fmtRub(r.ads)+'</td><td>'+Dash.fmtRub(r.other)+'</td>'+
-      '<td>'+cell(r.zakup, r.zakup_reason, Dash.fmtRub)+'</td>'+
-      '<td>'+cell(r.profit_before, r.profit_reason, Dash.fmtRub)+'</td>'+
-      '<td class="'+Dash.signClass(r.net||0)+'">'+cell(r.net, r.net_reason, Dash.fmtRub)+'</td></tr>';
+    const costWarn = r.unknown_cost_sales ? ' <span class="badge risk">неизв. себест-ть '+Dash.fmtRub(r.unknown_cost_sales)+'</span>' : '';
+    const st = r.streams || {};
+    return '<tr><td>'+Dash.fmtDate(r.date)+' '+r.wd+'</td>'+
+      '<td>'+statusBadge(r.data_status)+'</td>'+
+      '<td>'+cell(r.gross_sales, r.gross_sales_reason, Dash.fmtRub)+metaDetails(st.gross_sales)+'</td>'+
+      '<td>'+cell(r.returns_rub, r.returns_rub_reason, Dash.fmtRub)+metaDetails(st.returns_rub)+'</td>'+
+      '<td>'+cell(r.net_realized, r.net_realized_reason, Dash.fmtRub)+metaDetails(st.net_realized)+'</td>'+
+      '<td>'+cell(r.ads, r.ads_reason, Dash.fmtRub)+(r.ads_status==='stale'?' <span class="badge risk">stale</span>':'')+metaDetails(st.ads)+'</td>'+
+      '<td>'+cell(r.other, r.other_reason, Dash.fmtRub)+metaDetails(st.other)+'</td>'+
+      '<td>'+cell(r.accrued, r.accrued_reason, Dash.fmtRub)+metaDetails(st.accrued)+'</td>'+
+      '<td>'+cell(r.zakup, r.zakup_reason, Dash.fmtRub)+costWarn+metaDetails(st.zakup)+'</td>'+
+      '<td>'+cell(r.operating_profit_before_reserves, 'см. статус дня', Dash.fmtRub)+'</td>'+
+      '<td>'+cell(r.vat_reserve, r.vat_reason, Dash.fmtRub)+'</td>'+
+      '<td>'+Dash.fmtRub(r.credit_reserve)+' <span class="badge grey">'+esc(r.credit_reserve_status||'—')+'</span></td>'+
+      '<td>'+cell(r.result_after_reserves, 'см. статус дня', Dash.fmtRub)+'</td></tr>';
   }).join('');
-  return tbl(['День','Реализовано','Заказано','Реклама','Прочее Ozon','Закупка','Операц. прибыль','Денежный результат'], trs);
+  return tbl(['День','Статус','Вал. продажи','Возвраты','Чистая реализация','Реклама','Прочее Ozon',
+             'Начислено Ozon','Закупка','Прибыль до резервов','Резерв НДС','Резерв кредита','Результат после резервов'], trs);
 }
+
 function weeksTable(rows){
   const trs = rows.map(function(w){
-    const closed = w.net!=null;
-    return '<tr><td>'+Dash.fmtDate(w.beg)+'—'+Dash.fmtDate(w.end)+(closed?'':' <span class="badge risk">не завершена</span>')+'</td>'+
-      '<td>'+Dash.fmtRub(w.sales)+'</td><td>'+cell(w.ordered, w.ordered_reason, Dash.fmtRub)+'</td>'+
-      '<td>'+Dash.fmtRub(w.ads)+'</td><td>'+Dash.fmtRub(w.other)+'</td>'+
-      '<td>'+cell(w.zakup, w.zakup_reason, Dash.fmtRub)+'</td>'+
-      '<td>'+cell(w.profit_before, w.profit_reason, Dash.fmtRub)+'</td>'+
-      '<td>'+cell(w.loan, w.net_reason, Dash.fmtRub)+'</td>'+
-      '<td class="'+Dash.signClass(w.net||0)+'">'+cell(w.net, w.net_reason || w.note, Dash.fmtRub)+'</td></tr>'+
-      (w.comment ? '<tr><td></td><td colspan="8" class="dim wrap-cell" style="font-size:11px">'+esc(w.comment)+'</td></tr>' : '');
+    return '<tr><td>'+Dash.fmtDate(w.beg)+'—'+Dash.fmtDate(w.end)+'</td>'+
+      '<td>'+statusBadge(w.data_status)+'</td>'+
+      '<td>'+statusBadge(w.cost_reconciliation_status)+'</td>'+
+      '<td>'+statusBadge(w.credit_reserve_status)+'</td>'+
+      '<td>'+statusBadge(w.result_status)+'</td>'+
+      '<td>'+cell(w.operating_profit_before_reserves, 'см. статус недели', Dash.fmtRub)+'</td>'+
+      '<td>'+cell(w.vat_reserve, 'см. статус недели', Dash.fmtRub)+'</td>'+
+      '<td>'+Dash.fmtRub(w.credit_reserve)+'</td>'+
+      '<td>'+cell(w.result_after_reserves, 'см. статус недели', Dash.fmtRub)+'</td></tr>';
   }).join('');
-  return tbl(['Неделя','Реализовано','Заказано','Реклама','Прочее Ozon','Закупка','Операц. прибыль','Кредиты','Денежный результат'], trs);
+  return tbl(['Неделя','data_status','cost_reconciliation_status','credit_reserve_status','result_status',
+             'Прибыль до резервов','Резерв НДС','Резерв кредита','Результат после резервов'], trs);
 }
-function monthsTable(rows){
-  const trs = rows.map(function(m){
-    return '<tr><td>'+esc(m.name)+' '+m.key.slice(0,4)+(m.in_progress?' <span class="badge risk">не закончен</span>':'')+'</td>'+
-      '<td>'+Dash.fmtRub(m.sales)+'</td><td>'+Dash.fmtRub(m.ads)+'</td><td>'+Dash.fmtRub(m.other)+'</td>'+
-      '<td>'+cell(m.zakup, m.zakup_reason, Dash.fmtRub)+'</td>'+
-      '<td>'+cell(m.profit_before, m.zakup_reason ? 'закупка известна не за все дни: '+m.zakup_reason : null, Dash.fmtRub)+'</td>'+
-      '<td>'+cell(m.loan, m.credit_note, Dash.fmtRub)+'</td>'+
-      '<td class="'+Dash.signClass(m.net||0)+'">'+cell(m.net, m.credit_note, Dash.fmtRub)+'</td></tr>'+
-      '<tr><td></td><td colspan="7" class="dim wrap-cell" style="font-size:11px">'+esc(m.credit_note||'')+
-      (m.comment?' · '+esc(m.comment):'')+'</td></tr>';
-  }).join('');
-  return tbl(['Месяц','Реализовано','Реклама','Прочее Ozon','Закупка','Операц. прибыль','Кредиты','Денежный результат'], trs);
-}
+
 function tbl(heads, trs){
   return '<div class="card scroll"><table><thead><tr>'+heads.map(function(h){return '<th>'+h+'</th>';}).join('')+
     '</tr></thead><tbody>'+trs+'</tbody></table></div>';
