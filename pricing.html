@@ -50,7 +50,7 @@ Dash.loadAll(['data/pricing.json']).then(function(res){
   document.getElementById('content').innerHTML =
     '<div class="kpi-grid">'+
       kpi('SKU в наличии/транзите', s.base_n, null, null, s.meta)+
-      kpi('Прибыльные SKU (факт)', s.profitable_n, null, null, s.meta)+
+      kpi('Прибыльные, на уровне цели (ОК)', s.profitable_n, null, null, s.meta)+
       kpi('Фактически убыточные SKU', s.loss_making_n, Dash.fmtRub(s.loss_sum_32d)+'/32д (факт. убыток)', 'neg', s.meta)+
       kpi('Требуют пересмотра цены/акции', s.review_needed_n, Dash.fmtRub(s.potential_improvement_target_32d)+'/32д (оценка до цели, все SKU)', null, s.meta)+
       kpi('Низкая маржа', s.low_margin_n, null, null, s.meta)+
@@ -61,6 +61,15 @@ Dash.loadAll(['data/pricing.json']).then(function(res){
     '<p class="dim" style="font-size:11px;margin:4px 0 0">Потенциальное улучшение до безубыточности за 32д (сумма факт. '+
     'убытка всех убыточных SKU): <b>'+Dash.fmtRub(s.potential_improvement_breakeven_32d)+'</b>. Потенциальное улучшение '+
     'до целевой маржи (больше первого - цель не ноль, а целевая маржа компании): <b>'+Dash.fmtRub(s.potential_improvement_target_32d)+'</b>.</p>' +
+    '<p class="dim" style="font-size:11px">Проверка знаменателя (раздел 4): '+
+    (s.partition_check.ok_n)+' (ОК) + '+(s.partition_check.loss_making_n)+' (убыточные) + '+
+    (s.partition_check.review_needed_n)+' (требуют пересмотра) + '+(s.partition_check.no_actual_sales_n)+
+    ' (без продаж) = '+(s.partition_check.sum)+' — '+
+    (s.partition_check.reconciles ? 'совпадает с общим количеством SKU в выборке ('+s.partition_check.base_n+').'
+      : '<b>НЕ совпадает с '+s.partition_check.base_n+' — см. лог сборки.</b>')+'</p>'+
+    '<p class="dim" style="font-size:11px">'+esc(s.price_history_scope_note||'')+'</p>'+
+    buildDecomposition()+
+    buildReconciliation(d.finance_reconciliation)+
     prHtml +
     '<h2>SKU</h2>'+
     '<p class="dim" style="font-size:11.5px;margin:0 0 6px">'+esc(d.category_filter_note||'')+
@@ -145,7 +154,9 @@ function renderRows(){
       (r.returns_comparability_note?' <span class="badge grey" title="'+esc(r.returns_comparability_note)+'">возвраты?</span>':'')+'</td>'+
       '<td class="dim">'+(r.price_diag_seller_base!=null?Dash.fmtRub(r.price_diag_seller_base):'—')+'</td>'+
       '<td class="'+Dash.signClass(r.margin_now||0)+'">'+(r.margin_now!=null?Dash.fmtRub(r.margin_now):'—')+'</td>'+
-      '<td class="'+Dash.signClass(r.actual_profit_32d||0)+'">'+(r.actual_profit_32d!=null?Dash.fmtRub(r.actual_profit_32d):'—')+'</td>'+
+      '<td class="'+Dash.signClass(r.actual_profit_32d||0)+'" title="'+
+      (r.commission_actual_pct!=null?'факт. комиссия '+r.commission_actual_pct+'% выручки (живая ставка '+r.commission_pct_live+'%), эквайринг+прочие 4,95% (норматив)':'')+
+      '">'+(r.actual_profit_32d!=null?Dash.fmtRub(r.actual_profit_32d):'—')+'</td>'+
       '<td>'+(r.breakeven_target!=null?Dash.fmtRub(r.breakeven_target):'—')+'</td>'+
       '<td>'+(r.target_price!=null?Dash.fmtRub(r.target_price):'—')+'</td>'+
       '<td>'+Dash.fmtPct(r.drr_fact)+'</td>'+
@@ -160,6 +171,49 @@ function actionBadge(a){
   const cls = a==='Фактическая реализация убыточна' ? 'bad' : a==='Требуется пересмотр цены/акции' ? 'risk' :
               a==='ОК' ? 'ok' : 'grey';
   return '<span class="badge '+cls+'">'+esc(a)+'</span>';
+}
+function buildDecomposition(){
+  const rows = [
+    ['Комиссия Ozon (факт)', 'sku_realization_32d.json → sku[].commission', 'Σ(standard_fee проданных строк − standard_fee возвращённых строк), /v1/finance/realization/by-day', 'actual'],
+    ['Логистика', '2026-09-02_planirovshik_v3_recalc.csv → logistics_new/logistics_source', 'по каждому SKU: «факт» (начисления Ozon) либо тариф Антона (структурный аудит)', 'actual / allocated'],
+    ['Кросс-докинг', '…→ crossdock_new', '3,21% от закупки (структурный аудит 2026-09-02)', 'allocated'],
+    ['Хранение', 'расчёт: cost × 3%', 'нормативная ставка от себестоимости', 'estimated'],
+    ['Последняя миля', '…→ last_mile', 'структурный аудит 2026-09-02', 'allocated'],
+    ['Эквайринг', 'константа EKV=1% от выручки', 'нормативная ставка, поэлементного факт. источника по SKU нет', 'estimated'],
+    ['Прочие услуги', 'константа PROC=3,95% от выручки', 'нормативная ставка, поэлементного факт. источника по SKU нет', 'estimated'],
+    ['Себестоимость', 'combined_cost_price.csv → cost_final', 'закуп + Ермек + упаковка, компания ведёт сама', 'actual'],
+    ['Реклама', 'ads_sku_60d.json → cpc_expense', 'реальный расход Performance API за 60д, масштабирован ×32/60 к окну', 'actual (сумма) / allocated (окно)'],
+  ];
+  const trs = rows.map(function(r){
+    return '<tr><td>'+esc(r[0])+'</td><td class="dim" style="font-size:11px">'+esc(r[1])+'</td>'+
+      '<td class="dim" style="font-size:11px">'+esc(r[2])+'</td><td>'+esc(r[3])+'</td></tr>';
+  }).join('');
+  return '<h2>Из чего складывается «Комиссия всего» (методика)</h2>'+
+    '<p class="dim" style="font-size:11.5px;margin:0 0 6px">Раньше единая цифра «Комиссия всего» (60,14%) была суммой '+
+    'живой ставки комиссии (51%) и НОРМАТИВНЫХ надбавок, включая устаревшее дублирующее поле «кросс-докинг» и '+
+    'норматив «возвраты» (двойной учёт с уже вычтенной фактической суммой возвратов) - оба удалены. Комиссия в '+
+    'фактической прибыли теперь берётся из уже собранной фактической суммы (не по ставке). actual — сумма напрямую '+
+    'из операций Ozon; allocated — реальная сумма, распределена по структурному аудиту/окну; estimated — '+
+    'нормативная ставка без поэлементного факт. источника на SKU.</p>'+
+    '<div class="card scroll"><table><thead><tr><th>Составляющая</th><th>Источник → поле</th><th>Формула/ставка</th>'+
+    '<th>Тип</th></tr></thead><tbody>'+trs+'</tbody></table></div>';
+}
+function buildReconciliation(fr){
+  if (!fr) return '';
+  if (!fr.available) return '<h2>Сверка суммы по SKU с контуром Финансы</h2><p class="dim">'+esc(fr.note||'Недоступно')+'</p>';
+  const trs = fr.rows.map(function(row){
+    return '<tr><td>'+esc(row.label)+'</td><td>'+Dash.fmtRub(row.sku_sum)+'</td>'+
+      '<td>'+(row.finance_sum!=null?Dash.fmtRub(row.finance_sum):Dash.naText('нет данных'))+'</td>'+
+      '<td class="'+Dash.signClass(row.diff||0)+'">'+(row.diff!=null?((row.diff>0?'+':'')+Dash.fmtRub(row.diff)):'—')+
+      (row.diff_pct!=null?' ('+(row.diff_pct>0?'+':'')+Dash.fmtPct(row.diff_pct)+')':'')+'</td>'+
+      '<td class="dim wrap-cell" style="font-size:11px">'+esc(row.note||'')+'</td></tr>';
+  }).join('');
+  return '<h2>Сверка суммы по SKU с независимо измеренным контуром Финансы</h2>'+
+    '<p class="dim" style="font-size:11.5px;margin:0 0 6px">Окно SKU: '+esc(fr.sku_window.from)+' — '+esc(fr.sku_window.to)+
+    ' ('+fr.sku_window.n_days+' дн.). Окно Финансы (пересечение): '+esc(fr.finance_window.from)+' — '+
+    esc(fr.finance_window.to)+' ('+fr.finance_window.n_days+' дн.). SKU в сверке: '+fr.matched_sku_n+'. '+esc(fr.note||'')+'</p>'+
+    '<div class="card scroll"><table><thead><tr><th>Показатель</th><th>Сумма по SKU</th><th>Сумма в Финансах</th>'+
+    '<th>Разница</th><th>Объяснение</th></tr></thead><tbody>'+trs+'</tbody></table></div>';
 }
 function buildPriceChanges(pc){
   if (!pc || !pc.available) return '<h2>Было → стало (изменения цены)</h2><p class="dim">'+esc((pc&&pc.note)||'Нет данных')+'</p>';
