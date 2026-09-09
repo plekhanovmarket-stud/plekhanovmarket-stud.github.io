@@ -73,26 +73,29 @@ Dash.loadAll(['data/pricing.json']).then(function(res){
     prHtml +
     '<h2>SKU</h2>'+
     '<p class="dim" style="font-size:11.5px;margin:0 0 6px">'+esc(d.category_filter_note||'')+
-    ' Прибыль/маржа/рекомендация — по фактической средней цене реализации (продажи за вычетом возвратов ÷ '+
-    'реализованное количество за вычетом возвратов), не по цене продавца из каталога. «Необх. цена реализации» — '+
-    'справочная величина (цена, при которой прибыль обнулилась бы при рекламе на уровне целевого ДРР), НЕ команда '+
-    'установить такую цену в кабинете — связь между price.price и фактической ценой реализации через акции Ozon '+
-    'не установлена. «Убыток/32д (факт)» и «До цели/32д (оценка)» — разные величины: факт. убыток — то, что уже '+
-    'потеряно; недобор до цели — сколько ещё нужно ДОБАВИТЬ к прибыли, чтобы достичь целевой маржи компании '+
-    '(обычно больше факт. убытка, показывается для убыточных SKU тоже).</p>'+
+    ' Два РАЗНЫХ ПО ПРИРОДЕ показателя, не путать: <b>«Факт. цена реализации»</b> — результат УЖЕ ПРОШЕДШИХ продаж '+
+    '(продажи за вычетом возвратов ÷ реализованное количество за вычетом возвратов, sku_realization_32d.json) - '+
+    'исторический факт, не текущая цена продавца. <b>«Необх. цена реализации»/«Целевая»</b> — ПРОГНОЗ безубыточности '+
+    'при ТЕКУЩЕЙ структуре расходов (FIX/PCT), НЕ команда установить такую цену в кабинете и НЕ то же самое, что '+
+    'историческая цена выше — связь между price.price и фактической ценой реализации через акции Ozon не '+
+    'установлена. Прибыль/убыток называется РАСЧЁТНОЙ (не «фактической») - логистика/эквайринг/прочие услуги '+
+    'частично нормативные, см. «Из чего складывается «Комиссия всего»» и «Сверка с Финансы» ниже. «Убыток/32д '+
+    '(расчёт)» и «До цели/32д (оценка)» — разные величины: убыток — то, что уже потеряно по расчёту; недобор до '+
+    'цели — сколько ещё нужно ДОБАВИТЬ к прибыли, чтобы достичь целевой маржи компании (обычно больше убытка, '+
+    'показывается для убыточных SKU тоже).</p>'+
     '<div class="filters" id="filters"></div>'+
     '<div class="filters" id="catfilters"></div>'+
     '<div class="card scroll"><table><thead><tr>'+
-    '<th>SKU/Артикул</th><th>Название</th><th>Категория</th><th>Факт. цена реализации</th>'+
-    '<th>Цена продавца (без Ozon-акции)</th><th>Прибыль/ед. (факт)</th><th>Прибыль/32д (точно)</th>'+
-    '<th>Необх. цена реализации</th><th>Целевая</th><th>ДРР факт</th><th>Безубыт. ДРР</th><th>Индекс</th>'+
-    '<th>Продано (факт net)</th><th>Рекомендация</th><th>Убыток/32д (факт)</th><th>До цели/32д (оценка)</th>'+
+    '<th>SKU/Артикул</th><th>Название</th><th>Категория</th><th>Факт. цена реализации (история)</th>'+
+    '<th>Цена продавца (без Ozon-акции)</th><th>Прибыль/ед. (расчёт)</th><th>Прибыль/32д (расчёт, точно)</th>'+
+    '<th>Необх. цена реализации (прогноз)</th><th>Целевая (прогноз)</th><th>ДРР факт</th><th>Безубыт. ДРР</th><th>Индекс</th>'+
+    '<th>Продано (факт net)</th><th>Рекомендация</th><th>Убыток/32д (расчёт)</th><th>До цели/32д (оценка)</th>'+
     '</tr></thead><tbody id="rowsBody"></tbody></table></div>'+
     '<p class="dim" style="font-size:11px">'+esc(d.breakeven_drr_formula||'')+'</p>'+
     '<p class="dim" style="font-size:11px">'+esc(d.methodology_note||'')+'</p>'+
     buildPriceChanges(d.price_changes);
 
-  document.getElementById('filters').innerHTML = ['Все','Фактическая реализация убыточна','Требуется пересмотр цены/акции','ОК','Недостаточно фактических продаж','Возвраты превышают продажи в окне (не сопоставимо)']
+  document.getElementById('filters').innerHTML = ['Все','Расчётная реализация убыточна','Требуется пересмотр цены/акции','ОК','Недостаточно фактических продаж','Возвраты превышают продажи в окне (не сопоставимо)']
     .map(function(f){ return '<button data-f="'+f+'" class="'+(f===FILTER?'on':'')+'">'+f+'</button>'; }).join('');
   document.querySelectorAll('#filters button').forEach(function(b){
     b.onclick = function(){ FILTER=b.dataset.f; renderRows(); };
@@ -168,21 +171,21 @@ function renderRows(){
   }).join('') || '<tr><td colspan="16" class="dim" style="text-align:center;padding:14px">Нет строк</td></tr>';
 }
 function actionBadge(a){
-  const cls = a==='Фактическая реализация убыточна' ? 'bad' : a==='Требуется пересмотр цены/акции' ? 'risk' :
+  const cls = a==='Расчётная реализация убыточна' ? 'bad' : a==='Требуется пересмотр цены/акции' ? 'risk' :
               a==='ОК' ? 'ok' : 'grey';
   return '<span class="badge '+cls+'">'+esc(a)+'</span>';
 }
 function buildDecomposition(){
   const rows = [
-    ['Комиссия Ozon (факт)', 'sku_realization_32d.json → sku[].commission', 'Σ(standard_fee проданных строк − standard_fee возвращённых строк), /v1/finance/realization/by-day', 'actual'],
-    ['Логистика', '2026-09-02_planirovshik_v3_recalc.csv → logistics_new/logistics_source', 'по каждому SKU: «факт» (начисления Ozon) либо тариф Антона (структурный аудит)', 'actual / allocated'],
-    ['Кросс-докинг', '…→ crossdock_new', '3,21% от закупки (структурный аудит 2026-09-02)', 'allocated'],
+    ['Комиссия Ozon (факт)', 'sku_realization_32d.json → sku[].commission', 'Σ(standard_fee проданных строк − standard_fee возвращённых строк), /v1/finance/realization/by-day — корректировка возврата УЖЕ внутри суммы', 'actual'],
+    ['Логистика', '2026-09-02_planirovshik_v3_recalc.csv → logistics_new/logistics_source', 'по каждому SKU: сверено с начислениями Ozon ОДНОКРАТНО на 2026-09-02 (не на текущее окно) либо тариф Антона', 'allocated / estimated'],
+    ['Кросс-докинг', '…→ crossdock_new', '3,21% от закупки (структурный аудит 2026-09-02, не текущее окно)', 'allocated'],
     ['Хранение', 'расчёт: cost × 3%', 'нормативная ставка от себестоимости', 'estimated'],
-    ['Последняя миля', '…→ last_mile', 'структурный аудит 2026-09-02', 'allocated'],
-    ['Эквайринг', 'константа EKV=1% от выручки', 'нормативная ставка, поэлементного факт. источника по SKU нет', 'estimated'],
-    ['Прочие услуги', 'константа PROC=3,95% от выручки', 'нормативная ставка, поэлементного факт. источника по SKU нет', 'estimated'],
+    ['Последняя миля', '…→ last_mile', 'структурный аудит 2026-09-02 (не текущее окно)', 'allocated'],
+    ['Эквайринг', 'константа EKV=1% от выручки', 'нормативная ставка — не доказано отсутствие пересечения с комиссией/логистикой (см. открытые вопросы сверки)', 'estimated'],
+    ['Прочие услуги', 'константа PROC=3,95% от выручки', 'нормативная ставка — не доказано отсутствие пересечения с комиссией/логистикой (см. открытые вопросы сверки)', 'estimated'],
     ['Себестоимость', 'combined_cost_price.csv → cost_final', 'закуп + Ермек + упаковка, компания ведёт сама', 'actual'],
-    ['Реклама', 'ads_sku_60d.json → cpc_expense', 'реальный расход Performance API за 60д, масштабирован ×32/60 к окну', 'actual (сумма) / allocated (окно)'],
+    ['Реклама', 'ads_sku_60d.json → cpc_expense', 'реальный расход Performance API за 60д, линейно масштабирован ×32/60 к окну — НЕ факт именно за эти 32 дня', 'allocated'],
   ];
   const trs = rows.map(function(r){
     return '<tr><td>'+esc(r[0])+'</td><td class="dim" style="font-size:11px">'+esc(r[1])+'</td>'+
@@ -192,9 +195,11 @@ function buildDecomposition(){
     '<p class="dim" style="font-size:11.5px;margin:0 0 6px">Раньше единая цифра «Комиссия всего» (60,14%) была суммой '+
     'живой ставки комиссии (51%) и НОРМАТИВНЫХ надбавок, включая устаревшее дублирующее поле «кросс-докинг» и '+
     'норматив «возвраты» (двойной учёт с уже вычтенной фактической суммой возвратов) - оба удалены. Комиссия в '+
-    'фактической прибыли теперь берётся из уже собранной фактической суммы (не по ставке). actual — сумма напрямую '+
-    'из операций Ozon; allocated — реальная сумма, распределена по структурному аудиту/окну; estimated — '+
-    'нормативная ставка без поэлементного факт. источника на SKU.</p>'+
+    'прибыли теперь берётся из уже собранной фактической суммы (не по ставке). actual — сумма напрямую '+
+    'из операций Ozon; allocated — реальная сумма, но из разового аудита или другого окна (не текущих операций); '+
+    'estimated — нормативная ставка без поэлементного факт. источника на SKU. Итоговая прибыль/убыток по SKU '+
+    'называется «Расчётная» (calculated), не «фактическая» — совпадение общей суммы с контуром Финансы (см. '+
+    'сверку ниже) само по себе не доказывает правильность распределения по конкретному SKU.</p>'+
     '<div class="card scroll"><table><thead><tr><th>Составляющая</th><th>Источник → поле</th><th>Формула/ставка</th>'+
     '<th>Тип</th></tr></thead><tbody>'+trs+'</tbody></table></div>';
 }
@@ -202,18 +207,24 @@ function buildReconciliation(fr){
   if (!fr) return '';
   if (!fr.available) return '<h2>Сверка суммы по SKU с контуром Финансы</h2><p class="dim">'+esc(fr.note||'Недоступно')+'</p>';
   const trs = fr.rows.map(function(row){
-    return '<tr><td>'+esc(row.label)+'</td><td>'+Dash.fmtRub(row.sku_sum)+'</td>'+
+    return '<tr><td>'+esc(row.label)+(row.day_exact?' <span class="badge ok" title="Сверено за точно совпадающие даты">день-в-день</span>':' <span class="badge grey" title="Дневная разбивка недоступна - показано полное окно SKU">полное окно</span>')+'</td>'+
+      '<td>'+Dash.fmtRub(row.sku_sum)+'</td>'+
       '<td>'+(row.finance_sum!=null?Dash.fmtRub(row.finance_sum):Dash.naText('нет данных'))+'</td>'+
       '<td class="'+Dash.signClass(row.diff||0)+'">'+(row.diff!=null?((row.diff>0?'+':'')+Dash.fmtRub(row.diff)):'—')+
       (row.diff_pct!=null?' ('+(row.diff_pct>0?'+':'')+Dash.fmtPct(row.diff_pct)+')':'')+'</td>'+
       '<td class="dim wrap-cell" style="font-size:11px">'+esc(row.note||'')+'</td></tr>';
   }).join('');
+  const oq = (fr.open_questions||[]).map(function(q){ return '<li>'+esc(q)+'</li>'; }).join('');
   return '<h2>Сверка суммы по SKU с независимо измеренным контуром Финансы</h2>'+
     '<p class="dim" style="font-size:11.5px;margin:0 0 6px">Окно SKU: '+esc(fr.sku_window.from)+' — '+esc(fr.sku_window.to)+
-    ' ('+fr.sku_window.n_days+' дн.). Окно Финансы (пересечение): '+esc(fr.finance_window.from)+' — '+
-    esc(fr.finance_window.to)+' ('+fr.finance_window.n_days+' дн.). SKU в сверке: '+fr.matched_sku_n+'. '+esc(fr.note||'')+'</p>'+
+    ' ('+fr.sku_window.n_days+' дн.). Пересечение с историей Финансы: '+esc(fr.common_window.from)+' — '+
+    esc(fr.common_window.to)+' ('+fr.common_window.n_days+' дн.'+
+    (fr.common_window.excluded_sku_days&&fr.common_window.excluded_sku_days.length?', исключены дни окна SKU: '+fr.common_window.excluded_sku_days.map(Dash.fmtDate).join(', '):'')+
+    '). SKU в сверке: '+fr.matched_sku_n+(fr.unmatched_sku_n?' (+'+fr.unmatched_sku_n+' вне каталога, см. строку ниже)':'')+
+    '. '+esc(fr.note||'')+'</p>'+
     '<div class="card scroll"><table><thead><tr><th>Показатель</th><th>Сумма по SKU</th><th>Сумма в Финансах</th>'+
-    '<th>Разница</th><th>Объяснение</th></tr></thead><tbody>'+trs+'</tbody></table></div>';
+    '<th>Разница</th><th>Объяснение</th></tr></thead><tbody>'+trs+'</tbody></table></div>'+
+    (oq?'<p class="dim" style="font-size:11.5px;margin:6px 0 0"><b>Открытые вопросы (не сняты):</b></p><ul class="dim" style="font-size:11.5px;margin:2px 0 0;padding-left:18px">'+oq+'</ul>':'');
 }
 function buildPriceChanges(pc){
   if (!pc || !pc.available) return '<h2>Было → стало (изменения цены)</h2><p class="dim">'+esc((pc&&pc.note)||'Нет данных')+'</p>';
