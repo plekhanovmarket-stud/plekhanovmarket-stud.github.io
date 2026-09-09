@@ -51,8 +51,9 @@ Dash.loadAll(['data/pricing.json']).then(function(res){
     '<div class="kpi-grid">'+
       kpi('SKU в наличии/транзите', s.base_n, null, null, s.meta)+
       kpi('Прибыльные, на уровне цели (ОК)', s.profitable_n, null, null, s.meta)+
-      kpi('Фактически убыточные SKU', s.loss_making_n, Dash.fmtRub(s.loss_sum_32d)+'/32д (факт. убыток)', 'neg', s.meta)+
+      kpi('Расчётно убыточные SKU', s.loss_making_n, Dash.fmtRub(s.loss_sum_32d)+'/32д (расчёт)', 'neg', s.meta)+
       kpi('Требуют пересмотра цены/акции', s.review_needed_n, Dash.fmtRub(s.potential_improvement_target_32d)+'/32д (оценка до цели, все SKU)', null, s.meta)+
+      kpi('Требуют проверки (знак не гарантирован)', s.uncertain_n, 'прибыль>0, но меньше estimated/allocated статей', null, s.meta)+
       kpi('Низкая маржа', s.low_margin_n, null, null, s.meta)+
       kpi('Недостаточно продаж за период', s.no_actual_sales_n, (s.returns_not_comparable_n?s.returns_not_comparable_n+' из них - возвраты > продаж в окне':null), null, s.meta)+
       kpi('Без себестоимости', s.no_cost_n, null, null, s.meta)+
@@ -63,7 +64,8 @@ Dash.loadAll(['data/pricing.json']).then(function(res){
     'до целевой маржи (больше первого - цель не ноль, а целевая маржа компании): <b>'+Dash.fmtRub(s.potential_improvement_target_32d)+'</b>.</p>' +
     '<p class="dim" style="font-size:11px">Проверка знаменателя (раздел 4): '+
     (s.partition_check.ok_n)+' (ОК) + '+(s.partition_check.loss_making_n)+' (убыточные) + '+
-    (s.partition_check.review_needed_n)+' (требуют пересмотра) + '+(s.partition_check.no_actual_sales_n)+
+    (s.partition_check.review_needed_n)+' (требуют пересмотра) + '+(s.partition_check.uncertain_n)+
+    ' (требуют проверки) + '+(s.partition_check.no_actual_sales_n)+
     ' (без продаж) = '+(s.partition_check.sum)+' — '+
     (s.partition_check.reconciles ? 'совпадает с общим количеством SKU в выборке ('+s.partition_check.base_n+').'
       : '<b>НЕ совпадает с '+s.partition_check.base_n+' — см. лог сборки.</b>')+'</p>'+
@@ -82,7 +84,9 @@ Dash.loadAll(['data/pricing.json']).then(function(res){
     'частично нормативные, см. «Из чего складывается «Комиссия всего»» и «Сверка с Финансы» ниже. «Убыток/32д '+
     '(расчёт)» и «До цели/32д (оценка)» — разные величины: убыток — то, что уже потеряно по расчёту; недобор до '+
     'цели — сколько ещё нужно ДОБАВИТЬ к прибыли, чтобы достичь целевой маржи компании (обычно больше убытка, '+
-    'показывается для убыточных SKU тоже).</p>'+
+    'показывается для убыточных SKU тоже). «Требует проверки (знак не гарантирован)» — расчётная прибыль '+
+    'положительна, но МЕНЬШЕ суммы нормативных/allocated статей (эквайринг+прочие+реклама) - если их факт. '+
+    'величина отличается от оценки, знак прибыли может смениться; это НЕ подтверждённый убыток и НЕ «ОК».</p>'+
     '<div class="filters" id="filters"></div>'+
     '<div class="filters" id="catfilters"></div>'+
     '<div class="card scroll"><table><thead><tr>'+
@@ -95,7 +99,7 @@ Dash.loadAll(['data/pricing.json']).then(function(res){
     '<p class="dim" style="font-size:11px">'+esc(d.methodology_note||'')+'</p>'+
     buildPriceChanges(d.price_changes);
 
-  document.getElementById('filters').innerHTML = ['Все','Расчётная реализация убыточна','Требуется пересмотр цены/акции','ОК','Недостаточно фактических продаж','Возвраты превышают продажи в окне (не сопоставимо)']
+  document.getElementById('filters').innerHTML = ['Все','Расчётная реализация убыточна','Требуется пересмотр цены/акции','Требует проверки (знак прибыли не гарантирован)','ОК','Недостаточно фактических продаж','Возвраты превышают продажи в окне (не сопоставимо)']
     .map(function(f){ return '<button data-f="'+f+'" class="'+(f===FILTER?'on':'')+'">'+f+'</button>'; }).join('');
   document.querySelectorAll('#filters button').forEach(function(b){
     b.onclick = function(){ FILTER=b.dataset.f; renderRows(); };
@@ -171,7 +175,8 @@ function renderRows(){
   }).join('') || '<tr><td colspan="16" class="dim" style="text-align:center;padding:14px">Нет строк</td></tr>';
 }
 function actionBadge(a){
-  const cls = a==='Расчётная реализация убыточна' ? 'bad' : a==='Требуется пересмотр цены/акции' ? 'risk' :
+  const cls = a==='Расчётная реализация убыточна' ? 'bad' :
+              (a==='Требуется пересмотр цены/акции' || a==='Требует проверки (знак прибыли не гарантирован)') ? 'risk' :
               a==='ОК' ? 'ok' : 'grey';
   return '<span class="badge '+cls+'">'+esc(a)+'</span>';
 }

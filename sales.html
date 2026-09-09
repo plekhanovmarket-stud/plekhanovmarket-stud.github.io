@@ -96,9 +96,11 @@ Dash.loadAll(['data/sales.json']).then(function(res){
     '<div class="card scroll"><table><thead><tr><th>#</th><th>Артикул</th><th>Название</th><th>Продано, шт</th><th>Выручка</th></tr></thead>'+
     '<tbody>'+top20Trs+'</tbody></table></div>'+
     '<h2>ABC по выручке (32 дня)</h2>'+abcTable(d.abc_revenue, 'Выручка')+
-    '<h2>ABC по операционной прибыли (32 дня)</h2>'+
-    '<p class="dim" style="font-size:11.5px">Построено только по продающимся SKU с положительной прибылью. '+
-    'Убыточных при продаже SKU: <b>'+d.abc_profit.negative_n+'</b> (сумма '+Dash.fmtRub(d.abc_profit.negative_sum)+') — см. «Действия»/«Цены и маржа».</p>'+
+    '<h2>ABC по расчётной прибыли (32 дня)</h2>'+
+    '<p class="dim" style="font-size:11.5px">Прибыль — расчётная (логистика/эквайринг/прочие услуги частично '+
+    'нормативные, см. «Цены и маржа» → «Из чего складывается «Комиссия всего»»). Построено только по '+
+    'продающимся SKU с положительной расчётной прибылью. Расчётно убыточных при продаже SKU: '+
+    '<b>'+d.abc_profit.negative_n+'</b> (сумма '+Dash.fmtRub(d.abc_profit.negative_sum)+') — см. «Действия»/«Цены и маржа».</p>'+
     abcTable(d.abc_profit, 'Прибыль')+
     gdHtml;
 }).catch(function(e){ Dash.showFatalError('content', ['sales.json ('+e+')']); });
