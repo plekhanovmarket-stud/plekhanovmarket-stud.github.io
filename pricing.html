@@ -37,8 +37,10 @@ Dash.loadAll(['data/pricing.json']).then(function(res){
   const pr = d.price_reaction || {};
   window.__pr = pr;
   const prHtml = pr.available ? (
-    '<h2>Реакция на рост комиссии с '+Dash.fmtDate(pr.baseline_date)+'</h2>'+
-    '<p class="dim" style="font-size:11px;margin:0 0 8px">Нажмите на карточку, чтобы увидеть список SKU.</p>'+
+    '<h2>Изменение цены продавца с '+Dash.fmtDate(pr.baseline_date)+'</h2>'+
+    '<p class="dim" style="font-size:11px;margin:0 0 8px">Цена продавца (Контур 2, диагностика) — не путать с '+
+    'фактической ценой реализации в таблице ниже. Сумма "эффекта" — оценочная (при тех же продажах, что сейчас), '+
+    'не проверенный факт. Нажмите на карточку, чтобы увидеть список SKU.</p>'+
     '<div class="kpi-grid">'+
     reactionCard('raised', 'Подняли цену', pr.raised, 'pos')+
     reactionCard('unchanged', 'Не тронули', pr.unchanged, null)+
@@ -48,24 +50,30 @@ Dash.loadAll(['data/pricing.json']).then(function(res){
   document.getElementById('content').innerHTML =
     '<div class="kpi-grid">'+
       kpi('SKU в наличии/транзите', s.base_n, null, null, s.meta)+
-      kpi('Прибыльные SKU', s.profitable_n, null, null, s.meta)+
-      kpi('Ниже безубыточной цены', s.below_breakeven_n, Dash.fmtRub(s.loss_sum_32d)+'/32д', 'neg', s.meta)+
+      kpi('Прибыльные SKU (факт)', s.profitable_n, null, null, s.meta)+
+      kpi('Ниже безубыточной цены', s.below_breakeven_n, Dash.fmtRub(s.loss_sum_32d)+'/32д (факт)', 'neg', s.meta)+
       kpi('Низкая маржа', s.low_margin_n, null, null, s.meta)+
+      kpi('Недостаточно продаж за период', s.no_actual_sales_n, 'прибыль не считается', null, s.meta)+
       kpi('Без себестоимости', s.no_cost_n, null, null, s.meta)+
       kpi('Целевой ДРР', s.target_drr_pct+'%', 'целевая маржа '+Dash.fmtPct(s.target_margin_pct), null, s.target_drr_meta)+
     '</div>' + prHtml +
     '<h2>SKU</h2>'+
-    '<p class="dim" style="font-size:11.5px;margin:0 0 6px">'+esc(d.category_filter_note||'')+'</p>'+
+    '<p class="dim" style="font-size:11.5px;margin:0 0 6px">'+esc(d.category_filter_note||'')+
+    ' Прибыль/маржа/рекомендация — по фактической средней цене реализации (продажи за вычетом возвратов ÷ '+
+    'реализованное количество за вычетом возвратов), не по цене продавца из каталога.</p>'+
     '<div class="filters" id="filters"></div>'+
     '<div class="filters" id="catfilters"></div>'+
     '<div class="card scroll"><table><thead><tr>'+
-    '<th>SKU/Артикул</th><th>Название</th><th>Категория</th><th>Цена</th><th>Прибыль/ед.</th><th>Прибыль/32д</th>'+
-    '<th>Безубыточная</th><th>Целевая</th><th>ДРР факт</th><th>Безубыт. ДРР</th><th>Индекс</th><th>Продано</th><th>Рекомендация</th><th>Эффект/32д</th>'+
+    '<th>SKU/Артикул</th><th>Название</th><th>Категория</th><th>Факт. цена реализации</th>'+
+    '<th>Цена продавца (без Ozon-акции)</th><th>Прибыль/ед. (факт)</th><th>Прибыль/32д (факт)</th>'+
+    '<th>Безубыточная</th><th>Целевая</th><th>ДРР факт</th><th>Безубыт. ДРР</th><th>Индекс</th>'+
+    '<th>Продано (факт net)</th><th>Рекомендация</th><th>Эффект/32д (факт)</th>'+
     '</tr></thead><tbody id="rowsBody"></tbody></table></div>'+
     '<p class="dim" style="font-size:11px">'+esc(d.breakeven_drr_formula||'')+'</p>'+
+    '<p class="dim" style="font-size:11px">'+esc(d.methodology_note||'')+'</p>'+
     buildPriceChanges(d.price_changes);
 
-  document.getElementById('filters').innerHTML = ['Все','Поднять цену','Починить рекламу','ОК','Нет продаж 28 дней']
+  document.getElementById('filters').innerHTML = ['Все','Поднять цену','Починить рекламу','ОК','Недостаточно фактических продаж','Нет продаж 28 дней']
     .map(function(f){ return '<button data-f="'+f+'" class="'+(f===FILTER?'on':'')+'">'+f+'</button>'; }).join('');
   document.querySelectorAll('#filters button').forEach(function(b){
     b.onclick = function(){ FILTER=b.dataset.f; renderRows(); };
@@ -106,7 +114,7 @@ function renderReactionPanel(){
   panel.innerHTML = '<p class="dim" style="font-size:12px;margin:8px 0 4px">Строк в списке: <b>'+
     g.rows.length+'</b> (совпадает с числом на карточке: <b>'+g.n+'</b>)</p>'+
     '<div class="card scroll"><table><thead><tr><th>SKU/Артикул</th><th>Название</th>'+
-    '<th>Дата изменения</th><th>Было</th><th>Стало</th><th>Δ ₽</th><th>Δ %</th></tr></thead><tbody>'+
+    '<th>Дата изменения</th><th>Цена продавца была</th><th>Цена продавца стала</th><th>Δ ₽</th><th>Δ %</th></tr></thead><tbody>'+
     g.rows.map(function(e){
       return '<tr><td>'+esc(e.artikul)+'</td><td class="wrap-cell">'+esc(e.name)+'</td>'+
         '<td>'+(e.change_date ? Dash.fmtDate(e.change_date) : Dash.naText(e.change_date_note))+'</td>'+
@@ -122,18 +130,21 @@ function renderRows(){
   rows = rows.slice(0,300);
   document.getElementById('rowsBody').innerHTML = rows.map(function(r){
     return '<tr><td>'+esc(r.artikul)+'</td><td class="wrap-cell">'+esc(r.name)+'</td><td>'+esc(r.category||'—')+'</td>'+
-      '<td>'+Dash.fmtRub(r.price)+'</td><td class="'+Dash.signClass(r.margin_now)+'">'+Dash.fmtRub(r.margin_now)+'</td>'+
-      '<td>'+Dash.fmtRub(r.margin_now_total_32d)+'</td>'+
+      '<td>'+(r.actual_avg_price!=null?Dash.fmtRub(r.actual_avg_price):Dash.naText('нет фактических продаж за период'))+'</td>'+
+      '<td class="dim">'+(r.price_diag_seller_base!=null?Dash.fmtRub(r.price_diag_seller_base):'—')+'</td>'+
+      '<td class="'+Dash.signClass(r.margin_now||0)+'">'+(r.margin_now!=null?Dash.fmtRub(r.margin_now):'—')+'</td>'+
+      '<td>'+(r.margin_now_total_32d!=null?Dash.fmtRub(r.margin_now_total_32d):'—')+'</td>'+
       '<td>'+(r.breakeven_target!=null?Dash.fmtRub(r.breakeven_target):'—')+'</td>'+
       '<td>'+(r.target_price!=null?Dash.fmtRub(r.target_price):'—')+'</td>'+
       '<td>'+Dash.fmtPct(r.drr_fact)+'</td>'+
       '<td>'+(r.breakeven_drr!=null?Dash.fmtPct(r.breakeven_drr):'—')+(r.already_unprofitable_at_zero_ads?' <span class="badge bad">убыток без рекламы</span>':'')+'</td>'+
-      '<td>'+esc(r.price_index_color||'—')+'</td><td>'+r.qty_32d+'</td>'+
+      '<td>'+esc(r.price_index_color||'—')+'</td><td>'+(r.qty_net_32d!=null?r.qty_net_32d:r.qty_32d)+'</td>'+
       '<td>'+actionBadge(r.action)+'</td><td>'+(r.effect_32d?Dash.fmtRub(r.effect_32d):'—')+'</td></tr>';
-  }).join('') || '<tr><td colspan="14" class="dim" style="text-align:center;padding:14px">Нет строк</td></tr>';
+  }).join('') || '<tr><td colspan="15" class="dim" style="text-align:center;padding:14px">Нет строк</td></tr>';
 }
 function actionBadge(a){
-  const cls = a==='Поднять цену' ? 'bad' : a==='Починить рекламу' ? 'risk' : a==='ОК' ? 'ok' : 'grey';
+  const cls = a==='Поднять цену' ? 'bad' : a==='Починить рекламу' ? 'risk' : a==='ОК' ? 'ok' :
+              a==='Недостаточно фактических продаж' ? 'grey' : 'grey';
   return '<span class="badge '+cls+'">'+esc(a)+'</span>';
 }
 function buildPriceChanges(pc){
@@ -143,10 +154,12 @@ function buildPriceChanges(pc){
       '<td>'+Dash.fmtRub(c.old_price)+'</td><td>'+Dash.fmtRub(c.new_price)+'</td>'+
       '<td class="'+Dash.signClass(c.delta_abs||0)+'">'+(c.delta_abs>0?'+':'')+Dash.fmtRub(c.delta_abs)+' ('+Dash.fmtPct(c.delta_pct)+')</td></tr>';
   }).join('');
-  return '<h2>Было → стало (изменения цены за 30 дней)</h2>'+
-    '<p class="dim" style="font-size:12px">История цен ведётся с '+Dash.fmtDate(pc.tracking_started_from)+
+  return '<h2>Цена продавца — было → стало (изменения за 30 дней)</h2>'+
+    '<p class="dim" style="font-size:12px">Цена продавца по каталогу (Контур 2, диагностика — не фактическая цена '+
+    'реализации). История ведётся с '+Dash.fmtDate(pc.tracking_started_from)+
     ' — более ранние изменения не восстановить. Всего записей: '+pc.n+'.</p>'+
-    '<div class="card scroll"><table><thead><tr><th>Дата</th><th>Артикул</th><th>Название</th><th>Было</th><th>Стало</th><th>Дельта</th></tr></thead>'+
+    '<div class="card scroll"><table><thead><tr><th>Дата</th><th>Артикул</th><th>Название</th>'+
+    '<th>Цена продавца была</th><th>Цена продавца стала</th><th>Дельта</th></tr></thead>'+
     '<tbody>'+trs+'</tbody></table></div>';
 }
 function kpi(label, val, sub, cls, meta){
