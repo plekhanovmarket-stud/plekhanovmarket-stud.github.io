@@ -51,29 +51,39 @@ Dash.loadAll(['data/pricing.json']).then(function(res){
     '<div class="kpi-grid">'+
       kpi('SKU в наличии/транзите', s.base_n, null, null, s.meta)+
       kpi('Прибыльные SKU (факт)', s.profitable_n, null, null, s.meta)+
-      kpi('Ниже безубыточной цены', s.below_breakeven_n, Dash.fmtRub(s.loss_sum_32d)+'/32д (факт)', 'neg', s.meta)+
+      kpi('Фактически убыточные SKU', s.loss_making_n, Dash.fmtRub(s.loss_sum_32d)+'/32д (факт. убыток)', 'neg', s.meta)+
+      kpi('Требуют пересмотра цены/акции', s.review_needed_n, Dash.fmtRub(s.potential_improvement_target_32d)+'/32д (оценка до цели, все SKU)', null, s.meta)+
       kpi('Низкая маржа', s.low_margin_n, null, null, s.meta)+
-      kpi('Недостаточно продаж за период', s.no_actual_sales_n, 'прибыль не считается', null, s.meta)+
+      kpi('Недостаточно продаж за период', s.no_actual_sales_n, (s.returns_not_comparable_n?s.returns_not_comparable_n+' из них - возвраты > продаж в окне':null), null, s.meta)+
       kpi('Без себестоимости', s.no_cost_n, null, null, s.meta)+
       kpi('Целевой ДРР', s.target_drr_pct+'%', 'целевая маржа '+Dash.fmtPct(s.target_margin_pct), null, s.target_drr_meta)+
-    '</div>' + prHtml +
+    '</div>' +
+    '<p class="dim" style="font-size:11px;margin:4px 0 0">Потенциальное улучшение до безубыточности за 32д (сумма факт. '+
+    'убытка всех убыточных SKU): <b>'+Dash.fmtRub(s.potential_improvement_breakeven_32d)+'</b>. Потенциальное улучшение '+
+    'до целевой маржи (больше первого - цель не ноль, а целевая маржа компании): <b>'+Dash.fmtRub(s.potential_improvement_target_32d)+'</b>.</p>' +
+    prHtml +
     '<h2>SKU</h2>'+
     '<p class="dim" style="font-size:11.5px;margin:0 0 6px">'+esc(d.category_filter_note||'')+
     ' Прибыль/маржа/рекомендация — по фактической средней цене реализации (продажи за вычетом возвратов ÷ '+
-    'реализованное количество за вычетом возвратов), не по цене продавца из каталога.</p>'+
+    'реализованное количество за вычетом возвратов), не по цене продавца из каталога. «Необх. цена реализации» — '+
+    'справочная величина (цена, при которой прибыль обнулилась бы при рекламе на уровне целевого ДРР), НЕ команда '+
+    'установить такую цену в кабинете — связь между price.price и фактической ценой реализации через акции Ozon '+
+    'не установлена. «Убыток/32д (факт)» и «До цели/32д (оценка)» — разные величины: факт. убыток — то, что уже '+
+    'потеряно; недобор до цели — сколько ещё нужно ДОБАВИТЬ к прибыли, чтобы достичь целевой маржи компании '+
+    '(обычно больше факт. убытка, показывается для убыточных SKU тоже).</p>'+
     '<div class="filters" id="filters"></div>'+
     '<div class="filters" id="catfilters"></div>'+
     '<div class="card scroll"><table><thead><tr>'+
     '<th>SKU/Артикул</th><th>Название</th><th>Категория</th><th>Факт. цена реализации</th>'+
-    '<th>Цена продавца (без Ozon-акции)</th><th>Прибыль/ед. (факт)</th><th>Прибыль/32д (факт)</th>'+
-    '<th>Безубыточная</th><th>Целевая</th><th>ДРР факт</th><th>Безубыт. ДРР</th><th>Индекс</th>'+
-    '<th>Продано (факт net)</th><th>Рекомендация</th><th>Эффект/32д (факт)</th>'+
+    '<th>Цена продавца (без Ozon-акции)</th><th>Прибыль/ед. (факт)</th><th>Прибыль/32д (точно)</th>'+
+    '<th>Необх. цена реализации</th><th>Целевая</th><th>ДРР факт</th><th>Безубыт. ДРР</th><th>Индекс</th>'+
+    '<th>Продано (факт net)</th><th>Рекомендация</th><th>Убыток/32д (факт)</th><th>До цели/32д (оценка)</th>'+
     '</tr></thead><tbody id="rowsBody"></tbody></table></div>'+
     '<p class="dim" style="font-size:11px">'+esc(d.breakeven_drr_formula||'')+'</p>'+
     '<p class="dim" style="font-size:11px">'+esc(d.methodology_note||'')+'</p>'+
     buildPriceChanges(d.price_changes);
 
-  document.getElementById('filters').innerHTML = ['Все','Поднять цену','Починить рекламу','ОК','Недостаточно фактических продаж','Нет продаж 28 дней']
+  document.getElementById('filters').innerHTML = ['Все','Фактическая реализация убыточна','Требуется пересмотр цены/акции','ОК','Недостаточно фактических продаж','Возвраты превышают продажи в окне (не сопоставимо)']
     .map(function(f){ return '<button data-f="'+f+'" class="'+(f===FILTER?'on':'')+'">'+f+'</button>'; }).join('');
   document.querySelectorAll('#filters button').forEach(function(b){
     b.onclick = function(){ FILTER=b.dataset.f; renderRows(); };
@@ -129,22 +139,26 @@ function renderRows(){
   if (CATEGORY!=='Все') rows = rows.filter(function(r){return r.category===CATEGORY;});
   rows = rows.slice(0,300);
   document.getElementById('rowsBody').innerHTML = rows.map(function(r){
-    return '<tr><td>'+esc(r.artikul)+'</td><td class="wrap-cell">'+esc(r.name)+'</td><td>'+esc(r.category||'—')+'</td>'+
-      '<td>'+(r.actual_avg_price!=null?Dash.fmtRub(r.actual_avg_price):Dash.naText('нет фактических продаж за период'))+'</td>'+
+    const noteTitle = r.returns_comparability_note ? ' title="'+esc(r.returns_comparability_note)+'"' : '';
+    return '<tr'+noteTitle+'><td>'+esc(r.artikul)+'</td><td class="wrap-cell">'+esc(r.name)+'</td><td>'+esc(r.category||'—')+'</td>'+
+      '<td>'+(r.actual_avg_price!=null?Dash.fmtRub(r.actual_avg_price):Dash.naText('нет фактических продаж за период'))+
+      (r.returns_comparability_note?' <span class="badge grey" title="'+esc(r.returns_comparability_note)+'">возвраты?</span>':'')+'</td>'+
       '<td class="dim">'+(r.price_diag_seller_base!=null?Dash.fmtRub(r.price_diag_seller_base):'—')+'</td>'+
       '<td class="'+Dash.signClass(r.margin_now||0)+'">'+(r.margin_now!=null?Dash.fmtRub(r.margin_now):'—')+'</td>'+
-      '<td>'+(r.margin_now_total_32d!=null?Dash.fmtRub(r.margin_now_total_32d):'—')+'</td>'+
+      '<td class="'+Dash.signClass(r.actual_profit_32d||0)+'">'+(r.actual_profit_32d!=null?Dash.fmtRub(r.actual_profit_32d):'—')+'</td>'+
       '<td>'+(r.breakeven_target!=null?Dash.fmtRub(r.breakeven_target):'—')+'</td>'+
       '<td>'+(r.target_price!=null?Dash.fmtRub(r.target_price):'—')+'</td>'+
       '<td>'+Dash.fmtPct(r.drr_fact)+'</td>'+
       '<td>'+(r.breakeven_drr!=null?Dash.fmtPct(r.breakeven_drr):'—')+(r.already_unprofitable_at_zero_ads?' <span class="badge bad">убыток без рекламы</span>':'')+'</td>'+
       '<td>'+esc(r.price_index_color||'—')+'</td><td>'+(r.qty_net_32d!=null?r.qty_net_32d:r.qty_32d)+'</td>'+
-      '<td>'+actionBadge(r.action)+'</td><td>'+(r.effect_32d?Dash.fmtRub(r.effect_32d):'—')+'</td></tr>';
-  }).join('') || '<tr><td colspan="15" class="dim" style="text-align:center;padding:14px">Нет строк</td></tr>';
+      '<td>'+actionBadge(r.action)+'</td>'+
+      '<td>'+(r.actual_loss_32d?Dash.fmtRub(r.actual_loss_32d):'—')+'</td>'+
+      '<td class="dim">'+(r.uplift_to_target_32d?Dash.fmtRub(r.uplift_to_target_32d):'—')+'</td></tr>';
+  }).join('') || '<tr><td colspan="16" class="dim" style="text-align:center;padding:14px">Нет строк</td></tr>';
 }
 function actionBadge(a){
-  const cls = a==='Поднять цену' ? 'bad' : a==='Починить рекламу' ? 'risk' : a==='ОК' ? 'ok' :
-              a==='Недостаточно фактических продаж' ? 'grey' : 'grey';
+  const cls = a==='Фактическая реализация убыточна' ? 'bad' : a==='Требуется пересмотр цены/акции' ? 'risk' :
+              a==='ОК' ? 'ok' : 'grey';
   return '<span class="badge '+cls+'">'+esc(a)+'</span>';
 }
 function buildPriceChanges(pc){
