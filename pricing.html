@@ -211,8 +211,8 @@ function buildReconciliation(fr){
   if (!fr) return '';
   if (!fr.available) return '<h2>Сверка суммы по SKU с контуром Финансы</h2><p class="dim">'+esc(fr.note||'Недоступно')+'</p>';
   const trs = fr.rows.map(function(row){
-    return '<tr><td>'+esc(row.label)+(row.day_exact?' <span class="badge ok" title="Сверено за точно совпадающие даты">день-в-день</span>':' <span class="badge grey" title="Дневная разбивка недоступна - показано полное окно SKU">полное окно</span>')+'</td>'+
-      '<td>'+Dash.fmtRub(row.sku_sum)+'</td>'+
+    return '<tr><td>'+esc(row.label)+(row.comparable?' <span class="badge" title="Одинаковые даты и состав операций">сопоставимо</span>':' <span class="badge grey" title="Не подтверждена сопоставимость показателей">не сверено</span>')+'</td>'+
+      '<td>'+(row.sku_sum!=null?Dash.fmtRub(row.sku_sum):Dash.naText('нет полного итога'))+'</td>'+
       '<td>'+(row.finance_sum!=null?Dash.fmtRub(row.finance_sum):Dash.naText('нет данных'))+'</td>'+
       '<td class="'+Dash.signClass(row.diff||0)+'">'+(row.diff!=null?((row.diff>0?'+':'')+Dash.fmtRub(row.diff)):'—')+
       (row.diff_pct!=null?' ('+(row.diff_pct>0?'+':'')+Dash.fmtPct(row.diff_pct)+')':'')+'</td>'+
@@ -224,7 +224,7 @@ function buildReconciliation(fr){
     ' ('+fr.sku_window.n_days+' дн.). Пересечение с историей Финансы: '+esc(fr.common_window.from)+' — '+
     esc(fr.common_window.to)+' ('+fr.common_window.n_days+' дн.'+
     (fr.common_window.excluded_sku_days&&fr.common_window.excluded_sku_days.length?', исключены дни окна SKU: '+fr.common_window.excluded_sku_days.map(Dash.fmtDate).join(', '):'')+
-    '). SKU в сверке: '+fr.matched_sku_n+(fr.unmatched_sku_n?' (+'+fr.unmatched_sku_n+' вне каталога, см. строку ниже)':'')+
+    '). Продажи сверены по магазину целиком; фильтр каталога не применяется'+
     '. '+esc(fr.note||'')+'</p>'+
     '<div class="card scroll"><table><thead><tr><th>Показатель</th><th>Сумма по SKU</th><th>Сумма в Финансах</th>'+
     '<th>Разница</th><th>Объяснение</th></tr></thead><tbody>'+trs+'</tbody></table></div>'+
