@@ -1,21 +1,21 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-09-15T04:21:30.297535+00:00",
+  "updated_at": "2026-09-15T17:40:40.334Z",
   "project": "OZON DASHBOARD",
   "mode": "AUDIT",
   "phase": {
-    "current": 1,
+    "current": 2,
     "total": 12,
-    "name": "Фиксация состояния и протокола",
-    "note": "Новая формальная шкала из 12 этапов; не продолжение прежней условной шкалы 2/4. Номер этапа не равен проценту."
+    "name": "Происхождение входных данных",
+    "note": "Этап 1 принят по независимой проверке CYCLE-001. На этапе 2 подтверждается происхождение входов; полнота и корректность финансовых расчётов оцениваются на следующих этапах."
   },
   "readiness": {
-    "percent": 17,
+    "percent": 21,
     "formula": "sum(weight where status == VERIFIED and evidence is valid)",
     "total_weight": 100,
     "weights_version": "2026-09-15-v1",
     "scope": "Доказанная готовность кандидата на фиксированном SHA; не процент принятия и не оценка свежего локального API-прогона",
-    "measurement_status": "INITIAL_AWAITING_CHECKER"
+    "measurement_status": "VERIFIED_THROUGH_CYCLE_001"
   },
   "last_accepted_baseline": null,
   "baseline_note": "Для новой полной версии принятие не доказано. Исторические принятые задания сохраняются; SHA кода не равен принятому baseline.",
@@ -25,28 +25,29 @@
     "task-1",
     "task-1.5a",
     "task-1.5b",
-    "task-1.6"
+    "task-1.6",
+    "roadmap-stage-1"
   ],
   "historical_acceptance_note": "По существующему журналу; task-2 противоречит отчёту чата и требует восстановления решения, его приёмка не отменяется.",
   "canonical_repository": "plekhanovmarket-stud/ozon-data",
   "canonical_branch": "codex/dashboard-rebuild-2026-09-14-data",
-  "current_task": "CYCLE-001",
-  "next_step": "Робокоп: прочитать CURRENT_TASK.json и сохранить RESULT с манифестом уже собранных локальных входов; без нового API и build.",
+  "current_task": "CYCLE-002",
+  "next_step": "Робокоп: выполнить один штатный data-only сбор с сохранением локальных raw-ответов и обезличенного манифеста происхождения; без build и публикации.",
   "last_cycle": {
-    "id": "CYCLE-000",
-    "delta": 0,
-    "kind": "INITIAL_MEASUREMENT",
-    "decision": "AUDIT",
-    "note": "Первое измерение. Исторический процент не восстановлен; прирост не приписан."
+    "id": "CYCLE-001",
+    "delta": 4,
+    "kind": "PROTOCOL_VERIFICATION",
+    "decision": "ACCEPTED",
+    "note": "Этап 1 принят: R1.2 и R1.3 подтверждены независимым чтением RESULT и commit diff. R2.1 не зачтён: происхождение входов описано лишь частично."
   },
   "transport": {
     "outbound": "GitHub CURRENT_TASK.json",
     "inbound": "GitHub RESULT.json",
     "direct_cli_connection": false,
-    "executor_pickup_verified": false,
+    "executor_pickup_verified": true,
     "note": "Файлы доступны через GitHub. Автоматический запуск локальной сессии и опрос ещё не подключены."
   },
-  "control_review": "DONE_AWAITING_REVIEW",
+  "control_review": "CYCLE_001_ACCEPTED",
   "roadmap": [
     {
       "number": 1,
@@ -54,7 +55,7 @@
       "deliverable": "Единые правила, задача и подтверждённая исходная версия",
       "dependencies": [],
       "weight": 5,
-      "status": "В РАБОТЕ",
+      "status": "ПРИНЯТО",
       "criteria": [
         {
           "id": "R1.1",
@@ -72,9 +73,11 @@
           "id": "R1.2",
           "name": "Протокол и схема статуса проверены вторым исполнителем",
           "weight": 2,
-          "status": "UNVERIFIED",
-          "evidence": [],
-          "valid_for_code_commit": null,
+          "status": "VERIFIED",
+          "evidence": [
+            "E10"
+          ],
+          "valid_for_code_commit": "7ade2ca4e52ec7934c549e18b0a41a57e8400518",
           "verification": "Протокол и схема статуса проверены вторым исполнителем; сохранить проверяемый результат и источник",
           "invalidation_rule": "Перепроверить при изменении зависимого кода/входов; VERIFIED не переносится на новый снимок автоматически"
         },
@@ -82,9 +85,11 @@
           "id": "R1.3",
           "name": "Обмен CURRENT_TASK → RESULT проверен без пересказа чата",
           "weight": 2,
-          "status": "BLOCKED",
-          "evidence": [],
-          "valid_for_code_commit": null,
+          "status": "VERIFIED",
+          "evidence": [
+            "E10"
+          ],
+          "valid_for_code_commit": "7ade2ca4e52ec7934c549e18b0a41a57e8400518",
           "verification": "Обмен CURRENT_TASK → RESULT проверен без пересказа чата; сохранить проверяемый результат и источник",
           "invalidation_rule": "Перепроверить при изменении зависимого кода/входов; VERIFIED не переносится на новый снимок автоматически"
         }
@@ -98,13 +103,13 @@
         1
       ],
       "weight": 12,
-      "status": "ЗАБЛОКИРОВАНО",
+      "status": "В РАБОТЕ",
       "criteria": [
         {
           "id": "R2.1",
           "name": "Манифест свежего локального прогона проверен",
           "weight": 4,
-          "status": "BLOCKED",
+          "status": "UNVERIFIED",
           "evidence": [],
           "valid_for_code_commit": null,
           "verification": "Манифест свежего локального прогона проверен; сохранить проверяемый результат и источник",
@@ -802,6 +807,14 @@
       "method": "Read main refs and attempt live URLs",
       "result": "Frontend main 9ccd27f; data main 93146e6. Live production and old preview could not be retrieved from this environment; not verified",
       "checked_at": "2026-09-15T04:21:30.297535+00:00"
+    },
+    "E10": {
+      "method": "Independent WORK review of GitHub commit and CURRENT_TASK → RESULT exchange",
+      "result": "Commit 05abd44 contains only RESULT.json and docs/control/local-evidence-CYCLE-001.json; protocol fields match CYCLE-001; limitations and missing raw responses are explicit.",
+      "limitations": "Does not verify completeness of the API inputs; R2.1–R2.3 remain unverified.",
+      "code_commit": "7ade2ca4e52ec7934c549e18b0a41a57e8400518",
+      "url": "https://github.com/plekhanovmarket-stud/ozon-data/commit/05abd4445d08499da67600af1f2ef7a2de5ad4c7",
+      "checked_at": "2026-09-15T17:40:40.334Z"
     }
   },
   "known_limits": [
