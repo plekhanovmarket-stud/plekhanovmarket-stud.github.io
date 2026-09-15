@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Ozon — состояние проекта</title><link rel="stylesheet" href="project-control/style.css"><script src="project-control/app.js" defer></script></head>
+<body><main><header><span class="brand">OZON DASHBOARD</span><span id="mode" class="badge">Загрузка</span></header><div id="error" role="alert" hidden></div><div id="app" hidden>
+<section class="overview"><div class="eyebrow">Проверенная готовность</div><div class="score"><strong id="percent"></strong><span id="phase"></span></div><progress id="progress" max="100"></progress><p id="scope" class="muted"></p>
+<div class="baseline"><span>LAST ACCEPTED BASELINE</span><strong id="baseline"></strong><small id="code"></small></div>
+<div class="current"><span class="eyebrow">Сейчас</span><h1 id="current"></h1><span class="eyebrow">Следующий шаг</span><p id="next"></p></div>
+<div class="strip"><div><small>Последний цикл</small><strong id="delta"></strong></div><div><small>Критичных проблем</small><strong id="critical"></strong></div><div><small>Текущая задача</small><strong id="task"></strong></div></div>
+<p id="updated" class="muted"></p><p class="muted">Страница сама проверяет обновления раз в минуту.</p></section>
+<nav><a href="#roadmap">Дорога к результату</a><a href="#issues">Проблемы</a><a href="#history">История</a></nav>
+<section class="legend">✓ проверено · ◐ в работе · ○ впереди · ! проблема · × утратило проверку</section>
+<section><h2>Что означает эта оценка</h2><p id="method"></p><p id="transport" class="notice"></p><details><summary>Границы проверки и определение «готово»</summary><ul id="limits"></ul><h3>Готовый дашборд</h3><ul id="done"></ul></details></section>
+<section id="roadmap"><h2>12 этапов до рабочего дашборда</h2><div id="stages"></div></section>
+<section id="issues"><h2>Реестр проблем</h2><p class="muted">Открытые вопросы включают дефекты и недостающие доказательства. Закрытые записи сохраняются.</p><div id="issue-list"></div></section>
+<section id="history"><h2>История циклов</h2><div id="cycles"></div></section>
+<section><h2>Доказательства</h2><div id="evidence"></div></section>
+<footer><a href="project_status.json">Данные статуса</a><a href="progress_log.jsonl">История</a><p>Это состояние разработки. Финансовый дашборд Ozon здесь не публикуется.</p></footer>
+</div></main></body></html>

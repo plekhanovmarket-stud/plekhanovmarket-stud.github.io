@@ -1,0 +1,822 @@
+{
+  "schema_version": 1,
+  "updated_at": "2026-09-15T04:21:30.297535+00:00",
+  "project": "OZON DASHBOARD",
+  "mode": "AUDIT",
+  "phase": {
+    "current": 1,
+    "total": 12,
+    "name": "Фиксация состояния и протокола",
+    "note": "Новая формальная шкала из 12 этапов; не продолжение прежней условной шкалы 2/4. Номер этапа не равен проценту."
+  },
+  "readiness": {
+    "percent": 17,
+    "formula": "sum(weight where status == VERIFIED and evidence is valid)",
+    "total_weight": 100,
+    "weights_version": "2026-09-15-v1",
+    "scope": "Доказанная готовность кандидата на фиксированном SHA; не процент принятия и не оценка свежего локального API-прогона",
+    "measurement_status": "INITIAL_AWAITING_CHECKER"
+  },
+  "last_accepted_baseline": null,
+  "baseline_note": "Для новой полной версии принятие не доказано. Исторические принятые задания сохраняются; SHA кода не равен принятому baseline.",
+  "observed_code_commit": "7ade2ca4e52ec7934c549e18b0a41a57e8400518",
+  "frontend_commit": "9ccd27f112648a0d511a0885d2c82c2237495ce9",
+  "historical_acceptances": [
+    "task-1",
+    "task-1.5a",
+    "task-1.5b",
+    "task-1.6"
+  ],
+  "historical_acceptance_note": "По существующему журналу; task-2 противоречит отчёту чата и требует восстановления решения, его приёмка не отменяется.",
+  "canonical_repository": "plekhanovmarket-stud/ozon-data",
+  "canonical_branch": "codex/dashboard-rebuild-2026-09-14-data",
+  "current_task": "CYCLE-001",
+  "next_step": "Робокоп: прочитать CURRENT_TASK.json и сохранить RESULT с манифестом уже собранных локальных входов; без нового API и build.",
+  "last_cycle": {
+    "id": "CYCLE-000",
+    "delta": 0,
+    "kind": "INITIAL_MEASUREMENT",
+    "decision": "AUDIT",
+    "note": "Первое измерение. Исторический процент не восстановлен; прирост не приписан."
+  },
+  "transport": {
+    "outbound": "GitHub CURRENT_TASK.json",
+    "inbound": "GitHub RESULT.json",
+    "direct_cli_connection": false,
+    "executor_pickup_verified": false,
+    "note": "Файлы доступны через GitHub. Автоматический запуск локальной сессии и опрос ещё не подключены."
+  },
+  "control_review": "DONE_AWAITING_REVIEW",
+  "roadmap": [
+    {
+      "number": 1,
+      "name": "Фиксация состояния и протокола",
+      "deliverable": "Единые правила, задача и подтверждённая исходная версия",
+      "dependencies": [],
+      "weight": 5,
+      "status": "В РАБОТЕ",
+      "criteria": [
+        {
+          "id": "R1.1",
+          "name": "Репозитории и SHA установлены",
+          "weight": 1,
+          "status": "VERIFIED",
+          "evidence": [
+            "E01"
+          ],
+          "valid_for_code_commit": "7ade2ca4e52ec7934c549e18b0a41a57e8400518",
+          "verification": "Репозитории и SHA установлены; сохранить проверяемый результат и источник",
+          "invalidation_rule": "Перепроверить при изменении зависимого кода/входов; VERIFIED не переносится на новый снимок автоматически"
+        },
+        {
+          "id": "R1.2",
+          "name": "Протокол и схема статуса проверены вторым исполнителем",
+          "weight": 2,
+          "status": "UNVERIFIED",
+          "evidence": [],
+          "valid_for_code_commit": null,
+          "verification": "Протокол и схема статуса проверены вторым исполнителем; сохранить проверяемый результат и источник",
+          "invalidation_rule": "Перепроверить при изменении зависимого кода/входов; VERIFIED не переносится на новый снимок автоматически"
+        },
+        {
+          "id": "R1.3",
+          "name": "Обмен CURRENT_TASK → RESULT проверен без пересказа чата",
+          "weight": 2,
+          "status": "BLOCKED",
+          "evidence": [],
+          "valid_for_code_commit": null,
+          "verification": "Обмен CURRENT_TASK → RESULT проверен без пересказа чата; сохранить проверяемый результат и источник",
+          "invalidation_rule": "Перепроверить при изменении зависимого кода/входов; VERIFIED не переносится на новый снимок автоматически"
+        }
+      ]
+    },
+    {
+      "number": 2,
+      "name": "Происхождение входных данных",
+      "deliverable": "Входы связаны с исходными ответами, сборщиками и периодами",
+      "dependencies": [
+        1
+      ],
+      "weight": 12,
+      "status": "ЗАБЛОКИРОВАНО",
+      "criteria": [
+        {
+          "id": "R2.1",
+          "name": "Манифест свежего локального прогона проверен",
+          "weight": 4,
+          "status": "BLOCKED",
+          "evidence": [],
+          "valid_for_code_commit": null,
+          "verification": "Манифест свежего локального прогона проверен; сохранить проверяемый результат и источник",
+          "invalidation_rule": "Перепроверить при изменении зависимого кода/входов; VERIFIED не переносится на новый снимок автоматически"
+        },
+        {
+          "id": "R2.2",
+          "name": "Ответы API и преобразования сохранены и сопоставлены",
+          "weight": 4,
+          "status": "BLOCKED",
+          "evidence": [],
+          "valid_for_code_commit": null,
+          "verification": "Ответы API и преобразования сохранены и сопоставлены; сохранить проверяемый результат и источник",
+          "invalidation_rule": "Перепроверить при изменении зависимого кода/входов; VERIFIED не переносится на новый снимок автоматически"
+        },
+        {
+          "id": "R2.3",
+          "name": "Все требуемые источники имеют доказанный состав операций",
+          "weight": 4,
+          "status": "UNVERIFIED",
+          "evidence": [],
+          "valid_for_code_commit": null,
+          "verification": "Все требуемые источники имеют доказанный состав операций; сохранить проверяемый результат и источник",
+          "invalidation_rule": "Перепроверить при изменении зависимого кода/входов; VERIFIED не переносится на новый снимок автоматически"
+        }
+      ]
+    },
+    {
+      "number": 3,
+      "name": "Свежесть и отсутствие данных",
+      "deliverable": "Возраст берётся из содержания, пропуски видны",
+      "dependencies": [
+        2
+      ],
+      "weight": 10,
+      "status": "ВЫПОЛНЕНО, НО НЕ ПРОВЕРЕНО",
+      "criteria": [
+        {
+          "id": "R3.1",
+          "name": "Метаданные всех источников проверены на актуальном снимке",
+          "weight": 3,
+          "status": "UNVERIFIED",
+          "evidence": [],
+          "valid_for_code_commit": null,
+          "verification": "Метаданные всех источников проверены на актуальном снимке; сохранить проверяемый результат и источник",
+          "invalidation_rule": "Перепроверить при изменении зависимого кода/входов; VERIFIED не переносится на новый снимок автоматически"
+        },
+        {
+          "id": "R3.2",
+          "name": "Недоступные API-поля не превращаются в нули",
+          "weight": 3,
+          "status": "UNVERIFIED",
+          "evidence": [],
+          "valid_for_code_commit": null,
+          "verification": "Недоступные API-поля не превращаются в нули; сохранить проверяемый результат и источник",
+          "invalidation_rule": "Перепроверить при изменении зависимого кода/входов; VERIFIED не переносится на новый снимок автоматически"
+        },
+        {
+          "id": "R3.3",
+          "name": "Интерфейс различает ноль, пропуск и устаревание",
+          "weight": 4,
+          "status": "UNVERIFIED",
+          "evidence": [],
+          "valid_for_code_commit": null,
+          "verification": "Интерфейс различает ноль, пропуск и устаревание; сохранить проверяемый результат и источник",
+          "invalidation_rule": "Перепроверить при изменении зависимого кода/входов; VERIFIED не переносится на новый снимок автоматически"
+        }
+      ]
+    },
+    {
+      "number": 4,
+      "name": "Воспроизводимая сборка",
+      "deliverable": "Одинаковые входы и код дают одинаковые бизнес-значения",
+      "dependencies": [
+        2
+      ],
+      "weight": 12,
+      "status": "ЗАБЛОКИРОВАНО",
+      "criteria": [
+        {
+          "id": "R4.1",
+          "name": "Код зафиксирован неизменяемым SHA",
+          "weight": 2,
+          "status": "VERIFIED",
+          "evidence": [
+            "E01"
+          ],
+          "valid_for_code_commit": "7ade2ca4e52ec7934c549e18b0a41a57e8400518",
+          "verification": "Код зафиксирован неизменяемым SHA; сохранить проверяемый результат и источник",
+          "invalidation_rule": "Перепроверить при изменении зависимого кода/входов; VERIFIED не переносится на новый снимок автоматически"
+        },
+        {
+          "id": "R4.2",
+          "name": "Полный набор входов, конфигурации и state закреплён хэшами",
+          "weight": 4,
+          "status": "BLOCKED",
+          "evidence": [],
+          "valid_for_code_commit": null,
+          "verification": "Полный набор входов, конфигурации и state закреплён хэшами; сохранить проверяемый результат и источник",
+          "invalidation_rule": "Перепроверить при изменении зависимого кода/входов; VERIFIED не переносится на новый снимок автоматически"
+        },
+        {
+          "id": "R4.3",
+          "name": "Повторный штатный build воспроизводит результат с оговорёнными volatile-полями",
+          "weight": 6,
+          "status": "UNVERIFIED",
+          "evidence": [],
+          "valid_for_code_commit": null,
+          "verification": "Повторный штатный build воспроизводит результат с оговорёнными volatile-полями; сохранить проверяемый результат и источник",
+          "invalidation_rule": "Перепроверить при изменении зависимого кода/входов; VERIFIED не переносится на новый снимок автоматически"
+        }
+      ]
+    },
+    {
+      "number": 5,
+      "name": "Сверка продаж",
+      "deliverable": "Дневные продажи сверены без потери товаров",
+      "dependencies": [
+        2,
+        4
+      ],
+      "weight": 12,
+      "status": "В РАБОТЕ",
+      "criteria": [
+        {
+          "id": "R5.1",
+          "name": "Алгоритм общих дат и запрет ложного подтверждения покрыты тестами",
+          "weight": 5,
+          "status": "VERIFIED",
+          "evidence": [
+            "E02"
+          ],
+          "valid_for_code_commit": "7ade2ca4e52ec7934c549e18b0a41a57e8400518",
+          "verification": "Алгоритм общих дат и запрет ложного подтверждения покрыты тестами; сохранить проверяемый результат и источник",
+          "invalidation_rule": "Перепроверить при изменении зависимого кода/входов; VERIFIED не переносится на новый снимок автоматически"
+        },
+        {
+          "id": "R5.2",
+          "name": "Сохранённые продажи сверены по 29 общим дням",
+          "weight": 3,
+          "status": "VERIFIED",
+          "evidence": [
+            "E03"
+          ],
+          "valid_for_code_commit": "7ade2ca4e52ec7934c549e18b0a41a57e8400518",
+          "verification": "Сохранённые продажи сверены по 29 общим дням; сохранить проверяемый результат и источник",
+          "invalidation_rule": "Перепроверить при изменении зависимого кода/входов; VERIFIED не переносится на новый снимок автоматически"
+        },
+        {
+          "id": "R5.3",
+          "name": "Полное актуальное окно сверено, исключения объяснены",
+          "weight": 4,
+          "status": "UNVERIFIED",
+          "evidence": [],
+          "valid_for_code_commit": null,
+          "verification": "Полное актуальное окно сверено, исключения объяснены; сохранить проверяемый результат и источник",
+          "invalidation_rule": "Перепроверить при изменении зависимого кода/входов; VERIFIED не переносится на новый снимок автоматически"
+        }
+      ]
+    },
+    {
+      "number": 6,
+      "name": "Цена и экономика SKU",
+      "deliverable": "Доходы и расходы товаров имеют доказанную базу",
+      "dependencies": [
+        3,
+        5
+      ],
+      "weight": 16,
+      "status": "В РАБОТЕ",
+      "criteria": [
+        {
+          "id": "R6.1",
+          "name": "Фактическая реализация отделена от цены продавца",
+          "weight": 3,
+          "status": "VERIFIED",
+          "evidence": [
+            "E02"
+          ],
+          "valid_for_code_commit": "7ade2ca4e52ec7934c549e18b0a41a57e8400518",
+          "verification": "Фактическая реализация отделена от цены продавца; сохранить проверяемый результат и источник",
+          "invalidation_rule": "Перепроверить при изменении зависимого кода/входов; VERIFIED не переносится на новый снимок автоматически"
+        },
+        {
+          "id": "R6.2",
+          "name": "low_margin использует фактическую реализацию",
+          "weight": 1,
+          "status": "VERIFIED",
+          "evidence": [
+            "E02"
+          ],
+          "valid_for_code_commit": "7ade2ca4e52ec7934c549e18b0a41a57e8400518",
+          "verification": "low_margin использует фактическую реализацию; сохранить проверяемый результат и источник",
+          "invalidation_rule": "Перепроверить при изменении зависимого кода/входов; VERIFIED не переносится на новый снимок автоматически"
+        },
+        {
+          "id": "R6.3",
+          "name": "Реклама рассчитана за точный период",
+          "weight": 4,
+          "status": "UNVERIFIED",
+          "evidence": [],
+          "valid_for_code_commit": null,
+          "verification": "Реклама рассчитана за точный период; сохранить проверяемый результат и источник",
+          "invalidation_rule": "Перепроверить при изменении зависимого кода/входов; VERIFIED не переносится на новый снимок автоматически"
+        },
+        {
+          "id": "R6.4",
+          "name": "Логистика, услуги и нормативы проверены без двойного учёта",
+          "weight": 4,
+          "status": "UNVERIFIED",
+          "evidence": [],
+          "valid_for_code_commit": null,
+          "verification": "Логистика, услуги и нормативы проверены без двойного учёта; сохранить проверяемый результат и источник",
+          "invalidation_rule": "Перепроверить при изменении зависимого кода/входов; VERIFIED не переносится на новый снимок автоматически"
+        },
+        {
+          "id": "R6.5",
+          "name": "Цена кабинета и полный результат контрольных SKU сверены с первичными данными",
+          "weight": 4,
+          "status": "UNVERIFIED",
+          "evidence": [],
+          "valid_for_code_commit": null,
+          "verification": "Цена кабинета и полный результат контрольных SKU сверены с первичными данными; сохранить проверяемый результат и источник",
+          "invalidation_rule": "Перепроверить при изменении зависимого кода/входов; VERIFIED не переносится на новый снимок автоматически"
+        }
+      ]
+    },
+    {
+      "number": 7,
+      "name": "Финансы и незакрытые периоды",
+      "deliverable": "Три результата, кредит и НДС без скрытых вычетов",
+      "dependencies": [
+        3,
+        5,
+        6
+      ],
+      "weight": 12,
+      "status": "ВЫПОЛНЕНО, НО НЕ ПРОВЕРЕНО",
+      "criteria": [
+        {
+          "id": "R7.1",
+          "name": "Финансовая цепочка и отсутствие двойного вычета проверены",
+          "weight": 6,
+          "status": "UNVERIFIED",
+          "evidence": [],
+          "valid_for_code_commit": null,
+          "verification": "Финансовая цепочка и отсутствие двойного вычета проверены; сохранить проверяемый результат и источник",
+          "invalidation_rule": "Перепроверить при изменении зависимого кода/входов; VERIFIED не переносится на новый снимок автоматически"
+        },
+        {
+          "id": "R7.2",
+          "name": "Неполные дни не повышают статус и прибыль закрытого периода",
+          "weight": 6,
+          "status": "UNVERIFIED",
+          "evidence": [],
+          "valid_for_code_commit": null,
+          "verification": "Неполные дни не повышают статус и прибыль закрытого периода; сохранить проверяемый результат и источник",
+          "invalidation_rule": "Перепроверить при изменении зависимого кода/входов; VERIFIED не переносится на новый снимок автоматически"
+        }
+      ]
+    },
+    {
+      "number": 8,
+      "name": "Совместимость страниц и данных",
+      "deliverable": "Страницы читают текущие поля и показывают причины",
+      "dependencies": [
+        3,
+        6,
+        7
+      ],
+      "weight": 6,
+      "status": "НЕ НАЧАТО",
+      "criteria": [
+        {
+          "id": "R8.1",
+          "name": "Контракт JSON проверен у всех потребителей",
+          "weight": 3,
+          "status": "UNVERIFIED",
+          "evidence": [],
+          "valid_for_code_commit": null,
+          "verification": "Контракт JSON проверен у всех потребителей; сохранить проверяемый результат и источник",
+          "invalidation_rule": "Перепроверить при изменении зависимого кода/входов; VERIFIED не переносится на новый снимок автоматически"
+        },
+        {
+          "id": "R8.2",
+          "name": "Ноль/отсутствие/ошибка загрузки корректно отображаются",
+          "weight": 3,
+          "status": "UNVERIFIED",
+          "evidence": [],
+          "valid_for_code_commit": null,
+          "verification": "Ноль/отсутствие/ошибка загрузки корректно отображаются; сохранить проверяемый результат и источник",
+          "invalidation_rule": "Перепроверить при изменении зависимого кода/входов; VERIFIED не переносится на новый снимок автоматически"
+        }
+      ]
+    },
+    {
+      "number": 9,
+      "name": "Регрессионные проверки",
+      "deliverable": "Проверки привязаны к точному состоянию",
+      "dependencies": [
+        4,
+        6,
+        7,
+        8
+      ],
+      "weight": 5,
+      "status": "ВЫПОЛНЕНО, НО НЕ ПРОВЕРЕНО",
+      "criteria": [
+        {
+          "id": "R9.1",
+          "name": "Три целевых бизнес-теста выполнены независимым проверяющим",
+          "weight": 2,
+          "status": "VERIFIED",
+          "evidence": [
+            "E02"
+          ],
+          "valid_for_code_commit": "7ade2ca4e52ec7934c549e18b0a41a57e8400518",
+          "verification": "Три целевых бизнес-теста выполнены независимым проверяющим; сохранить проверяемый результат и источник",
+          "invalidation_rule": "Перепроверить при изменении зависимого кода/входов; VERIFIED не переносится на новый снимок автоматически"
+        },
+        {
+          "id": "R9.2",
+          "name": "Полный suite и валидаторы финального кандидата подтверждены логами",
+          "weight": 3,
+          "status": "UNVERIFIED",
+          "evidence": [],
+          "valid_for_code_commit": null,
+          "verification": "Полный suite и валидаторы финального кандидата подтверждены логами; сохранить проверяемый результат и источник",
+          "invalidation_rule": "Перепроверить при изменении зависимого кода/входов; VERIFIED не переносится на новый снимок автоматически"
+        }
+      ]
+    },
+    {
+      "number": 10,
+      "name": "Просмотр Preview",
+      "deliverable": "Проверяемый кандидат доступен на компьютере и телефоне",
+      "dependencies": [
+        8,
+        9
+      ],
+      "weight": 4,
+      "status": "НЕ НАЧАТО",
+      "criteria": [
+        {
+          "id": "R10.1",
+          "name": "Desktop/mobile, консоль и сеть проверены",
+          "weight": 2,
+          "status": "UNVERIFIED",
+          "evidence": [],
+          "valid_for_code_commit": null,
+          "verification": "Desktop/mobile, консоль и сеть проверены; сохранить проверяемый результат и источник",
+          "invalidation_rule": "Перепроверить при изменении зависимого кода/входов; VERIFIED не переносится на новый снимок автоматически"
+        },
+        {
+          "id": "R10.2",
+          "name": "Контрольные SKU и финансовые итоги совпадают с JSON",
+          "weight": 2,
+          "status": "UNVERIFIED",
+          "evidence": [],
+          "valid_for_code_commit": null,
+          "verification": "Контрольные SKU и финансовые итоги совпадают с JSON; сохранить проверяемый результат и источник",
+          "invalidation_rule": "Перепроверить при изменении зависимого кода/входов; VERIFIED не переносится на новый снимок автоматически"
+        }
+      ]
+    },
+    {
+      "number": 11,
+      "name": "Штатный ежедневный цикл",
+      "deliverable": "Сбор → build → проверки работает без ручного вмешательства",
+      "dependencies": [
+        4,
+        9,
+        10
+      ],
+      "weight": 4,
+      "status": "ЗАБЛОКИРОВАНО",
+      "criteria": [
+        {
+          "id": "R11.1",
+          "name": "Боевой планировщик и версия оркестратора установлены по факту",
+          "weight": 2,
+          "status": "BLOCKED",
+          "evidence": [],
+          "valid_for_code_commit": null,
+          "verification": "Боевой планировщик и версия оркестратора установлены по факту; сохранить проверяемый результат и источник",
+          "invalidation_rule": "Перепроверить при изменении зависимого кода/входов; VERIFIED не переносится на новый снимок автоматически"
+        },
+        {
+          "id": "R11.2",
+          "name": "Следующий штатный цикл сохранил исправления и историю",
+          "weight": 2,
+          "status": "UNVERIFIED",
+          "evidence": [],
+          "valid_for_code_commit": null,
+          "verification": "Следующий штатный цикл сохранил исправления и историю; сохранить проверяемый результат и источник",
+          "invalidation_rule": "Перепроверить при изменении зависимого кода/входов; VERIFIED не переносится на новый снимок автоматически"
+        }
+      ]
+    },
+    {
+      "number": 12,
+      "name": "Выпуск и контроль Production",
+      "deliverable": "Разрешённый выпуск с автоматической проверкой",
+      "dependencies": [
+        10,
+        11
+      ],
+      "weight": 2,
+      "status": "НЕ НАЧАТО",
+      "criteria": [
+        {
+          "id": "R12.1",
+          "name": "Андрей разрешил выпуск проверенного кандидата; SHA опубликован",
+          "weight": 1,
+          "status": "UNVERIFIED",
+          "evidence": [],
+          "valid_for_code_commit": null,
+          "verification": "Андрей разрешил выпуск проверенного кандидата; SHA опубликован; сохранить проверяемый результат и источник",
+          "invalidation_rule": "Перепроверить при изменении зависимого кода/входов; VERIFIED не переносится на новый снимок автоматически"
+        },
+        {
+          "id": "R12.2",
+          "name": "Автоматическая проверка после публикации подтверждена",
+          "weight": 1,
+          "status": "UNVERIFIED",
+          "evidence": [],
+          "valid_for_code_commit": null,
+          "verification": "Автоматическая проверка после публикации подтверждена; сохранить проверяемый результат и источник",
+          "invalidation_rule": "Перепроверить при изменении зависимого кода/входов; VERIFIED не переносится на новый снимок автоматически"
+        }
+      ]
+    }
+  ],
+  "issues": [
+    {
+      "id": "P01",
+      "title": "Свежие локальные входы и журнал API не доступны проверяющему",
+      "severity": "CRITICAL",
+      "status": "OPEN",
+      "classification": "DISCOVERY",
+      "evidence": [
+        "E01",
+        "E07"
+      ],
+      "note": "Это пробел доказательств, а не доказанный дефект данных. Заявленные 15 файлов пока не сверены.",
+      "closed_at": null
+    },
+    {
+      "id": "P02",
+      "title": "Дата generated не доказывает свежесть balance/returns",
+      "severity": "CRITICAL",
+      "status": "OPEN",
+      "classification": "DISCOVERY",
+      "evidence": [
+        "E04"
+      ],
+      "note": "Период 19.07–18.08 в свежем локальном снимке известен только из отчёта; требует проверки.",
+      "closed_at": null
+    },
+    {
+      "id": "P03",
+      "title": "Прибыль SKU содержит расходы-оценки",
+      "severity": "CRITICAL",
+      "status": "OPEN",
+      "classification": "DISCOVERY",
+      "evidence": [
+        "E06"
+      ],
+      "note": "",
+      "closed_at": null
+    },
+    {
+      "id": "KI-003",
+      "title": "Открытые периоды: финальность результата не подтверждена",
+      "severity": "CRITICAL",
+      "status": "OPEN",
+      "classification": "DISCOVERY",
+      "evidence": [
+        "E07"
+      ],
+      "note": "Сохранена историческая открытая проблема; заново не объявляется регрессией.",
+      "closed_at": null
+    },
+    {
+      "id": "KI-004",
+      "title": "Финансовая цепочка и скрытые вычеты требуют подтверждения",
+      "severity": "CRITICAL",
+      "status": "OPEN",
+      "classification": "DISCOVERY",
+      "evidence": [
+        "E07"
+      ],
+      "note": "Запись сохранена из прежнего реестра; текущая бизнес-проверка не завершена.",
+      "closed_at": null
+    },
+    {
+      "id": "P06",
+      "title": "Пропуски и настоящий ноль не везде различаются",
+      "severity": "CRITICAL",
+      "status": "OPEN",
+      "classification": "DISCOVERY",
+      "evidence": [
+        "E05",
+        "E06"
+      ],
+      "note": "",
+      "closed_at": null
+    },
+    {
+      "id": "P07",
+      "title": "Frontend ожидает прежние поля pricing",
+      "severity": "CRITICAL",
+      "status": "OPEN",
+      "classification": "DISCOVERY",
+      "evidence": [
+        "E05"
+      ],
+      "note": "",
+      "closed_at": null
+    },
+    {
+      "id": "P08",
+      "title": "Полного принятого baseline новой версии нет",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "classification": "DISCOVERY",
+      "evidence": [
+        "E08"
+      ],
+      "note": "",
+      "closed_at": null
+    },
+    {
+      "id": "P09",
+      "title": "Штатная автоматизация и проверка выпуска сейчас недоступны",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "classification": "DISCOVERY",
+      "evidence": [
+        "E07",
+        "E09"
+      ],
+      "note": "",
+      "closed_at": null
+    },
+    {
+      "id": "P10",
+      "title": "Журнал задач отстаёт от реализации",
+      "severity": "MEDIUM",
+      "status": "OPEN",
+      "classification": "DISCOVERY",
+      "evidence": [
+        "E08"
+      ],
+      "note": "",
+      "closed_at": null
+    },
+    {
+      "id": "KI-001",
+      "title": "Датированное имя справочника в штатном цикле",
+      "severity": "MEDIUM",
+      "status": "OPEN",
+      "classification": "DISCOVERY",
+      "evidence": [
+        "E07"
+      ],
+      "note": "Историческая запись сохранена, исправление не подтверждено. Фиксированную себестоимость не пересчитывать.",
+      "closed_at": null
+    },
+    {
+      "id": "KI-002",
+      "title": "Неодинаковые цели git push в оркестраторе",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "classification": "DISCOVERY",
+      "evidence": [
+        "E07"
+      ],
+      "note": "",
+      "closed_at": null
+    },
+    {
+      "id": "KI-005",
+      "title": "Оркестратор может коммитить постороннее рабочее состояние",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "classification": "DISCOVERY",
+      "evidence": [
+        "E07"
+      ],
+      "note": "",
+      "closed_at": null
+    },
+    {
+      "id": "P11",
+      "title": "ResourceWarning открытого CSV",
+      "severity": "LOW",
+      "status": "OPEN",
+      "classification": "DISCOVERY",
+      "evidence": [
+        "E02"
+      ],
+      "note": "",
+      "closed_at": null
+    }
+  ],
+  "critical_open": 7,
+  "evidence": {
+    "E01": {
+      "method": "GitHub API: git ref, commit, compare main→working branch",
+      "result": "HEAD 7ade2ca; ahead 2 / behind 0; code changes only, no fresh inputs committed",
+      "code_commit": "7ade2ca4e52ec7934c549e18b0a41a57e8400518",
+      "url": "https://github.com/plekhanovmarket-stud/ozon-data/commit/7ade2ca4e52ec7934c549e18b0a41a57e8400518",
+      "checked_at": "2026-09-15T04:21:30.297535+00:00"
+    },
+    "E02": {
+      "method": "Independent execution, Python 3.12, exact files fetched at pinned SHA",
+      "tests": [
+        {
+          "file": "scripts/test_codex_reconciliation.py",
+          "passed": 12,
+          "exit": 0
+        },
+        {
+          "file": "scripts/test_pricing_actual_economics.py",
+          "passed": 94,
+          "exit": 0
+        },
+        {
+          "file": "scripts/test_codex_low_margin.py",
+          "passed": 4,
+          "exit": 0
+        }
+      ],
+      "result": "110/110; ResourceWarning unclosed CSV remains; not a full suite or production verification",
+      "code_commit": "7ade2ca4e52ec7934c549e18b0a41a57e8400518",
+      "checked_at": "2026-09-15T04:21:30.297535+00:00"
+    },
+    "E03": {
+      "method": "Independent reconcile([], saved dashboard_v2.days, saved realization.days); read-only",
+      "result": {
+        "from": "2026-08-16",
+        "to": "2026-09-13",
+        "days": 29,
+        "sku_sales": 16248210,
+        "finance_sales": 16248210,
+        "difference": 0,
+        "daily_mismatches": 0,
+        "sku_attribution_verified": false
+      },
+      "limitations": "Saved Git snapshot, not fresh local API run; full SKU window excludes 13–15 August",
+      "paths": [
+        "data/sku_realization_32d.json",
+        "derived/dashboard_v2.json"
+      ],
+      "code_commit": "7ade2ca4e52ec7934c549e18b0a41a57e8400518",
+      "checked_at": "2026-09-15T04:21:30.297535+00:00",
+      "downloaded_content_sha256": {
+        "data/sku_realization_32d.json": "f0ef923dd6b589957020e68daeaecd6378d96b5d864be828a3e2ff6905fc29bb",
+        "derived/dashboard_v2.json": "1b5ea361d56516aa52e44a567eb7350e15465e2f2c05deeab2ed16a736735343"
+      }
+    },
+    "E04": {
+      "method": "Read tracked ops/run_daily.ps1 extraction block",
+      "result": "finance_balance_30d and returns_list are extracted by штатный code; generated is current clock, not proof of source period",
+      "url": "https://github.com/plekhanovmarket-stud/ozon-data/blob/7ade2ca4e52ec7934c549e18b0a41a57e8400518/ops/run_daily.ps1",
+      "checked_at": "2026-09-15T04:21:30.297535+00:00"
+    },
+    "E05": {
+      "method": "Read frontend pricing.html at pinned frontend commit",
+      "result": "Consumers still require below_breakeven_n and margin_now_total_32d; effect_32d uses truthiness",
+      "code_commit": "9ccd27f112648a0d511a0885d2c82c2237495ce9",
+      "url": "https://github.com/plekhanovmarket-stud/plekhanovmarket-stud.github.io/blob/9ccd27f112648a0d511a0885d2c82c2237495ce9/pricing.html",
+      "checked_at": "2026-09-15T04:21:30.297535+00:00"
+    },
+    "E06": {
+      "method": "Read lib_pricing.py and lib_reconciliation.py",
+      "result": "Ads scaled 32/60; structural logistics; EKV/PROC norms; SKU attribution false. Missing numeric fields can pass through f(..., default=0).",
+      "url": "https://github.com/plekhanovmarket-stud/ozon-data/blob/7ade2ca4e52ec7934c549e18b0a41a57e8400518/scripts/lib_pricing.py",
+      "checked_at": "2026-09-15T04:21:30.297535+00:00"
+    },
+    "E07": {
+      "method": "Read DAILY_PIPELINE and tracked run_daily; compare available repository tree",
+      "result": "Operating collector scripts and Windows scheduler are outside this repo; local fresh run cannot be verified here",
+      "url": "https://github.com/plekhanovmarket-stud/ozon-data/blob/7ade2ca4e52ec7934c549e18b0a41a57e8400518/docs/DAILY_PIPELINE.md",
+      "checked_at": "2026-09-15T04:21:30.297535+00:00"
+    },
+    "E08": {
+      "method": "Read frontend data/project_log.json",
+      "result": "Updated 2026-09-07; task-1,1.5a,1.5b,1.6 accepted historically; task-2 still placed. No complete accepted baseline for current rebuild recorded",
+      "code_commit": "9ccd27f112648a0d511a0885d2c82c2237495ce9",
+      "checked_at": "2026-09-15T04:21:30.297535+00:00"
+    },
+    "E09": {
+      "method": "Read main refs and attempt live URLs",
+      "result": "Frontend main 9ccd27f; data main 93146e6. Live production and old preview could not be retrieved from this environment; not verified",
+      "checked_at": "2026-09-15T04:21:30.297535+00:00"
+    }
+  },
+  "known_limits": [
+    "Нет доступа к локальному checkpoint, dirty tree, логам свежего API и планировщику Windows",
+    "239 проверок известны по отчёту исполнителя; независимо повторены только 110 целевых",
+    "Live Production и Preview не просмотрены: сеть не дала доступ",
+    "Временный prepare_build.py не прочитан; его корректность и фактические записи не установлены"
+  ],
+  "definition_of_done": [
+    "Штатный сбор Ozon с происхождением и свежестью каждого источника",
+    "Воспроизводимая сборка из закреплённых входов, кода, конфигурации и состояния",
+    "Сверены продажи, расходы и финансы; незакрытые периоды не искажают итог",
+    "Пропуски не заменены нулями; оценки и факты разделены",
+    "Регрессионные тесты и Preview соответствуют расчётам",
+    "Ежедневный цикл и разрешённый выпуск работают штатно",
+    "Автоматическая проверка опубликованной версии и приёмка Андрея"
+  ]
+}
