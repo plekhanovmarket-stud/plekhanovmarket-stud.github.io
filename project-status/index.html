@@ -1,17 +1,18 @@
 <!doctype html>
-<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Ozon — состояние проекта</title><link rel="stylesheet" href="project-control/style.css"><script src="project-control/app.js" defer></script></head>
-<body><main><header><span class="brand">OZON DASHBOARD</span><span id="mode" class="badge">Загрузка</span></header><div id="error" role="alert" hidden></div><div id="app" hidden>
-<section class="overview"><div class="eyebrow">Проверенная готовность</div><div class="score"><strong id="percent"></strong><span id="phase"></span></div><progress id="progress" max="100"></progress><p id="scope" class="muted"></p>
-<div class="baseline"><span>LAST ACCEPTED BASELINE</span><strong id="baseline"></strong><small id="code"></small></div>
-<div class="current"><span class="eyebrow">Сейчас</span><h1 id="current"></h1><span class="eyebrow">Следующий шаг</span><p id="next"></p></div>
-<div class="strip"><div><small>Последний цикл</small><strong id="delta"></strong></div><div><small>Критичных проблем</small><strong id="critical"></strong></div><div><small>Текущая задача</small><strong id="task"></strong></div></div>
-<p id="updated" class="muted"></p><p class="muted">Страница сама проверяет обновления раз в минуту.</p></section>
-<nav><a href="#roadmap">Дорога к результату</a><a href="#issues">Проблемы</a><a href="#history">История</a></nav>
-<section class="legend">✓ проверено · ◐ в работе · ○ впереди · ! проблема · × утратило проверку</section>
-<section><h2>Что означает эта оценка</h2><p id="method"></p><p id="transport" class="notice"></p><details><summary>Границы проверки и определение «готово»</summary><ul id="limits"></ul><h3>Готовый дашборд</h3><ul id="done"></ul></details></section>
-<section id="roadmap"><h2>12 этапов до рабочего дашборда</h2><div id="stages"></div></section>
-<section id="issues"><h2>Реестр проблем</h2><p class="muted">Открытые вопросы включают дефекты и недостающие доказательства. Закрытые записи сохраняются.</p><div id="issue-list"></div></section>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Ozon Dashboard — статус проекта</title><link rel="stylesheet" href="project-control/style.css"><script src="project-control/app.js" defer></script></head>
+<body><main><header><span class="brand">OZON DASHBOARD · КАРТА РАБОТ</span><span id="mode" class="badge">Загрузка</span></header><div id="error" role="alert" hidden></div><div id="app" hidden>
+<section class="hero">
+ <div class="readiness"><span class="eyebrow">Проверенная готовность всего проекта</span><strong id="percent"></strong><progress id="progress" max="100"></progress><p>Это уровень подтверждённых критериев по всему проекту. Это НЕ означает, что 83% разработки ещё впереди.</p></div>
+ <div class="position"><span class="eyebrow">Где мы сейчас</span><h1><span id="phase"></span> — <span id="phase-name"></span></h1><div class="facts"><p><span>Текущий подшаг</span><strong id="substep-position"></strong></p><p><span>Сейчас выполняет</span><strong>Робокоп</strong></p><p><span>Текущая задача</span><strong id="task"></strong></p></div><p><b>Что он делает сейчас:</b> <span id="doing-now"></span></p><p><b>Следующий подшаг:</b> <span id="next-substep"></span></p><p><b>После него:</b> <span id="after-next"></span></p></div>
+</section>
+<section class="stage-focus"><div class="section-title"><div><span class="eyebrow">Внутри текущего этапа</span><h2 id="stage-title"></h2></div><strong id="remaining" class="remaining"></strong></div><div id="substep-map" class="substep-map"></div><div class="legend">✓ завершено · ▶ выполняется сейчас · ○ впереди · ! заблокировано</div>
+<div class="three-cols"><article><h3>Завершено</h3><ul id="completed-now"></ul></article><article class="active-card"><h3>Сейчас</h3><ul id="now-list"></ul></article><article><h3>Следом</h3><ul id="next-list"></ul></article></div></section>
+<section class="journey"><span class="eyebrow">Что будет после текущего этапа</span><h2>Следующий этап: <span id="next-stage"></span></h2><div id="stage-map" class="stage-map"></div><div class="legend">✓ завершено · ▶ текущий · ○ впереди · ! заблокировано</div></section>
+<nav><span>Подробности:</span><a href="#roadmap">12 этапов и 32 критерия</a><a href="#issues">Проблемы</a><a href="#history">История</a><a href="#evidence">Доказательства</a></nav>
+<section class="technical"><h2>Аудиторские детали</h2><div class="audit-grid"><div><small>Baseline</small><strong id="baseline"></strong><small id="code"></small></div><div><small>Последний цикл</small><strong id="delta"></strong></div><div><small>Критичных проблем</small><strong id="critical"></strong></div></div><p id="updated" class="muted"></p><p id="method"></p><p id="transport" class="notice"></p><details><summary>Границы проверки и определение «готово»</summary><ul id="limits"></ul><h3>Готовый дашборд</h3><ul id="done"></ul></details></section>
+<section id="roadmap"><h2>12 этапов и 32 критерия</h2><div id="stages"></div></section>
+<section id="issues"><h2>Реестр проблем</h2><div id="issue-list"></div></section>
 <section id="history"><h2>История циклов</h2><div id="cycles"></div></section>
-<section><h2>Доказательства</h2><div id="evidence"></div></section>
-<footer><a href="project_status.json">Данные статуса</a><a href="progress_log.jsonl">История</a><p>Это состояние разработки. Финансовый дашборд Ozon здесь не публикуется.</p></footer>
+<section id="evidence"><h2>Доказательства</h2><div id="evidence-list"></div></section>
+<footer><a href="project_status.json">project_status.json</a><a href="progress_log.jsonl">progress_log.jsonl</a><p>Страница показывает сохранённое состояние разработки, а не прямую трансляцию локальной сессии.</p></footer>
 </div></main></body></html>
